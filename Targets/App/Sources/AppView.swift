@@ -30,6 +30,36 @@ struct AppView: View {
                     mainTabView(viewStore, mainTabState)
                 }
             }
+            .onOpenURL { url in
+                handleDeepLink(url, viewStore: viewStore)
+            }
+        }
+    }
+
+    private func handleDeepLink(_ url: URL, viewStore: ViewStoreOf<AppFeature>) {
+        guard url.scheme == "moment" else { return }
+
+        if url.host == "login" {
+            // Handle login deep link - simple implementation
+            if case .auth = viewStore.state {
+                // Already on auth screen
+                return
+            }
+        } else if url.host == "connect" {
+            // Handle connect deep link
+            if case .connect = viewStore.state {
+                // Already on connect screen
+                return
+            }
+        } else if url.host == "moment" {
+            // Handle moment detail deep link
+            let pathComponents = url.pathComponents.filter { $0 != "/" }
+            if let momentIdString = pathComponents.last,
+               let momentId = UUID(uuidString: momentIdString) {
+                // Navigate to feed and trigger refresh
+                viewStore.send(.selectTab(.feed))
+                viewStore.send(.feed(.refresh))
+            }
         }
     }
 

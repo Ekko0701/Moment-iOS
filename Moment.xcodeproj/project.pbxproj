@@ -38,12 +38,14 @@
 		466C46C0B92BC3DD3671F55B /* CoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 74C1B5752A652418CFB9810E /* CoreKit.framework */; };
 		46C7DFFB2ED0CE10B4AB6702 /* AuthFeature.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 17999797966833CAFE799402 /* AuthFeature.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		4CF8102FB8F889B74C4299E5 /* Dependencies in Frameworks */ = {isa = PBXBuildFile; productRef = A3372D2109234B5EEB07F4F5 /* Dependencies */; };
+		4D3CB7192BA74991E654CFBE /* WidgetMomentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54451DE8840C2FA23838A2A9 /* WidgetMomentStore.swift */; };
 		56441482B7DB572D7286CAE1 /* Endpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F25307E059A65F5F0C4F6A5 /* Endpoint.swift */; };
 		5E274882226B3521A3E86D6F /* Networking.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 861F7A404B97C3C05A98287E /* Networking.framework */; };
 		5E4D823A7EEF9651C0740D5D /* ComposeFeature.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DFBCD1FF6CE504F4CF03CA5 /* ComposeFeature.framework */; };
 		5F51440F5F6CA6B1EAC490FA /* MomentUIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5F2D8657A700919F85FBA723 /* MomentUIKit.framework */; };
 		64EF156BBF1C280DCE396DE7 /* ApiEnvelope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48890929EEC1DB33E3E19653 /* ApiEnvelope.swift */; };
 		653922728A0E992CD6C6F873 /* MomentApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E542170D7175D2699575215A /* MomentApp.swift */; };
+		69786B6C1F7F7D49F85E2248 /* MomentWidgetProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CE0069E4BE38552EA228CAC /* MomentWidgetProvider.swift */; };
 		6A0D6C09A4D88BF7C5630D50 /* DomainError.swift in Sources */ = {isa = PBXBuildFile; fileRef = F498BC1AAFFDA765FC2CA306 /* DomainError.swift */; };
 		6ED4CACC599CA47672B5A94B /* FeedFeature.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F79D809E6519207418727B0 /* FeedFeature.framework */; };
 		6F5524943824D4D68AFA3B66 /* Domain.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B07CD609590736578C0A259D /* Domain.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -64,6 +66,7 @@
 		87DB956540999A2CEB9C31B6 /* Domain.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B07CD609590736578C0A259D /* Domain.framework */; };
 		8A0C6EE78A74757B8C306D00 /* Domain.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B07CD609590736578C0A259D /* Domain.framework */; };
 		8B9FEE2CBD85F760CB547F48 /* SettingsFeature.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 29DE383444C462571BB9F08E /* SettingsFeature.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		8EBC614558991E7465BAA3A2 /* MomentWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210670D0468B23352F9A04A5 /* MomentWidgetView.swift */; };
 		91B46459B389A3650050687A /* Domain.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B07CD609590736578C0A259D /* Domain.framework */; };
 		9381DA02A28825A10385F141 /* Networking.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 861F7A404B97C3C05A98287E /* Networking.framework */; };
 		96248D041DF6FC99D1E763D8 /* Domain.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B07CD609590736578C0A259D /* Domain.framework */; };
@@ -72,8 +75,10 @@
 		A19643231017ACD6B5E6F7A4 /* MomentUIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5F2D8657A700919F85FBA723 /* MomentUIKit.framework */; };
 		A68716A4130F4956F960F3C5 /* FeedFeature.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 4F79D809E6519207418727B0 /* FeedFeature.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A758D52209ACC7DD46E352C2 /* Dependencies in Frameworks */ = {isa = PBXBuildFile; productRef = 8665201FED0E4578030587A4 /* Dependencies */; };
+		A7E051F05F3E8B255A75603E /* CoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 74C1B5752A652418CFB9810E /* CoreKit.framework */; };
 		A8DEF7ECC6B13416CF37F46D /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 04BB63B2B05C17199AB590B7 /* ComposableArchitecture */; };
 		AC0B3D0810BE8A54D6DB7E08 /* UIImage+Resize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BCB52236033A9DECBA8D9A4 /* UIImage+Resize.swift */; };
+		AD3329B2843206546420457F /* MomentWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90A121BD6D43907213A1A14E /* MomentWidgetBundle.swift */; };
 		AEA7B69FC946B05CA87A9BC2 /* ComposeFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0160039CA480F8254CF9515B /* ComposeFeature.swift */; };
 		B2AA674D4A3494E79213DE5E /* MomentRepositoryProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C04DD09D2910B8D7A5737C3 /* MomentRepositoryProtocol.swift */; };
 		B4E6500C9C9ABDB291FFBA7D /* SpaceType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C2E9457616CA1993E0FBE4A /* SpaceType.swift */; };
@@ -97,6 +102,7 @@
 		E72D296D1142197972D550B5 /* Dependencies in Frameworks */ = {isa = PBXBuildFile; productRef = A180D0F178EA174100ECD27C /* Dependencies */; };
 		EBBF1850EB98A225BE7FD244 /* FeedFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135680AC18819253F961A020 /* FeedFeature.swift */; };
 		EDBEF4FBCD823B134D46B54F /* MomentUIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5F2D8657A700919F85FBA723 /* MomentUIKit.framework */; };
+		F6FD61EAAC88FDD93D552752 /* MomentWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 6A3293A9289CC153A3156638 /* MomentWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FBF3F8221D992D4D5AE6E6AE /* MomentUIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5F2D8657A700919F85FBA723 /* MomentUIKit.framework */; };
 		FC87652F850D2437880CDB5C /* APIClientProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = E75BF752AFFA51195FBEFD87 /* APIClientProtocol.swift */; };
 /* End PBXBuildFile section */
@@ -115,6 +121,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 4B84B8AD7C6D203E007907E0;
 			remoteInfo = MomentUIKit;
+		};
+		2B90078E649D2487888D3071 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 03315C3312CAE6422B20B4BD /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 75D43E6577B9BEE341F8C85F;
+			remoteInfo = CoreKit;
 		};
 		39DB37CDB57DD0ED612E3304 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -192,6 +205,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 4B84B8AD7C6D203E007907E0;
 			remoteInfo = MomentUIKit;
+		};
+		7E9A51F8CFC9BDAE57F91C6A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 03315C3312CAE6422B20B4BD /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 71801EA069873B113BA93B2F;
+			remoteInfo = MomentWidget;
 		};
 		7F6E90D521FF28C38317CC66 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -335,6 +355,16 @@
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		2CDD3E76941BCEDFDC3A0BF0 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstSubfolderSpec = 13;
+			files = (
+				F6FD61EAAC88FDD93D552752 /* MomentWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		53C5AF095515B4FFD68D24F4 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -424,6 +454,16 @@
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E9E09B6AFC6EF391A7C3D6EB /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -435,6 +475,7 @@
 		131D67C0DEE0B7880B3BA79B /* UserRepositoryImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserRepositoryImpl.swift; sourceTree = "<group>"; };
 		135680AC18819253F961A020 /* FeedFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedFeature.swift; sourceTree = "<group>"; };
 		17999797966833CAFE799402 /* AuthFeature.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = AuthFeature.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		210670D0468B23352F9A04A5 /* MomentWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MomentWidgetView.swift; sourceTree = "<group>"; };
 		217E672CF08740DF1F5EA1EC /* SettingsFeature-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "SettingsFeature-Info.plist"; sourceTree = "<group>"; };
 		218C265BB6F7EF9DE3B9028E /* UserRepositoryProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserRepositoryProtocol.swift; sourceTree = "<group>"; };
 		29DE383444C462571BB9F08E /* SettingsFeature.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SettingsFeature.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -450,10 +491,13 @@
 		4F79D809E6519207418727B0 /* FeedFeature.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = FeedFeature.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		50EB1C18B4D56BFC7790161B /* Moment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Moment.swift; sourceTree = "<group>"; };
 		543C8B215FD35AF38607ED16 /* MomentUIKit-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "MomentUIKit-Info.plist"; sourceTree = "<group>"; };
+		54451DE8840C2FA23838A2A9 /* WidgetMomentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetMomentStore.swift; sourceTree = "<group>"; };
 		5AB97966EB9D69C9FA5761FB /* InvitationDTO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvitationDTO.swift; sourceTree = "<group>"; };
 		5F2D8657A700919F85FBA723 /* MomentUIKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MomentUIKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6228E4B869A94B43BC3BDA57 /* AuthRequestInterceptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthRequestInterceptor.swift; sourceTree = "<group>"; };
 		641F4403701A178D1B2CEF01 /* AppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppView.swift; sourceTree = "<group>"; };
+		69CD42AECC5D5A2F7C0C0B6C /* MomentWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MomentWidget.entitlements; sourceTree = "<group>"; };
+		6A3293A9289CC153A3156638 /* MomentWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MomentWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		6F25307E059A65F5F0C4F6A5 /* Endpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Endpoint.swift; sourceTree = "<group>"; };
 		720B620D2E63F9B28555E882 /* CoreKit-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "CoreKit-Info.plist"; sourceTree = "<group>"; };
 		74C1B5752A652418CFB9810E /* CoreKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CoreKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -462,7 +506,10 @@
 		8215299A1EF7EC528FFBF42B /* ConnectFeature.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ConnectFeature.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		861F7A404B97C3C05A98287E /* Networking.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Networking.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		87F88851BCADA5E9CC8B7D65 /* Spacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spacing.swift; sourceTree = "<group>"; };
+		8A845BA49BB9EEBC4602BFDF /* MomentApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MomentApp.entitlements; sourceTree = "<group>"; };
 		8BCB52236033A9DECBA8D9A4 /* UIImage+Resize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+Resize.swift"; sourceTree = "<group>"; };
+		8CE0069E4BE38552EA228CAC /* MomentWidgetProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MomentWidgetProvider.swift; sourceTree = "<group>"; };
+		90A121BD6D43907213A1A14E /* MomentWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MomentWidgetBundle.swift; sourceTree = "<group>"; };
 		9742D8865A08259F150DD690 /* AuthFeature-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "AuthFeature-Info.plist"; sourceTree = "<group>"; };
 		9C2E9457616CA1993E0FBE4A /* SpaceType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceType.swift; sourceTree = "<group>"; };
 		9FBD67B3D9F1A116C36D97CB /* ComposeFeature-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "ComposeFeature-Info.plist"; sourceTree = "<group>"; };
@@ -479,6 +526,7 @@
 		C90559271565EF593D19B0AC /* Placeholder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Placeholder.swift; sourceTree = "<group>"; };
 		CA4D941C1F5CA10573E52DC5 /* ConnectFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectFeature.swift; sourceTree = "<group>"; };
 		D057221CFBE228EC45112DBC /* MomentTypography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MomentTypography.swift; sourceTree = "<group>"; };
+		D0E424755FDAF2F11C3428A3 /* MomentWidget-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "MomentWidget-Info.plist"; sourceTree = "<group>"; };
 		D2BD48F3E6A844E0EC692993 /* SpaceDTO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceDTO.swift; sourceTree = "<group>"; };
 		E52275CCAB7AB29F6C6DE84C /* MomentRepositoryImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MomentRepositoryImpl.swift; sourceTree = "<group>"; };
 		E542170D7175D2699575215A /* MomentApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MomentApp.swift; sourceTree = "<group>"; };
@@ -521,6 +569,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				466C46C0B92BC3DD3671F55B /* CoreKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		56F414FB9AD8783E9C5C1B5A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A7E051F05F3E8B255A75603E /* CoreKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -633,6 +689,14 @@
 			path = Extensions;
 			sourceTree = "<group>";
 		};
+		165FB07CCFBABB7A793BB821 /* Widget */ = {
+			isa = PBXGroup;
+			children = (
+				54451DE8840C2FA23838A2A9 /* WidgetMomentStore.swift */,
+			);
+			path = Widget;
+			sourceTree = "<group>";
+		};
 		173A224FDA81570D90C52524 /* CoreKit */ = {
 			isa = PBXGroup;
 			children = (
@@ -649,6 +713,15 @@
 			path = Errors;
 			sourceTree = "<group>";
 		};
+		3C7C0DD6AEDB8B54CD17E615 /* Widget */ = {
+			isa = PBXGroup;
+			children = (
+				62C155D809379E14AA44F822 /* Sources */,
+				69CD42AECC5D5A2F7C0C0B6C /* MomentWidget.entitlements */,
+			);
+			path = Widget;
+			sourceTree = "<group>";
+		};
 		413A9983C7C419E006587025 /* Targets */ = {
 			isa = PBXGroup;
 			children = (
@@ -656,6 +729,7 @@
 				134AC0CDEF4B861EE918A908 /* Core */,
 				D1858ECF6CF9EF60BBC2AF94 /* Domain */,
 				A459E90FFEE48EBBDA39CAC5 /* Features */,
+				3C7C0DD6AEDB8B54CD17E615 /* Widget */,
 			);
 			path = Targets;
 			sourceTree = "<group>";
@@ -727,6 +801,16 @@
 			path = Token;
 			sourceTree = "<group>";
 		};
+		62C155D809379E14AA44F822 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				90A121BD6D43907213A1A14E /* MomentWidgetBundle.swift */,
+				8CE0069E4BE38552EA228CAC /* MomentWidgetProvider.swift */,
+				210670D0468B23352F9A04A5 /* MomentWidgetView.swift */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
 		71472C9500A782EA36CA083E /* Sources */ = {
 			isa = PBXGroup;
 			children = (
@@ -782,6 +866,7 @@
 			isa = PBXGroup;
 			children = (
 				F062BB72EA1EAF4494A00B49 /* Sources */,
+				8A845BA49BB9EEBC4602BFDF /* MomentApp.entitlements */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -856,6 +941,7 @@
 				4F79D809E6519207418727B0 /* FeedFeature.framework */,
 				4C8E03B914507E11CEC9FBEE /* MomentApp.app */,
 				5F2D8657A700919F85FBA723 /* MomentUIKit.framework */,
+				6A3293A9289CC153A3156638 /* MomentWidget.appex */,
 				861F7A404B97C3C05A98287E /* Networking.framework */,
 				29DE383444C462571BB9F08E /* SettingsFeature.framework */,
 			);
@@ -892,6 +978,7 @@
 			isa = PBXGroup;
 			children = (
 				13E0BC85645B1327451C6F1D /* Extensions */,
+				165FB07CCFBABB7A793BB821 /* Widget */,
 				0DEA884961484C3152F5840D /* Logger.swift */,
 			);
 			path = Sources;
@@ -932,6 +1019,7 @@
 				2B2EE81C8E8F53780B5F1905 /* FeedFeature-Info.plist */,
 				3BD8AD97D315258006FA9F83 /* MomentApp-Info.plist */,
 				543C8B215FD35AF38607ED16 /* MomentUIKit-Info.plist */,
+				D0E424755FDAF2F11C3428A3 /* MomentWidget-Info.plist */,
 				AA21FD2D9A67AABD0A650AA5 /* Networking-Info.plist */,
 				217E672CF08740DF1F5EA1EC /* SettingsFeature-Info.plist */,
 			);
@@ -1019,6 +1107,7 @@
 			buildPhases = (
 				D2F4BACD5D6ABE24EE1166FE /* Sources */,
 				31C23D17940628C9EE64EC31 /* Resources */,
+				2CDD3E76941BCEDFDC3A0BF0 /* Embed Foundation Extensions */,
 				6A7D0341A1BF509C5CD674EC /* Frameworks */,
 				D607A0A4A738A43AD6118499 /* Embed Frameworks */,
 			);
@@ -1032,6 +1121,7 @@
 				43CAD92310CDAFDFC733B6B5 /* PBXTargetDependency */,
 				78C7472AF71D914C3BB149F7 /* PBXTargetDependency */,
 				D1870084132C023CCAFF5B04 /* PBXTargetDependency */,
+				5E7709CC826037E97F67CD9E /* PBXTargetDependency */,
 				792F6EC5AFB0C26FFCE4AADC /* PBXTargetDependency */,
 				E7D3E521A9D50FF8E73E3AFD /* PBXTargetDependency */,
 			);
@@ -1114,6 +1204,27 @@
 			productName = FeedFeature;
 			productReference = 4F79D809E6519207418727B0 /* FeedFeature.framework */;
 			productType = "com.apple.product-type.framework";
+		};
+		71801EA069873B113BA93B2F /* MomentWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 966298ED1E1099A496871732 /* Build configuration list for PBXNativeTarget "MomentWidget" */;
+			buildPhases = (
+				3260C247C7590CBDC9E69DE3 /* Sources */,
+				D1CDF4F74A858EFB5316358D /* Resources */,
+				56F414FB9AD8783E9C5C1B5A /* Frameworks */,
+				E9E09B6AFC6EF391A7C3D6EB /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4EC631E6E7C96A42C6077BD4 /* PBXTargetDependency */,
+			);
+			name = MomentWidget;
+			packageProductDependencies = (
+			);
+			productName = MomentWidget;
+			productReference = 6A3293A9289CC153A3156638 /* MomentWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 		729F4FB088F942A0B81B73AC /* ComposeFeature */ = {
 			isa = PBXNativeTarget;
@@ -1266,6 +1377,7 @@
 				6F6A7756D09A5E7CC13ADD26 /* FeedFeature */,
 				31283A1E6F73C059F73ECA40 /* MomentApp */,
 				4B84B8AD7C6D203E007907E0 /* MomentUIKit */,
+				71801EA069873B113BA93B2F /* MomentWidget */,
 				F5BB0BACABF02D3EB8523BCF /* Networking */,
 				27D90EE79F1C4F179C3EA132 /* SettingsFeature */,
 			);
@@ -1329,6 +1441,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D1CDF4F74A858EFB5316358D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D602AF807450848171B1D19A /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1353,6 +1472,7 @@
 				27028F5EC96B52F7E022C020 /* Date+RelativeFormat.swift in Sources */,
 				AC0B3D0810BE8A54D6DB7E08 /* UIImage+Resize.swift in Sources */,
 				C005518655BCF37B5F941BF2 /* Logger.swift in Sources */,
+				4D3CB7192BA74991E654CFBE /* WidgetMomentStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1371,6 +1491,16 @@
 			buildActionMask = 2147483647;
 			files = (
 				EBBF1850EB98A225BE7FD244 /* FeedFeature.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3260C247C7590CBDC9E69DE3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AD3329B2843206546420457F /* MomentWidgetBundle.swift in Sources */,
+				69786B6C1F7F7D49F85E2248 /* MomentWidgetProvider.swift in Sources */,
+				8EBC614558991E7465BAA3A2 /* MomentWidgetView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1525,11 +1655,23 @@
 			target = B125BA4E78EB9CDE4B24C3C2 /* Domain */;
 			targetProxy = 53473016EED52D478BA5B406 /* PBXContainerItemProxy */;
 		};
+		4EC631E6E7C96A42C6077BD4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = CoreKit;
+			target = 75D43E6577B9BEE341F8C85F /* CoreKit */;
+			targetProxy = 2B90078E649D2487888D3071 /* PBXContainerItemProxy */;
+		};
 		5B7DF5AF16393BFE28E7F83A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = Networking;
 			target = F5BB0BACABF02D3EB8523BCF /* Networking */;
 			targetProxy = 685B2195523755D5CF1C19BB /* PBXContainerItemProxy */;
+		};
+		5E7709CC826037E97F67CD9E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = MomentWidget;
+			target = 71801EA069873B113BA93B2F /* MomentWidget */;
+			targetProxy = 7E9A51F8CFC9BDAE57F91C6A /* PBXContainerItemProxy */;
 		};
 		5EB7BA9634450F80347E9FEE /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -1787,6 +1929,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Targets/App/MomentApp.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = "Derived/InfoPlists/MomentApp-Info.plist";
@@ -2002,6 +2145,35 @@
 			};
 			name = Release;
 		};
+		8D30CEC2733816AD2479EBA0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Targets/Widget/MomentWidget.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = "Derived/InfoPlists/MomentWidget-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.moment.app.widget;
+				PRODUCT_NAME = MomentWidget;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = (
+					"$(inherited)",
+					DEBUG,
+				);
+				SWIFT_COMPILATION_MODE = singlefile;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
 		ACE620288E6FBDA5B08B8760 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -2032,6 +2204,31 @@
 				TARGETED_DEVICE_FAMILY = 1;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		BD2AE941C5ACF488938082D5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Targets/Widget/MomentWidget.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = "Derived/InfoPlists/MomentWidget-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.moment.app.widget;
+				PRODUCT_NAME = MomentWidget;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -2421,6 +2618,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Targets/App/MomentApp.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = "Derived/InfoPlists/MomentApp-Info.plist";
@@ -2468,6 +2666,15 @@
 			buildConfigurations = (
 				30F3EFA7C2A42CA3ADABE913 /* Debug */,
 				ACE620288E6FBDA5B08B8760 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		966298ED1E1099A496871732 /* Build configuration list for PBXNativeTarget "MomentWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8D30CEC2733816AD2479EBA0 /* Debug */,
+				BD2AE941C5ACF488938082D5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

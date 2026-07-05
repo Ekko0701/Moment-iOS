@@ -27,6 +27,7 @@ let project = Project(
                 ]
             ),
             sources: ["Targets/App/Sources/**"],
+            entitlements: .file(path: "Targets/App/MomentApp.entitlements"),
             dependencies: [
                 .target(name: "MomentUIKit"),
                 .target(name: "Domain"),
@@ -38,6 +39,7 @@ let project = Project(
                 .target(name: "SettingsFeature"),
                 .target(name: "CoreKit"),
                 .package(product: "ComposableArchitecture"),
+                .target(name: "MomentWidget"),
             ]
         ),
 
@@ -177,6 +179,27 @@ let project = Project(
                 .target(name: "CoreKit"),
                 .package(product: "ComposableArchitecture"),
                 .package(product: "Dependencies"),
+            ]
+        ),
+
+        // MARK: - Widget Extension
+        .target(
+            name: "MomentWidget",
+            destinations: [.iPhone],
+            product: .appExtension,
+            bundleId: "com.moment.app.widget",
+            deploymentTargets: .iOS("17.0"),
+            infoPlist: .extendingDefault(
+                with: [
+                    "NSExtension": [
+                        "NSExtensionPointIdentifier": "com.apple.widgetkit-extension",
+                    ],
+                ]
+            ),
+            sources: ["Targets/Widget/Sources/**"],
+            entitlements: .file(path: "Targets/Widget/MomentWidget.entitlements"),
+            dependencies: [
+                .target(name: "CoreKit"),
             ]
         ),
     ]

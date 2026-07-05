@@ -6,6 +6,8 @@ import ConnectFeature
 import FeedFeature
 import ComposeFeature
 import SettingsFeature
+import CoreKit
+import WidgetKit
 
 public struct AppFeature {
     let userRepository: UserRepositoryProtocol
@@ -29,6 +31,7 @@ public struct AppFeature {
         public var settingsState: SettingsFeatureReducer.State
         public var selectedTab: Tab = .feed
         public var currentSpace: Space? = nil
+        public var currentUser: UserProfile? = nil
 
         public enum Tab: Equatable {
             case feed
@@ -71,21 +74,33 @@ public struct AppFeature {
                     await send(.appInitialized(result: result))
                 }
 
-            case .appInitialized(.success((_, let spaces))):
+            case .appInitialized(.success((let user, let spaces))):
                 if !spaces.isEmpty {
                     var mainState = MainTabState()
+                    mainState.currentUser = user
                     mainState.currentSpace = spaces.first
                     mainState.feedState.selectedSpaceId = spaces.first?.id
                     mainState.composeState.selectedSpaceId = spaces.first?.id
                     mainState.settingsState.currentSpace = spaces.first
+                    mainState.settingsState.userProfile = user
                     state = .main(mainState)
+                    // Save widget state: has spaces, no need to check moment yet
+                    return .none
                 } else {
                     state = .connect(ConnectFeatureReducer.State())
+                    // Save widget state: need to connect
+                    let store = WidgetMomentStore()
+                    store.saveState(.needConnect)
+                    WidgetCenter.shared.reloadAllTimelines()
+                    return .none
                 }
-                return .none
 
             case .appInitialized(.failure):
                 state = .auth(AuthFeatureReducer.State())
+                // Save widget state: need login
+                let store = WidgetMomentStore()
+                store.saveState(.needLogin)
+                WidgetCenter.shared.reloadAllTimelines()
                 return .none
 
             case .spacesLoaded(.success(let spaces)):
@@ -160,6 +175,16 @@ public struct AppFeature {
                 }
                 let effect = FeedFeatureReducer().reduce(into: &mainState.feedState, action: action)
                 state = .main(mainState)
+
+                // Sync widget when timeline is loaded
+                if case .timelineResponse(.success) = action {
+                    return effect.map { .feed($0) }
+                        .merge(with: .run { [feedState = mainState.feedState,
+                                             myUserId = mainState.currentUser?.id] _ in
+                            syncWidgetMoment(from: feedState, excludingAuthorId: myUserId)
+                        })
+                }
+
                 return effect.map { .feed($0) }
 
             case .compose(let action):
@@ -226,3 +251,30 @@ public struct AppFeature {
 }
 
 extension AppFeature: Reducer {}
+
+// MARK: - Widget Sync Helper
+private func syncWidgetMoment(from feedState: FeedFeatureReducer.State, excludingAuthorId: UUID?) {
+    let store = WidgetMomentStore()
+
+    // 위젯 계약(F-06): "내가 작성하지 않은" 최신 모먼트만 표시한다.
+    let candidates = feedState.moments.filter { moment in
+        guard let excludingAuthorId else { return true }
+        return moment.author.id != excludingAuthorId
+    }
+    if let latestMoment = candidates.first {
+        let snapshot = WidgetMomentSnapshot(
+            momentId: latestMoment.id,
+            spaceId: latestMoment.spaceId,
+            authorNickname: latestMoment.author.nickname,
+            text: latestMoment.text,
+            imageFileName: nil,
+            createdAt: latestMoment.createdAt,
+            hasImage: latestMoment.imageURL != nil
+        )
+        store.saveState(.hasMoment(snapshot))
+    } else {
+        store.saveState(.empty)
+    }
+
+    WidgetCenter.shared.reloadAllTimelines()
+}

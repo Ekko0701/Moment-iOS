@@ -126,6 +126,20 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "71801EA069873B113BA93B2F"
+               BuildableName = "MomentWidget.appex"
+               BlueprintName = "MomentWidget"
+               ReferencedContainer = "container:Moment.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "F5BB0BACABF02D3EB8523BCF"
                BuildableName = "Networking.framework"
                BlueprintName = "Networking"
