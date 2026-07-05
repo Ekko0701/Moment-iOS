@@ -6,6 +6,7 @@ import ConnectFeature
 import FeedFeature
 import ComposeFeature
 import SettingsFeature
+import MomentUIKit
 
 struct AppView: View {
     let store: StoreOf<AppFeature>
@@ -40,85 +41,143 @@ struct AppView: View {
         guard url.scheme == "moment" else { return }
 
         if url.host == "login" {
-            // Handle login deep link - simple implementation
             if case .auth = viewStore.state {
-                // Already on auth screen
                 return
             }
         } else if url.host == "connect" {
-            // Handle connect deep link
             if case .connect = viewStore.state {
-                // Already on connect screen
                 return
             }
         } else if url.host == "moment" {
-            // Handle moment detail deep link
             let pathComponents = url.pathComponents.filter { $0 != "/" }
             if let momentIdString = pathComponents.last,
                let momentId = UUID(uuidString: momentIdString) {
-                // Navigate to feed and trigger refresh
                 viewStore.send(.selectTab(.feed))
                 viewStore.send(.feed(.refresh))
             }
         }
     }
 
+    // MARK: - Auth View
     private func authView(_ viewStore: ViewStoreOf<AppFeature>) -> some View {
-        VStack(spacing: 24) {
-            Text("Moment")
-                .font(.system(size: 32, weight: .bold))
-                .foregroundColor(.blue)
+        ZStack {
+            MomentColor.canvas.ignoresSafeArea()
 
-            Text("로그인이 필요해요")
-                .font(.system(size: 16, weight: .regular))
-                .foregroundColor(.gray)
+            VStack(spacing: Spacing.lg) {
+                EyebrowText("MOMENT — 우리 둘의 순간")
+                    .padding(.top, Spacing.xxl)
 
-            Button(action: {
-                viewStore.send(.auth(.appleSignInCompleted(identityToken: "dev-user-1")))
-            }) {
-                Text("Sign in with Apple (Dev)")
+                Text("Moment")
+                    .font(MomentTypography.displayXL)
+                    .tracking(-1.6)
+                    .foregroundColor(MomentColor.ink)
+
+                Text("두 사람만의 소중한 순간을 함께 기록해보세요")
+                    .font(MomentTypography.subhead)
+                    .foregroundColor(MomentColor.ink)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, Spacing.xl)
+
+                Spacer()
+
+                // 포스터 카피 — CTA와 중복되지 않는 서비스 서사 (여백 넉넉히, 문서의 poster 원칙)
+                ColorBlock(color: .lilac) {
+                    VStack(alignment: .center, spacing: Spacing.sm) {
+                        Text("사진 한 장, 짧은 글 하나로")
+                            .font(MomentTypography.subhead)
+                            .foregroundColor(MomentColor.ink)
+                            .multilineTextAlignment(.center)
+                        Text("서로의 홈 화면에 스며들어요")
+                            .font(MomentTypography.headline)
+                            .foregroundColor(MomentColor.ink)
+                            .multilineTextAlignment(.center)
+                    }
                     .frame(maxWidth: .infinity)
-                    .padding(12)
-                    .background(Color.black)
-                    .foregroundColor(.white)
-                    .cornerRadius(8)
-            }
-            .padding(.horizontal, 16)
+                    .padding(.vertical, Spacing.xl)
+                }
+                .padding(.horizontal, Spacing.lg)
 
-            Spacer()
+                Spacer()
+
+                MomentPillButton("Apple로 시작하기", style: .primary) {
+                    viewStore.send(.auth(.appleSignInCompleted(identityToken: "dev-user-1")))
+                }
+                .padding(.horizontal, Spacing.lg)
+
+                Spacer()
+                    .frame(height: Spacing.lg)
+            }
+            .padding(.vertical, Spacing.lg)
         }
-        .padding(.vertical, 48)
     }
 
+    // MARK: - Connect View
     private func connectView(_ viewStore: ViewStoreOf<AppFeature>) -> some View {
-        VStack(spacing: 24) {
-            Text("상대방을 초대해 보세요")
-                .font(.system(size: 18, weight: .semibold))
+        ZStack {
+            MomentColor.canvas.ignoresSafeArea()
 
-            Text("코드를 생성하거나 입력해주세요")
-                .font(.system(size: 14, weight: .regular))
-                .foregroundColor(.gray)
+            VStack(spacing: Spacing.lg) {
+                EyebrowText("초대 코드")
+                    .padding(.top, Spacing.lg)
 
-            Button(action: {
-                viewStore.send(.connect(.issueCodeTapped))
-            }) {
-                Text("코드 생성")
-                    .frame(maxWidth: .infinity)
-                    .padding(12)
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(8)
+                Text("상대방을 초대해 보세요")
+                    .font(MomentTypography.headline)
+                    .foregroundColor(MomentColor.ink)
+
+                Spacer()
+
+                ColorBlock(color: .lime) {
+                    VStack(alignment: .center, spacing: Spacing.md) {
+                        Text("ABC123DEF")
+                            .font(MomentTypography.displayLG)
+                            .tracking(-0.9)
+                            .foregroundColor(MomentColor.ink)
+
+                        Text("코드는 7일 후 만료됩니다")
+                            .font(MomentTypography.caption)
+                            .tracking(0.8)
+                            .foregroundColor(MomentColor.ink.opacity(0.6))
+
+                        MomentIconCircleButton(systemName: "square.on.square") {
+                            // Copy to clipboard
+                        }
+                        .padding(.top, Spacing.sm)
+                    }
+                }
+                .padding(.horizontal, Spacing.lg)
+
+                MomentPillButton("새 코드 발급", style: .primary) {
+                    viewStore.send(.connect(.issueCodeTapped))
+                }
+                .padding(.horizontal, Spacing.lg)
+
+                Spacer()
+
+                EyebrowText("상대방 초대하기")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, Spacing.lg)
+
+                VStack(spacing: Spacing.md) {
+                    MomentTextField("초대 코드 입력", text: .constant(""))
+                        .padding(.horizontal, Spacing.lg)
+
+                    MomentPillButton("초대 수락", style: .primary) {
+                        // Handle invitation
+                    }
+                    .padding(.horizontal, Spacing.lg)
+                }
+
+                Spacer()
+                    .frame(height: Spacing.xl)
             }
-            .padding(.horizontal, 16)
-
-            Spacer()
+            .padding(.vertical, Spacing.lg)
         }
-        .padding(.vertical, 48)
         .onAppear {
             viewStore.send(.connect(.onAppear))
         }
     }
 
+    // MARK: - Main Tab View
     private func mainTabView(_ viewStore: ViewStoreOf<AppFeature>, _ mainTabState: AppFeature.MainTabState) -> some View {
         TabView(selection: Binding(
             get: { mainTabState.selectedTab },
@@ -128,32 +187,61 @@ struct AppView: View {
             composeView(viewStore, mainTabState)
             settingsView(viewStore, mainTabState)
         }
+        .tint(MomentColor.ink)
     }
 
+    // MARK: - Feed View
     private func feedView(_ viewStore: ViewStoreOf<AppFeature>, _ mainTabState: AppFeature.MainTabState) -> some View {
         NavigationStack {
-            VStack(spacing: 24) {
-                Text("홈 (피드)")
-                    .font(.system(size: 24, weight: .bold))
+            ZStack {
+                MomentColor.canvas.ignoresSafeArea()
 
-                if mainTabState.feedState.moments.isEmpty {
-                    Text("첫 모먼트를 기다리는 중...")
-                        .font(.system(size: 14, weight: .regular))
-                        .foregroundColor(.gray)
-                } else {
-                    ScrollView {
-                        VStack(spacing: 12) {
-                            feedMomentsList(mainTabState.feedState.moments)
+                VStack(spacing: 0) {
+                    VStack(alignment: .leading, spacing: Spacing.sm) {
+                        EyebrowText("피드")
+                            .padding(.horizontal, Spacing.lg)
+                            .padding(.top, Spacing.lg)
+
+                        Text("우리 둘의 순간")
+                            .font(MomentTypography.headline)
+                            .foregroundColor(MomentColor.ink)
+                            .padding(.horizontal, Spacing.lg)
+                    }
+
+                    if mainTabState.feedState.moments.isEmpty {
+                        Spacer()
+
+                        ColorBlock(color: .cream) {
+                            VStack(alignment: .center, spacing: Spacing.md) {
+                                Image(systemName: "sparkles")
+                                    .font(.system(size: 32, weight: .semibold))
+                                    .foregroundColor(MomentColor.ink)
+
+                                Text("첫 순간을 기다리는 중")
+                                    .font(MomentTypography.body)
+                                    .foregroundColor(MomentColor.ink)
+                                    .multilineTextAlignment(.center)
+                            }
                         }
-                        .padding(12)
+                        .padding(.horizontal, Spacing.lg)
+                        .padding(.vertical, Spacing.xxl)
+
+                        Spacer()
+                    } else {
+                        ScrollView {
+                            VStack(spacing: Spacing.lg) {
+                                feedMomentsList(mainTabState.feedState.moments)
+                            }
+                            .padding(.horizontal, Spacing.lg)
+                            .padding(.vertical, Spacing.lg)
+                        }
+                    }
+
+                    if mainTabState.feedState.isLoading {
+                        ProgressView()
+                            .padding(.vertical, Spacing.lg)
                     }
                 }
-
-                if mainTabState.feedState.isLoading {
-                    ProgressView()
-                }
-
-                Spacer()
             }
         }
         .onAppear {
@@ -166,63 +254,165 @@ struct AppView: View {
     }
 
     private func feedMomentsList(_ moments: [Moment]) -> some View {
-        VStack(spacing: 12) {
-            ForEach(moments, id: \.id) { moment in
-                feedMomentCard(moment)
+        VStack(spacing: Spacing.lg) {
+            ForEach(moments.enumerated().map({ $0 }), id: \.element.id) { index, moment in
+                feedMomentCard(moment, index: index)
             }
         }
     }
 
-    private func feedMomentCard(_ moment: Moment) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(moment.text ?? "(이미지만 공유)")
-                .font(.system(size: 14))
-            Text("by \(moment.author.nickname)")
-                .font(.system(size: 12, weight: .light))
-                .foregroundColor(.gray)
+    private func feedMomentCard(_ moment: Moment, index: Int) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            if moment.imageURL == nil {
+                let blockColor = MomentColor.BlockColor.forFeedIndex(index)
+                ColorBlock(color: blockColor) {
+                    VStack(alignment: .center, spacing: Spacing.md) {
+                        Text(moment.text ?? "")
+                            .font(MomentTypography.subhead)
+                            .foregroundColor(blockColor.textColor)
+                            .multilineTextAlignment(.center)
+                            .lineLimit(5)
+                    }
+                }
+
+                HStack(spacing: Spacing.sm) {
+                    Text(moment.author.nickname)
+                        .font(MomentTypography.bodySM)
+                        .fontWeight(.medium)
+                        .foregroundColor(MomentColor.ink)
+
+                    Spacer()
+
+                    Text(moment.createdAt.relativeTimeString)
+                        .font(MomentTypography.caption)
+                        .tracking(0.8)
+                        .foregroundColor(MomentColor.ink.opacity(0.6))
+                }
+                .padding(.horizontal, Spacing.lg)
+                .padding(.vertical, Spacing.sm)
+
+            } else {
+                VStack(alignment: .leading, spacing: Spacing.sm) {
+                    AsyncImage(url: moment.imageURL) { phase in
+                        if let image = phase.image {
+                            image
+                                .resizable()
+                                .scaledToFill()
+                                .frame(maxHeight: 200)
+                                .clipped()
+                        } else if phase.error != nil {
+                            Color.gray.opacity(0.2)
+                                .frame(maxHeight: 200)
+                        } else {
+                            Color.gray.opacity(0.2)
+                                .frame(maxHeight: 200)
+                        }
+                    }
+                    .cornerRadius(Spacing.Radius.md)
+
+                    if let text = moment.text {
+                        Text(text)
+                            .font(MomentTypography.body)
+                            .foregroundColor(MomentColor.ink)
+                            .lineLimit(3)
+                    }
+
+                    HStack(spacing: Spacing.sm) {
+                        Text(moment.author.nickname)
+                            .font(MomentTypography.bodySM)
+                            .fontWeight(.medium)
+                            .foregroundColor(MomentColor.ink)
+
+                        Spacer()
+
+                        Text(moment.createdAt.relativeTimeString)
+                            .font(MomentTypography.caption)
+                            .tracking(0.8)
+                            .foregroundColor(MomentColor.ink.opacity(0.6))
+                    }
+                }
+            }
+
+            if !moment.reactions.isEmpty {
+                HStack(spacing: Spacing.xs) {
+                    ForEach(moment.reactions, id: \.emoji) { reaction in
+                        HStack(spacing: 4) {
+                            Text(reaction.emoji)
+                                .font(.system(size: 14))
+
+                            Text("\(reaction.count)")
+                                .font(MomentTypography.bodySM)
+                                .foregroundColor(moment.myReaction == reaction.emoji ? MomentColor.inverseInk : MomentColor.ink)
+                        }
+                        .padding(.horizontal, Spacing.sm)
+                        .padding(.vertical, Spacing.xxs)
+                        .background(moment.myReaction == reaction.emoji ? MomentColor.ink : MomentColor.surfaceSoft)
+                        .foregroundColor(moment.myReaction == reaction.emoji ? MomentColor.inverseInk : MomentColor.ink)
+                        .cornerRadius(Spacing.Radius.full)
+                    }
+
+                    Spacer()
+                }
+            }
         }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.gray.opacity(0.1))
-        .cornerRadius(8)
     }
 
+    // MARK: - Compose View
     private func composeView(_ viewStore: ViewStoreOf<AppFeature>, _ mainTabState: AppFeature.MainTabState) -> some View {
         NavigationStack {
-            VStack(spacing: 16) {
-                Text("새 모먼트 작성")
-                    .font(.system(size: 18, weight: .semibold))
+            ZStack {
+                MomentColor.canvas.ignoresSafeArea()
 
-                TextEditor(text: Binding(
-                    get: { mainTabState.composeState.text },
-                    set: { viewStore.send(.compose(.textChanged($0))) }
-                ))
-                .border(Color.gray.opacity(0.5))
-                .frame(height: 100)
+                VStack(spacing: Spacing.lg) {
+                    EyebrowText("새 순간")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, Spacing.lg)
+                        .padding(.top, Spacing.lg)
 
-                Text("\(mainTabState.composeState.characterCount)/\(mainTabState.composeState.maxCharacters)")
-                    .font(.system(size: 12, weight: .light))
-                    .foregroundColor(.gray)
+                    Text("우리의 순간을 기록하세요")
+                        .font(MomentTypography.headline)
+                        .foregroundColor(MomentColor.ink)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, Spacing.lg)
 
-                Button(action: {
-                    viewStore.send(.compose(.submitTapped))
-                }) {
-                    Text("공유하기")
-                        .frame(maxWidth: .infinity)
-                        .padding(12)
-                        .background(mainTabState.composeState.canSubmit ? Color.blue : Color.gray)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
+                    VStack(alignment: .leading, spacing: Spacing.sm) {
+                        TextEditor(text: Binding(
+                            get: { mainTabState.composeState.text },
+                            set: { viewStore.send(.compose(.textChanged($0))) }
+                        ))
+                        .font(MomentTypography.body)
+                        .foregroundColor(MomentColor.ink)
+                        .scrollContentBackground(.hidden)
+                        .background(MomentColor.canvas)
+                        .border(MomentColor.hairline, width: 1)
+                        .cornerRadius(Spacing.Radius.md)
+                        .frame(minHeight: 120)
+
+                        HStack(alignment: .center, spacing: Spacing.sm) {
+                            Spacer()
+
+                            Text(String(format: "%04d / 0500", mainTabState.composeState.characterCount))
+                                .font(MomentTypography.caption)
+                                .tracking(0.8)
+                                .foregroundColor(MomentColor.ink.opacity(0.6))
+                        }
+                    }
+                    .padding(.horizontal, Spacing.lg)
+
+                    MomentPillButton("공유하기", style: mainTabState.composeState.canSubmit ? .primary : .secondary) {
+                        viewStore.send(.compose(.submitTapped))
+                    }
+                    .disabled(!mainTabState.composeState.canSubmit)
+                    .padding(.horizontal, Spacing.lg)
+
+                    if mainTabState.composeState.isUploading {
+                        ProgressView()
+                    }
+
+                    Spacer()
                 }
-                .disabled(!mainTabState.composeState.canSubmit)
-
-                if mainTabState.composeState.isUploading {
-                    ProgressView()
-                }
-
-                Spacer()
+                .padding(.vertical, Spacing.lg)
             }
-            .padding(16)
         }
         .tabItem {
             Label("Compose", systemImage: "plus")
@@ -230,41 +420,130 @@ struct AppView: View {
         .tag(AppFeature.MainTabState.Tab.compose)
     }
 
+    // MARK: - Settings View
     private func settingsView(_ viewStore: ViewStoreOf<AppFeature>, _ mainTabState: AppFeature.MainTabState) -> some View {
         NavigationStack {
-            VStack(spacing: 24) {
-                Text("설정")
-                    .font(.system(size: 24, weight: .bold))
+            ZStack {
+                MomentColor.canvas.ignoresSafeArea()
 
-                if let profile = mainTabState.settingsState.userProfile {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("닉네임: \(profile.nickname)")
-                        Text("핸들: @\(profile.handle)")
+                VStack(spacing: 0) {
+                    VStack(alignment: .leading, spacing: Spacing.sm) {
+                        EyebrowText("설정")
+                            .padding(.horizontal, Spacing.lg)
+                            .padding(.top, Spacing.lg)
+
+                        Text("프로필 및 설정")
+                            .font(MomentTypography.headline)
+                            .foregroundColor(MomentColor.ink)
+                            .padding(.horizontal, Spacing.lg)
                     }
-                    .font(.system(size: 14))
-                    .padding(16)
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(8)
-                }
 
-                Button(action: {
-                    viewStore.send(.settings(.logoutTapped))
-                }) {
-                    Text("로그아웃")
-                        .frame(maxWidth: .infinity)
-                        .padding(12)
-                        .background(Color.red)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-                }
+                    ScrollView {
+                        VStack(spacing: Spacing.lg) {
+                            if let profile = mainTabState.settingsState.userProfile {
+                                VStack(alignment: .leading, spacing: Spacing.md) {
+                                    EyebrowText("프로필")
 
-                if mainTabState.settingsState.isLoading {
-                    ProgressView()
-                }
+                                    HStack(spacing: Spacing.md) {
+                                        VStack(alignment: .leading, spacing: Spacing.xs) {
+                                            Text(profile.nickname)
+                                                .font(MomentTypography.cardTitle)
+                                                .foregroundColor(MomentColor.ink)
 
-                Spacer()
+                                            Text("@\(profile.handle)")
+                                                .font(MomentTypography.caption)
+                                                .tracking(0.8)
+                                                .foregroundColor(MomentColor.ink.opacity(0.6))
+                                        }
+
+                                        Spacer()
+
+                                        MomentIconCircleButton(systemName: "square.on.square") {
+                                            // Copy handle
+                                        }
+                                    }
+                                }
+                                .padding(.horizontal, Spacing.lg)
+                                .padding(.vertical, Spacing.lg)
+
+                                HairlineDivider()
+                                    .padding(.horizontal, Spacing.lg)
+                            }
+
+                            if let space = mainTabState.settingsState.currentSpace {
+                                ColorBlock(color: .mint) {
+                                    VStack(alignment: .leading, spacing: Spacing.md) {
+                                        EyebrowText("연결 정보")
+
+                                        if let partner = space.members.first(where: { $0.id != mainTabState.currentUser?.id }) {
+                                            VStack(alignment: .leading, spacing: Spacing.xs) {
+                                                Text("함께하는 사람")
+                                                    .font(MomentTypography.bodySM)
+                                                    .foregroundColor(MomentColor.ink.opacity(0.7))
+
+                                                Text(partner.nickname)
+                                                    .font(MomentTypography.cardTitle)
+                                                    .foregroundColor(MomentColor.ink)
+
+                                                let daysConnected = Calendar.current.dateComponents([.day], from: space.createdAt, to: Date()).day ?? 0
+                                                Text("D+\(daysConnected)")
+                                                    .font(MomentTypography.bodySM)
+                                                    .foregroundColor(MomentColor.ink.opacity(0.6))
+                                            }
+                                        }
+                                    }
+                                }
+                                .padding(.horizontal, Spacing.lg)
+                            }
+
+                            VStack(alignment: .leading, spacing: Spacing.md) {
+                                EyebrowText("위험한 작업")
+
+                                VStack(spacing: Spacing.sm) {
+                                    Button {
+                                        // Disconnect
+                                    } label: {
+                                        Text("연결 해제")
+                                            .font(MomentTypography.button)
+                                            .foregroundColor(MomentColor.ink)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
+
+                                    HairlineDivider()
+
+                                    Button {
+                                        viewStore.send(.settings(.logoutTapped))
+                                    } label: {
+                                        Text("로그아웃")
+                                            .font(MomentTypography.button)
+                                            .foregroundColor(MomentColor.ink)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
+
+                                    HairlineDivider()
+
+                                    Button {
+                                        // Delete account
+                                    } label: {
+                                        Text("계정 삭제")
+                                            .font(MomentTypography.button)
+                                            .foregroundColor(MomentColor.accentMagenta)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, Spacing.lg)
+                            .padding(.vertical, Spacing.lg)
+                        }
+                        .padding(.vertical, Spacing.lg)
+                    }
+
+                    if mainTabState.settingsState.isLoading {
+                        ProgressView()
+                            .padding(.vertical, Spacing.lg)
+                    }
+                }
             }
-            .padding(16)
         }
         .onAppear {
             viewStore.send(.settings(.onAppear))
@@ -273,5 +552,24 @@ struct AppView: View {
             Label("Settings", systemImage: "gear")
         }
         .tag(AppFeature.MainTabState.Tab.settings)
+    }
+}
+
+// MARK: - Helper Extensions
+extension Date {
+    fileprivate var relativeTimeString: String {
+        let calendar = Calendar.current
+        let now = Date()
+        let components = calendar.dateComponents([.minute, .hour, .day], from: self, to: now)
+
+        if let day = components.day, day >= 1 {
+            return "\(day)일 전"
+        } else if let hour = components.hour, hour >= 1 {
+            return "\(hour)시간 전"
+        } else if let minute = components.minute, minute >= 1 {
+            return "\(minute)분 전"
+        } else {
+            return "방금"
+        }
     }
 }

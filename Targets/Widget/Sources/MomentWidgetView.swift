@@ -92,41 +92,47 @@ struct MomentSmallWidgetView: View {
             .clipped()
             .widgetURL(URL(string: "moment://moment/\(snapshot.momentId)"))
         } else {
-            // Text-only with gradient background
+            // Text-only with pastel color block background based on hash
+            let blockColor = getBlockColor(for: snapshot.momentId)
             ZStack(alignment: .center) {
-                LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color.blue.opacity(0.2),
-                        Color.purple.opacity(0.2)
-                    ]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(blockColor)
 
                 VStack(alignment: .center, spacing: 4) {
                     Text(snapshot.text ?? "")
                         .font(.caption2)
                         .fontWeight(.medium)
                         .lineLimit(2)
-                        .foregroundColor(.primary)
+                        .foregroundColor(.black)
 
                     HStack(spacing: 4) {
                         Text(snapshot.authorNickname)
                             .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.black.opacity(0.7))
 
                         Spacer()
 
                         Text(snapshot.createdAt.relativeTimeString)
                             .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.black.opacity(0.6))
                     }
                 }
                 .padding(8)
             }
-            .containerBackground(.fill.tertiary, for: .widget)
             .widgetURL(URL(string: "moment://moment/\(snapshot.momentId)"))
         }
+    }
+
+    private func getBlockColor(for momentId: UUID) -> Color {
+        let colors: [Color] = [
+            Color(red: 0.863, green: 0.933, blue: 0.694),     // lime
+            Color(red: 0.957, green: 0.933, blue: 0.839),     // cream
+            Color(red: 0.784, green: 0.902, blue: 0.804),     // mint
+            Color(red: 0.937, green: 0.835, blue: 0.835),     // pink
+            Color(red: 0.773, green: 0.690, blue: 0.957)      // lilac
+        ]
+        let index = abs(momentId.hashValue) % colors.count
+        return colors[index]
     }
 }
 

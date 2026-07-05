@@ -67,6 +67,7 @@
 		8A0C6EE78A74757B8C306D00 /* Domain.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B07CD609590736578C0A259D /* Domain.framework */; };
 		8B9FEE2CBD85F760CB547F48 /* SettingsFeature.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 29DE383444C462571BB9F08E /* SettingsFeature.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		8EBC614558991E7465BAA3A2 /* MomentWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210670D0468B23352F9A04A5 /* MomentWidgetView.swift */; };
+		916D71E567840A88D0394473 /* ColorBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5825D52827A9BCABA85EE992 /* ColorBlock.swift */; };
 		91B46459B389A3650050687A /* Domain.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B07CD609590736578C0A259D /* Domain.framework */; };
 		9381DA02A28825A10385F141 /* Networking.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 861F7A404B97C3C05A98287E /* Networking.framework */; };
 		96248D041DF6FC99D1E763D8 /* Domain.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B07CD609590736578C0A259D /* Domain.framework */; };
@@ -98,6 +99,7 @@
 		DF4FA1C3B122F78DC9D46114 /* MomentRepositoryImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = E52275CCAB7AB29F6C6DE84C /* MomentRepositoryImpl.swift */; };
 		E234D78A9EB41D77244E3C14 /* InvitationDTO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AB97966EB9D69C9FA5761FB /* InvitationDTO.swift */; };
 		E2967B61F87305F16AFD2F84 /* CoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 74C1B5752A652418CFB9810E /* CoreKit.framework */; };
+		E3ED407648F1B9322EDB2C0D /* MomentPillButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D72B25A247AF61FD09FF4F9 /* MomentPillButton.swift */; };
 		E3FB390E678DB0CF83C8F77B /* Domain.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B07CD609590736578C0A259D /* Domain.framework */; };
 		E72D296D1142197972D550B5 /* Dependencies in Frameworks */ = {isa = PBXBuildFile; productRef = A180D0F178EA174100ECD27C /* Dependencies */; };
 		EBBF1850EB98A225BE7FD244 /* FeedFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135680AC18819253F961A020 /* FeedFeature.swift */; };
@@ -492,6 +494,7 @@
 		50EB1C18B4D56BFC7790161B /* Moment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Moment.swift; sourceTree = "<group>"; };
 		543C8B215FD35AF38607ED16 /* MomentUIKit-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "MomentUIKit-Info.plist"; sourceTree = "<group>"; };
 		54451DE8840C2FA23838A2A9 /* WidgetMomentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetMomentStore.swift; sourceTree = "<group>"; };
+		5825D52827A9BCABA85EE992 /* ColorBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorBlock.swift; sourceTree = "<group>"; };
 		5AB97966EB9D69C9FA5761FB /* InvitationDTO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvitationDTO.swift; sourceTree = "<group>"; };
 		5F2D8657A700919F85FBA723 /* MomentUIKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MomentUIKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6228E4B869A94B43BC3BDA57 /* AuthRequestInterceptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthRequestInterceptor.swift; sourceTree = "<group>"; };
@@ -512,6 +515,7 @@
 		90A121BD6D43907213A1A14E /* MomentWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MomentWidgetBundle.swift; sourceTree = "<group>"; };
 		9742D8865A08259F150DD690 /* AuthFeature-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "AuthFeature-Info.plist"; sourceTree = "<group>"; };
 		9C2E9457616CA1993E0FBE4A /* SpaceType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceType.swift; sourceTree = "<group>"; };
+		9D72B25A247AF61FD09FF4F9 /* MomentPillButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MomentPillButton.swift; sourceTree = "<group>"; };
 		9FBD67B3D9F1A116C36D97CB /* ComposeFeature-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "ComposeFeature-Info.plist"; sourceTree = "<group>"; };
 		9FFB14A57FDFCB3BE3DFB384 /* AppFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFeature.swift; sourceTree = "<group>"; };
 		A9231781458E1B42DB96ABE7 /* MomentAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MomentAPIClient.swift; sourceTree = "<group>"; };
@@ -845,6 +849,15 @@
 			path = Repositories;
 			sourceTree = "<group>";
 		};
+		7EE32F5577C81F9DE002DC04 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				5825D52827A9BCABA85EE992 /* ColorBlock.swift */,
+				9D72B25A247AF61FD09FF4F9 /* MomentPillButton.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
 		7F0DEC6A45F8D5DCDFA08913 /* Project */ = {
 			isa = PBXGroup;
 			children = (
@@ -857,6 +870,7 @@
 		92AB68E3C11FBCE406AC86C3 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				7EE32F5577C81F9DE002DC04 /* Components */,
 				B976C66FCC259E9DB4930C56 /* Tokens */,
 			);
 			path = Sources;
@@ -1480,6 +1494,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				916D71E567840A88D0394473 /* ColorBlock.swift in Sources */,
+				E3ED407648F1B9322EDB2C0D /* MomentPillButton.swift in Sources */,
 				DE66AE96F436735470F63F4D /* MomentColor.swift in Sources */,
 				C03CFA8864929E243243B56A /* MomentTypography.swift in Sources */,
 				28C357CC2672DE30DCEF8A25 /* Spacing.swift in Sources */,
