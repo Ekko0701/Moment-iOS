@@ -2,7 +2,10 @@ import ProjectDescription
 
 let project = Project(
     name: "Moment",
-    packages: [],
+    packages: [
+        .remote(url: "https://github.com/pointfreeco/swift-composable-architecture.git", requirement: .exact("1.9.3")),
+        .remote(url: "https://github.com/Alamofire/Alamofire.git", requirement: .upToNextMajor(from: "5.8.0")),
+    ],
     targets: [
         // MARK: - App Target
         .target(
@@ -23,6 +26,10 @@ let project = Project(
             dependencies: [
                 .target(name: "MomentUIKit"),
                 .target(name: "Domain"),
+                .target(name: "Networking"),
+                .target(name: "AuthFeature"),
+                .target(name: "ConnectFeature"),
+                .package(product: "ComposableArchitecture"),
             ]
         ),
 
@@ -60,7 +67,7 @@ let project = Project(
             sources: ["Targets/Core/Networking/Sources/**"],
             dependencies: [
                 .target(name: "Domain"),
-                .external(name: "Alamofire"),
+                .package(product: "Alamofire"),
             ]
         ),
 
@@ -73,6 +80,36 @@ let project = Project(
             deploymentTargets: .iOS("17.0"),
             sources: ["Targets/Domain/Sources/**"],
             dependencies: []
+        ),
+
+        // MARK: - Features: AuthFeature
+        .target(
+            name: "AuthFeature",
+            destinations: [.iPhone],
+            product: .framework,
+            bundleId: "com.moment.features.auth",
+            deploymentTargets: .iOS("17.0"),
+            sources: ["Targets/Features/AuthFeature/Sources/**"],
+            dependencies: [
+                .target(name: "Domain"),
+                .target(name: "MomentUIKit"),
+                .package(product: "ComposableArchitecture"),
+            ]
+        ),
+
+        // MARK: - Features: ConnectFeature
+        .target(
+            name: "ConnectFeature",
+            destinations: [.iPhone],
+            product: .framework,
+            bundleId: "com.moment.features.connect",
+            deploymentTargets: .iOS("17.0"),
+            sources: ["Targets/Features/ConnectFeature/Sources/**"],
+            dependencies: [
+                .target(name: "Domain"),
+                .target(name: "MomentUIKit"),
+                .package(product: "ComposableArchitecture"),
+            ]
         ),
     ]
 )

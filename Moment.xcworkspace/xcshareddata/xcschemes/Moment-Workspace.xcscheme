@@ -14,10 +14,24 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "2A717419231F3C0B8A3E0F06"
-               BuildableName = "Alamofire.framework"
-               BlueprintName = "Alamofire"
-               ReferencedContainer = "container:Tuist/.build/tuist-derived/Alamofire/Alamofire.xcodeproj">
+               BlueprintIdentifier = "32AE76BA66F0F6ED7046ACCE"
+               BuildableName = "AuthFeature.framework"
+               BlueprintName = "AuthFeature"
+               ReferencedContainer = "container:Moment.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "F8C3F28D3C50B5DFA7A083F2"
+               BuildableName = "ConnectFeature.framework"
+               BlueprintName = "ConnectFeature"
+               ReferencedContainer = "container:Moment.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
          <BuildActionEntry
@@ -113,10 +127,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "2A717419231F3C0B8A3E0F06"
-            BuildableName = "Alamofire.framework"
-            BlueprintName = "Alamofire"
-            ReferencedContainer = "container:Tuist/.build/tuist-derived/Alamofire/Alamofire.xcodeproj">
+            BlueprintIdentifier = "32AE76BA66F0F6ED7046ACCE"
+            BuildableName = "AuthFeature.framework"
+            BlueprintName = "AuthFeature"
+            ReferencedContainer = "container:Moment.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </LaunchAction>
@@ -129,10 +143,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "2A717419231F3C0B8A3E0F06"
-            BuildableName = "Alamofire.framework"
-            BlueprintName = "Alamofire"
-            ReferencedContainer = "container:Tuist/.build/tuist-derived/Alamofire/Alamofire.xcodeproj">
+            BlueprintIdentifier = "32AE76BA66F0F6ED7046ACCE"
+            BuildableName = "AuthFeature.framework"
+            BlueprintName = "AuthFeature"
+            ReferencedContainer = "container:Moment.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </ProfileAction>
