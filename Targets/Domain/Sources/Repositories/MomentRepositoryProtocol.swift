@@ -10,9 +10,20 @@ public struct PaginatedMoments: Sendable, Equatable {
     }
 }
 
+public struct PresignResponse: Sendable, Equatable {
+    public let uploadUrl: String
+    public let imageKey: String
+
+    public init(uploadUrl: String, imageKey: String) {
+        self.uploadUrl = uploadUrl
+        self.imageKey = imageKey
+    }
+}
+
 public protocol MomentRepositoryProtocol: Sendable {
     func timeline(spaceId: UUID, cursor: String?, limit: Int) async throws -> PaginatedMoments
     func latestExcludingMine(spaceId: UUID) async throws -> Moment?
+    func presign() async throws -> PresignResponse
     func create(spaceId: UUID, imageKey: String?, text: String?) async throws -> Moment
     func delete(momentId: UUID) async throws
     func react(to momentId: UUID, emoji: String) async throws

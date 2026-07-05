@@ -4,6 +4,7 @@ let project = Project(
     name: "Moment",
     packages: [
         .remote(url: "https://github.com/pointfreeco/swift-composable-architecture.git", requirement: .upToNextMajor(from: "1.16.0")),
+        .remote(url: "https://github.com/pointfreeco/swift-dependencies.git", requirement: .upToNextMajor(from: "1.0.0")),
         .remote(url: "https://github.com/Alamofire/Alamofire.git", requirement: .upToNextMajor(from: "5.8.0")),
     ],
     settings: .settings(
@@ -32,6 +33,10 @@ let project = Project(
                 .target(name: "Networking"),
                 .target(name: "AuthFeature"),
                 .target(name: "ConnectFeature"),
+                .target(name: "FeedFeature"),
+                .target(name: "ComposeFeature"),
+                .target(name: "SettingsFeature"),
+                .target(name: "CoreKit"),
                 .package(product: "ComposableArchitecture"),
             ]
         ),
@@ -71,6 +76,7 @@ let project = Project(
             dependencies: [
                 .target(name: "Domain"),
                 .package(product: "Alamofire"),
+                .package(product: "Dependencies"),
             ]
         ),
 
@@ -95,8 +101,10 @@ let project = Project(
             sources: ["Targets/Features/AuthFeature/Sources/**"],
             dependencies: [
                 .target(name: "Domain"),
+                .target(name: "Networking"),
                 .target(name: "MomentUIKit"),
                 .package(product: "ComposableArchitecture"),
+                .package(product: "Dependencies"),
             ]
         ),
 
@@ -110,8 +118,65 @@ let project = Project(
             sources: ["Targets/Features/ConnectFeature/Sources/**"],
             dependencies: [
                 .target(name: "Domain"),
+                .target(name: "Networking"),
                 .target(name: "MomentUIKit"),
+                .target(name: "CoreKit"),
                 .package(product: "ComposableArchitecture"),
+                .package(product: "Dependencies"),
+            ]
+        ),
+
+        // MARK: - Features: FeedFeature
+        .target(
+            name: "FeedFeature",
+            destinations: [.iPhone],
+            product: .framework,
+            bundleId: "com.moment.features.feed",
+            deploymentTargets: .iOS("17.0"),
+            sources: ["Targets/Features/FeedFeature/Sources/**"],
+            dependencies: [
+                .target(name: "Domain"),
+                .target(name: "Networking"),
+                .target(name: "MomentUIKit"),
+                .target(name: "CoreKit"),
+                .package(product: "ComposableArchitecture"),
+                .package(product: "Dependencies"),
+            ]
+        ),
+
+        // MARK: - Features: ComposeFeature
+        .target(
+            name: "ComposeFeature",
+            destinations: [.iPhone],
+            product: .framework,
+            bundleId: "com.moment.features.compose",
+            deploymentTargets: .iOS("17.0"),
+            sources: ["Targets/Features/ComposeFeature/Sources/**"],
+            dependencies: [
+                .target(name: "Domain"),
+                .target(name: "Networking"),
+                .target(name: "MomentUIKit"),
+                .target(name: "CoreKit"),
+                .package(product: "ComposableArchitecture"),
+                .package(product: "Dependencies"),
+            ]
+        ),
+
+        // MARK: - Features: SettingsFeature
+        .target(
+            name: "SettingsFeature",
+            destinations: [.iPhone],
+            product: .framework,
+            bundleId: "com.moment.features.settings",
+            deploymentTargets: .iOS("17.0"),
+            sources: ["Targets/Features/SettingsFeature/Sources/**"],
+            dependencies: [
+                .target(name: "Domain"),
+                .target(name: "Networking"),
+                .target(name: "MomentUIKit"),
+                .target(name: "CoreKit"),
+                .package(product: "ComposableArchitecture"),
+                .package(product: "Dependencies"),
             ]
         ),
     ]

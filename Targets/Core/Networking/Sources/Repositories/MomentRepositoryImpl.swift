@@ -36,12 +36,21 @@ public final class MomentRepositoryImpl: MomentRepositoryProtocol {
         try await apiClient.requestVoid(endpoint)
     }
 
+    public func presign() async throws -> PresignResponse {
+        let endpoint = PresignEndpoints.presign()
+        let response: PresignResponseDTO = try await apiClient.request(endpoint)
+        return PresignResponse(uploadUrl: response.uploadUrl, imageKey: response.imageKey)
+    }
+
     public func react(to momentId: UUID, emoji: String) async throws {
         let endpoint = ReactionEndpoints.addReaction(momentId: momentId.uuidString, emoji: emoji)
         try await apiClient.requestVoid(endpoint)
     }
 
-    public func removeReaction(from momentId: UUID) async throws {}
+    public func removeReaction(from momentId: UUID) async throws {
+        let endpoint = ReactionEndpoints.removeReaction(momentId: momentId.uuidString)
+        try await apiClient.requestVoid(endpoint)
+    }
 }
 
 struct PaginatedMomentsResponse: Decodable {
@@ -96,4 +105,14 @@ struct MomentAuthorDTO: Decodable {
 struct ReactionCountDTO: Decodable {
     let emoji: String
     let count: Int
+}
+
+struct PresignResponseDTO: Decodable {
+    let uploadUrl: String
+    let imageKey: String
+
+    enum CodingKeys: String, CodingKey {
+        case uploadUrl
+        case imageKey
+    }
 }

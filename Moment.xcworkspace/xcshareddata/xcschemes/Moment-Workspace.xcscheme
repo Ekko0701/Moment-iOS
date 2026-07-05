@@ -28,6 +28,20 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "729F4FB088F942A0B81B73AC"
+               BuildableName = "ComposeFeature.framework"
+               BlueprintName = "ComposeFeature"
+               ReferencedContainer = "container:Moment.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "F8C3F28D3C50B5DFA7A083F2"
                BuildableName = "ConnectFeature.framework"
                BlueprintName = "ConnectFeature"
@@ -70,6 +84,20 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "6F6A7756D09A5E7CC13ADD26"
+               BuildableName = "FeedFeature.framework"
+               BlueprintName = "FeedFeature"
+               ReferencedContainer = "container:Moment.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "31283A1E6F73C059F73ECA40"
                BuildableName = "MomentApp.app"
                BlueprintName = "MomentApp"
@@ -101,6 +129,20 @@
                BlueprintIdentifier = "F5BB0BACABF02D3EB8523BCF"
                BuildableName = "Networking.framework"
                BlueprintName = "Networking"
+               ReferencedContainer = "container:Moment.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "27D90EE79F1C4F179C3EA132"
+               BuildableName = "SettingsFeature.framework"
+               BlueprintName = "SettingsFeature"
                ReferencedContainer = "container:Moment.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>

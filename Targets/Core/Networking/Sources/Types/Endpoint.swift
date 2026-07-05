@@ -183,8 +183,28 @@ public enum ReactionEndpoints {
         let body = UpdateReactionRequest(emoji: emoji)
         return Endpoint(
             path: "/v1/moments/\(momentId)/reactions",
-            method: .patch,
+            method: .put,
             body: body,
+            requiresAuth: true
+        )
+    }
+
+    static func removeReaction(momentId: String) -> Endpoint {
+        return Endpoint(
+            path: "/v1/moments/\(momentId)/reactions",
+            method: .delete,
+            requiresAuth: true
+        )
+    }
+}
+
+// MARK: - Presign Endpoints
+
+public enum PresignEndpoints {
+    static func presign() -> Endpoint {
+        return Endpoint(
+            path: "/v1/moments/presign",
+            method: .post,
             requiresAuth: true
         )
     }
