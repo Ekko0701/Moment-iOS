@@ -3,9 +3,12 @@ import ProjectDescription
 let project = Project(
     name: "Moment",
     packages: [
-        .remote(url: "https://github.com/pointfreeco/swift-composable-architecture.git", requirement: .exact("1.9.3")),
+        .remote(url: "https://github.com/pointfreeco/swift-composable-architecture.git", requirement: .upToNextMajor(from: "1.16.0")),
         .remote(url: "https://github.com/Alamofire/Alamofire.git", requirement: .upToNextMajor(from: "5.8.0")),
     ],
+    settings: .settings(
+        base: ["SWIFT_ALLOW_MACRO_ATTESTATIONS": "YES"]
+    ),
     targets: [
         // MARK: - App Target
         .target(
