@@ -52,6 +52,26 @@ public enum AuthEndpoints {
             requiresAuth: false
         )
     }
+
+    // 서버 계약: POST /v1/auth/email/signup { email, password, nickname }
+    static func emailSignup(email: String, password: String, nickname: String) -> Endpoint {
+        return Endpoint(
+            path: "/v1/auth/email/signup",
+            method: .post,
+            body: EmailSignupRequest(email: email, password: password, nickname: nickname),
+            requiresAuth: false
+        )
+    }
+
+    // 서버 계약: POST /v1/auth/email/login { email, password }
+    static func emailLogin(email: String, password: String) -> Endpoint {
+        return Endpoint(
+            path: "/v1/auth/email/login",
+            method: .post,
+            body: EmailLoginRequest(email: email, password: password),
+            requiresAuth: false
+        )
+    }
 }
 
 // MARK: - User Endpoints
@@ -251,6 +271,17 @@ struct LoginAppleRequest: Encodable, Sendable {
 
 struct RefreshTokenRequest: Encodable, Sendable {
     let refreshToken: String
+}
+
+struct EmailSignupRequest: Encodable, Sendable {
+    let email: String
+    let password: String
+    let nickname: String
+}
+
+struct EmailLoginRequest: Encodable, Sendable {
+    let email: String
+    let password: String
 }
 
 struct UserUpdateRequest: Encodable, Sendable {

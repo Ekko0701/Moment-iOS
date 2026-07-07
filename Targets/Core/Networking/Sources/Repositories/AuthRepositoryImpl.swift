@@ -18,6 +18,22 @@ public final class AuthRepositoryImpl: AuthRepositoryProtocol {
         return (pair, response.isNewUser)
     }
 
+    public func signUpWithEmail(email: String, password: String, nickname: String) async throws -> (tokenPair: TokenPair, isNewUser: Bool) {
+        let endpoint = AuthEndpoints.emailSignup(email: email, password: password, nickname: nickname)
+        let response: LoginAppleResponse = try await apiClient.request(endpoint)
+        let pair = TokenPair(accessToken: response.accessToken, refreshToken: response.refreshToken)
+        try await persist(pair)
+        return (pair, response.isNewUser)
+    }
+
+    public func loginWithEmail(email: String, password: String) async throws -> TokenPair {
+        let endpoint = AuthEndpoints.emailLogin(email: email, password: password)
+        let response: RefreshResponse = try await apiClient.request(endpoint)
+        let pair = TokenPair(accessToken: response.accessToken, refreshToken: response.refreshToken)
+        try await persist(pair)
+        return pair
+    }
+
     public func refresh(refreshToken: String) async throws -> TokenPair {
         let endpoint = AuthEndpoints.refresh(refreshToken: refreshToken)
         let response: RefreshResponse = try await apiClient.request(endpoint)

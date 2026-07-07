@@ -103,46 +103,106 @@ struct AppView: View {
 
                 Spacer()
 
-                // 포스터 카피 — CTA와 중복되지 않는 서비스 서사 (여백 넉넉히, 문서의 poster 원칙)
-                ColorBlock(color: .lilac) {
-                    VStack(alignment: .center, spacing: Spacing.sm) {
-                        Text("사진 한 장, 짧은 글 하나로")
-                            .font(MomentTypography.subhead)
-                            .foregroundColor(MomentColor.ink)
-                            .multilineTextAlignment(.center)
-                        Text("서로의 홈 화면에 스며들어요")
-                            .font(MomentTypography.headline)
-                            .foregroundColor(MomentColor.ink)
-                            .multilineTextAlignment(.center)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, Spacing.xl)
+                if authState?.mode == .apple || authState == nil {
+                    appleAuthSection(viewStore, isLoading: isLoading)
+                } else {
+                    emailAuthSection(viewStore, authState: authState, isLoading: isLoading)
                 }
-                .padding(.horizontal, Spacing.lg)
-
-                Spacer()
-
-                MomentPillButton(isLoading ? "로그인 중…" : "Apple로 시작하기", style: .primary) {
-                    guard !isLoading else { return }
-                    let deviceId = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
-                    viewStore.send(.auth(.appleSignInCompleted(identityToken: "dev-\(deviceId)")))
-                }
-                .disabled(isLoading)
-                .opacity(isLoading ? 0.6 : 1.0)
-                .overlay(alignment: .trailing) {
-                    if isLoading {
-                        ProgressView()
-                            .tint(MomentColor.canvas)
-                            .padding(.trailing, Spacing.xl + Spacing.lg)
-                    }
-                }
-                .padding(.horizontal, Spacing.lg)
 
                 Spacer()
                     .frame(height: Spacing.lg)
             }
             .padding(.vertical, Spacing.lg)
         }
+    }
+
+    @ViewBuilder
+    private func appleAuthSection(_ viewStore: ViewStoreOf<AppFeature>, isLoading: Bool) -> some View {
+        // 포스터 카피 — CTA와 중복되지 않는 서비스 서사 (여백 넉넉히, 문서의 poster 원칙)
+        ColorBlock(color: .lilac) {
+            VStack(alignment: .center, spacing: Spacing.sm) {
+                Text("사진 한 장, 짧은 글 하나로")
+                    .font(MomentTypography.subhead)
+                    .foregroundColor(MomentColor.ink)
+                    .multilineTextAlignment(.center)
+                Text("서로의 홈 화면에 스며들어요")
+                    .font(MomentTypography.headline)
+                    .foregroundColor(MomentColor.ink)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, Spacing.xl)
+        }
+        .padding(.horizontal, Spacing.lg)
+
+        Spacer()
+
+        MomentPillButton(isLoading ? "로그인 중…" : "Apple로 시작하기", style: .primary) {
+            guard !isLoading else { return }
+            let deviceId = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
+            viewStore.send(.auth(.appleSignInCompleted(identityToken: "dev-\(deviceId)")))
+        }
+        .disabled(isLoading)
+        .opacity(isLoading ? 0.6 : 1.0)
+        .padding(.horizontal, Spacing.lg)
+
+        Button("이메일로 계속하기") {
+            viewStore.send(.auth(.modeChanged(.emailLogin)))
+        }
+        .font(MomentTypography.bodySM)
+        .foregroundColor(MomentColor.ink)
+        .padding(.top, Spacing.xs)
+    }
+
+    @ViewBuilder
+    private func emailAuthSection(_ viewStore: ViewStoreOf<AppFeature>,
+                                  authState: AuthFeatureReducer.State?,
+                                  isLoading: Bool) -> some View {
+        let isSignup = authState?.mode == .emailSignup
+        let canSubmit = authState?.canSubmitEmail ?? false
+
+        VStack(spacing: Spacing.md) {
+            EyebrowText(isSignup ? "이메일로 가입" : "이메일로 로그인")
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            MomentTextField("이메일", text: Binding(
+                get: { authState?.email ?? "" },
+                set: { viewStore.send(.auth(.emailChanged($0))) }
+            ), disablesAutocapitalization: true)
+
+            MomentTextField("비밀번호 (8자 이상)", text: Binding(
+                get: { authState?.password ?? "" },
+                set: { viewStore.send(.auth(.passwordChanged($0))) }
+            ), isSecure: true, disablesAutocapitalization: true)
+
+            if isSignup {
+                MomentTextField("닉네임 (2~12자)", text: Binding(
+                    get: { authState?.nickname ?? "" },
+                    set: { viewStore.send(.auth(.nicknameChanged($0))) }
+                ))
+            }
+
+            MomentPillButton(isLoading ? "처리 중…" : (isSignup ? "가입하기" : "로그인"),
+                             style: .primary) {
+                viewStore.send(.auth(.emailSubmitTapped))
+            }
+            .disabled(!canSubmit || isLoading)
+            .opacity((!canSubmit || isLoading) ? 0.6 : 1.0)
+
+            Button(isSignup ? "이미 계정이 있어요 — 로그인" : "계정이 없어요 — 가입하기") {
+                viewStore.send(.auth(.modeChanged(isSignup ? .emailLogin : .emailSignup)))
+            }
+            .font(MomentTypography.bodySM)
+            .foregroundColor(MomentColor.ink)
+
+            Button("← Apple로 돌아가기") {
+                viewStore.send(.auth(.modeChanged(.apple)))
+            }
+            .font(MomentTypography.caption)
+            .foregroundColor(MomentColor.ink.opacity(0.6))
+            .padding(.top, Spacing.xs)
+        }
+        .padding(.horizontal, Spacing.lg)
     }
 
     // MARK: - Connect View

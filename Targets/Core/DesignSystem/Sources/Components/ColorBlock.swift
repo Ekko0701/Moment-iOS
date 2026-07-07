@@ -53,20 +53,33 @@ public struct EyebrowText: View {
 public struct MomentTextField: View {
     let placeholder: String
     @Binding var text: String
+    let isSecure: Bool
+    let disablesAutocapitalization: Bool
     @State private var isFocused = false
 
-    public init(_ placeholder: String, text: Binding<String>) {
+    public init(_ placeholder: String, text: Binding<String>,
+                isSecure: Bool = false, disablesAutocapitalization: Bool = false) {
         self.placeholder = placeholder
         self._text = text
+        self.isSecure = isSecure
+        self.disablesAutocapitalization = disablesAutocapitalization
     }
 
     public var body: some View {
-        TextField(placeholder, text: $text)
-            .font(MomentTypography.body)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .background(MomentColor.canvas)
-            .border(isFocused ? MomentColor.ink : MomentColor.hairline, width: 1)
-            .cornerRadius(Spacing.Radius.md)
+        Group {
+            if isSecure {
+                SecureField(placeholder, text: $text)
+            } else {
+                TextField(placeholder, text: $text)
+            }
+        }
+        .font(MomentTypography.body)
+        .textInputAutocapitalization(disablesAutocapitalization ? .never : .sentences)
+        .autocorrectionDisabled(disablesAutocapitalization)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(MomentColor.canvas)
+        .border(isFocused ? MomentColor.ink : MomentColor.hairline, width: 1)
+        .cornerRadius(Spacing.Radius.md)
     }
 }

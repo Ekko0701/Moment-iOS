@@ -4,16 +4,39 @@ import Domain
 import Networking
 
 public struct AuthFeature {
+    /// 로그인 화면 모드: Apple 기본 → 이메일 로그인 ↔ 이메일 가입
+    public enum Mode: Equatable {
+        case apple
+        case emailLogin
+        case emailSignup
+    }
+
     public struct State: Equatable {
+        public var mode: Mode = .apple
+        public var email: String = ""
+        public var password: String = ""
+        public var nickname: String = ""
         public var isLoading = false
         public var error: DomainError? = nil
 
         public init() {}
+
+        /// 이메일 폼 제출 가능 여부 — 클라이언트 1차 검증(서버가 최종 검증).
+        public var canSubmitEmail: Bool {
+            guard email.contains("@"), password.count >= 8 else { return false }
+            if mode == .emailSignup { return nickname.count >= 2 }
+            return true
+        }
     }
 
     public enum Action {
         case appleSignInTapped
         case appleSignInCompleted(identityToken: String)
+        case modeChanged(Mode)
+        case emailChanged(String)
+        case passwordChanged(String)
+        case nicknameChanged(String)
+        case emailSubmitTapped
         case loginResponse(Result<(TokenPair, Bool), DomainError>)
         case dismissError
         case delegate(Delegate)
@@ -35,7 +58,6 @@ public struct AuthFeature {
                 return .run { send in
                     @Dependency(\.authRepository) var authRepository
                     do {
-                        // Generate a default nickname if not provided
                         let defaultNickname = "User\(Int.random(in: 1000...9999))"
                         let result = try await authRepository.loginWithApple(identityToken: token, nickname: defaultNickname)
                         await send(.loginResponse(.success(result)))
@@ -45,10 +67,50 @@ public struct AuthFeature {
                     }
                 }
 
-            case .loginResponse(.success(let isNewUser)):
+            case .modeChanged(let mode):
+                state.mode = mode
+                state.error = nil
+                return .none
+
+            case .emailChanged(let value):
+                state.email = value
+                return .none
+
+            case .passwordChanged(let value):
+                state.password = value
+                return .none
+
+            case .nicknameChanged(let value):
+                state.nickname = value
+                return .none
+
+            case .emailSubmitTapped:
+                guard state.canSubmitEmail, !state.isLoading else { return .none }
+                state.isLoading = true
+                let mode = state.mode
+                let email = state.email.trimmingCharacters(in: .whitespaces)
+                let password = state.password
+                let nickname = state.nickname.trimmingCharacters(in: .whitespaces)
+                return .run { send in
+                    @Dependency(\.authRepository) var authRepository
+                    do {
+                        if mode == .emailSignup {
+                            let result = try await authRepository.signUpWithEmail(email: email, password: password, nickname: nickname)
+                            await send(.loginResponse(.success(result)))
+                        } else {
+                            let pair = try await authRepository.loginWithEmail(email: email, password: password)
+                            await send(.loginResponse(.success((pair, false))))
+                        }
+                    } catch {
+                        let domainError = error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)
+                        await send(.loginResponse(.failure(domainError)))
+                    }
+                }
+
+            case .loginResponse(.success(let result)):
                 state.isLoading = false
                 state.error = nil
-                return .send(.delegate(.loggedIn(isNewUser: isNewUser.1)))
+                return .send(.delegate(.loggedIn(isNewUser: result.1)))
 
             case .loginResponse(.failure(let error)):
                 state.isLoading = false
