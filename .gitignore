@@ -1,0 +1,16 @@
+# macOS
+.DS_Store
+
+# Xcode 사용자 상태
+xcuserdata/
+*.xcuserstate
+
+# Tuist 생성물 — tuist generate로 재생성되므로 커밋하지 않는다
+Moment.xcodeproj/
+Moment.xcworkspace/
+Derived/
+.build/
+Tuist/.build/
+
+# 빌드 산출물
+DerivedData/
