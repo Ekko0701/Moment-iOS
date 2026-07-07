@@ -271,9 +271,9 @@ struct AppView: View {
                         .padding(.horizontal, Spacing.lg)
                     }
 
-                    // Refresh button
+                    // Refresh button — 초대 목록 갱신 + 스페이스 재확인(상대 수락 시 메인 전환)
                     Button(action: {
-                        viewStore.send(.connect(.onAppear))
+                        viewStore.send(.refreshConnection)
                     }) {
                         Text("연결 상태 새로고침")
                             .font(MomentTypography.bodySM)

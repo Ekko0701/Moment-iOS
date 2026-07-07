@@ -50,6 +50,9 @@ public struct AppFeature {
         case onAppear
         case appInitialized(result: Result<(UserProfile, [Space]), DomainError>)
         case spacesLoaded(result: Result<[Space], DomainError>)
+        // 연결 대기 중 새로고침: 받은 초대 목록을 갱신하는 동시에 스페이스를 재확인해
+        // 상대가 수락했으면(스페이스 생성됨) 메인으로 전환한다.
+        case refreshConnection
         case selectTab(MainTabState.Tab)
 
         case auth(AuthFeatureReducer.Action)
@@ -116,6 +119,24 @@ public struct AppFeature {
 
             case .spacesLoaded(.failure):
                 return .none
+
+            case .refreshConnection:
+                guard case .connect(var connectState) = state else {
+                    return .none
+                }
+                // 받은 초대 목록 갱신 + 스페이스 재확인을 동시에 수행.
+                // 스페이스가 생겼으면 spacesLoaded 핸들러가 메인으로 전환한다.
+                let effect = ConnectFeatureReducer().reduce(into: &connectState, action: .onAppear)
+                state = .connect(connectState)
+                return effect.map { Action.connect($0) }
+                    .merge(with: .run { [spaceRepository = self.spaceRepository] send in
+                        let result: Result<[Space], DomainError> = await Result {
+                            try await spaceRepository.mySpaces()
+                        }.mapError { error in
+                            error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)
+                        }
+                        await send(.spacesLoaded(result: result))
+                    })
 
             case .selectTab(let tab):
                 guard case .main(var mainState) = state else {
