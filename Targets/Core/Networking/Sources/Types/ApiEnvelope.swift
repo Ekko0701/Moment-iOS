@@ -36,10 +36,16 @@ public struct ApiMeta: Decodable, Sendable {
     public let total: Int?
     public let page: Int?
     public let limit: Int?
+    // 커서 페이지네이션 (서버 타임라인 계약: meta = { nextCursor, hasNext })
+    public let nextCursor: String?
+    public let hasNext: Bool?
 
-    public init(total: Int? = nil, page: Int? = nil, limit: Int? = nil) {
+    public init(total: Int? = nil, page: Int? = nil, limit: Int? = nil,
+                nextCursor: String? = nil, hasNext: Bool? = nil) {
         self.total = total
         self.page = page
         self.limit = limit
+        self.nextCursor = nextCursor
+        self.hasNext = hasNext
     }
 }

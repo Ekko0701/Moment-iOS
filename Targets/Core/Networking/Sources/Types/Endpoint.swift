@@ -82,6 +82,15 @@ public enum UserEndpoints {
             requiresAuth: true
         )
     }
+
+    /// 계정 삭제 — 서버 계약: DELETE /v1/users/me
+    static func deleteMe() -> Endpoint {
+        return Endpoint(
+            path: "/v1/users/me",
+            method: .delete,
+            requiresAuth: true
+        )
+    }
 }
 
 // MARK: - Space Endpoints
@@ -94,13 +103,28 @@ public enum SpaceEndpoints {
             requiresAuth: true
         )
     }
+
+    static func leave(spaceId: UUID) -> Endpoint {
+        return Endpoint(
+            path: "/v1/spaces/\(spaceId.uuidString)/members/me",
+            method: .delete,
+            requiresAuth: true
+        )
+    }
 }
 
 // MARK: - Invitation Endpoints
 
 public enum InvitationEndpoints {
-    static func createInvitation(handle: String) -> Endpoint {
-        let body = CreateInvitationRequest(handle: handle)
+    static func issueInviteCode() -> Endpoint {
+        return Endpoint(
+            path: "/v1/invite-codes",
+            method: .post,
+            requiresAuth: true
+        )
+    }
+
+    static func sendInvitation(body: SendInvitationRequest) -> Endpoint {
         return Endpoint(
             path: "/v1/invitations",
             method: .post,
@@ -109,18 +133,19 @@ public enum InvitationEndpoints {
         )
     }
 
-    static func listInvitations() -> Endpoint {
+    static func listInvitations(received: Bool) -> Endpoint {
+        let query = [URLQueryItem(name: "received", value: received ? "true" : "false")]
         return Endpoint(
             path: "/v1/invitations",
             method: .get,
+            query: query,
             requiresAuth: true
         )
     }
 
-    static func updateInvitation(invitationId: String, status: String) -> Endpoint {
-        let body = UpdateInvitationRequest(status: status)
+    static func respondInvitation(invitationId: UUID, body: RespondInvitationRequest) -> Endpoint {
         return Endpoint(
-            path: "/v1/invitations/\(invitationId)",
+            path: "/v1/invitations/\(invitationId.uuidString)",
             method: .patch,
             body: body,
             requiresAuth: true
@@ -133,16 +158,26 @@ public enum InvitationEndpoints {
 public enum MomentEndpoints {
     static func listMoments(spaceId: String, limit: Int = 20, cursor: String?) -> Endpoint {
         var query: [URLQueryItem] = [
-            URLQueryItem(name: "spaceId", value: spaceId),
             URLQueryItem(name: "limit", value: String(limit))
         ]
         if let cursor = cursor {
             query.append(URLQueryItem(name: "cursor", value: cursor))
         }
+        // 서버 계약: GET /v1/spaces/{spaceId}/moments?cursor=&limit=
         return Endpoint(
-            path: "/v1/moments",
+            path: "/v1/spaces/\(spaceId)/moments",
             method: .get,
             query: query,
+            requiresAuth: true
+        )
+    }
+
+    /// 위젯/피드용 최신 1건 — 서버 계약: GET /v1/spaces/{spaceId}/moments/latest?excludeMine=true
+    static func latestMoment(spaceId: String, excludeMine: Bool) -> Endpoint {
+        return Endpoint(
+            path: "/v1/spaces/\(spaceId)/moments/latest",
+            method: .get,
+            query: [URLQueryItem(name: "excludeMine", value: excludeMine ? "true" : "false")],
             requiresAuth: true
         )
     }
@@ -169,20 +204,11 @@ public enum MomentEndpoints {
 // MARK: - Reaction Endpoints
 
 public enum ReactionEndpoints {
+    // 서버 계약: PUT /v1/moments/{id}/reaction (단수) — 등록/교체/토글 모두 PUT 하나
     static func addReaction(momentId: String, emoji: String) -> Endpoint {
         let body = AddReactionRequest(emoji: emoji)
         return Endpoint(
-            path: "/v1/moments/\(momentId)/reactions",
-            method: .post,
-            body: body,
-            requiresAuth: true
-        )
-    }
-
-    static func updateReaction(momentId: String, emoji: String) -> Endpoint {
-        let body = UpdateReactionRequest(emoji: emoji)
-        return Endpoint(
-            path: "/v1/moments/\(momentId)/reactions",
+            path: "/v1/moments/\(momentId)/reaction",
             method: .put,
             body: body,
             requiresAuth: true
@@ -191,7 +217,7 @@ public enum ReactionEndpoints {
 
     static func removeReaction(momentId: String) -> Endpoint {
         return Endpoint(
-            path: "/v1/moments/\(momentId)/reactions",
+            path: "/v1/moments/\(momentId)/reaction",
             method: .delete,
             requiresAuth: true
         )
@@ -201,13 +227,19 @@ public enum ReactionEndpoints {
 // MARK: - Presign Endpoints
 
 public enum PresignEndpoints {
-    static func presign() -> Endpoint {
+    static func presign(contentType: String = "image/jpeg") -> Endpoint {
+        // 서버 계약: POST /v1/moments/presign { contentType }
         return Endpoint(
             path: "/v1/moments/presign",
             method: .post,
+            body: PresignRequest(contentType: contentType),
             requiresAuth: true
         )
     }
+}
+
+struct PresignRequest: Encodable, Sendable {
+    let contentType: String
 }
 
 // MARK: - Request Bodies
@@ -241,12 +273,28 @@ struct UserUpdateRequest: Encodable, Sendable {
     }
 }
 
-struct CreateInvitationRequest: Encodable, Sendable {
-    let handle: String
+struct SendInvitationRequest: Encodable, Sendable {
+    let toUserId: UUID?
+    let code: String?
+
+    enum CodingKeys: String, CodingKey {
+        case toUserId
+        case code
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        if let toUserId = toUserId {
+            try container.encode(toUserId, forKey: .toUserId)
+        }
+        if let code = code {
+            try container.encode(code, forKey: .code)
+        }
+    }
 }
 
-struct UpdateInvitationRequest: Encodable, Sendable {
-    let status: String
+struct RespondInvitationRequest: Encodable, Sendable {
+    let action: String
 }
 
 struct CreateMomentRequest: Encodable, Sendable {

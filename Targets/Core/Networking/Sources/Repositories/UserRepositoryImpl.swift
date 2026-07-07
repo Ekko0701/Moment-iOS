@@ -27,23 +27,28 @@ public final class UserRepositoryImpl: UserRepositoryProtocol {
     }
 
     public func deleteMe() async throws {
-        // Stub - will implement when available
+        // 서버 계약: DELETE /v1/users/me
+        let endpoint = UserEndpoints.deleteMe()
+        try await apiClient.requestVoid(endpoint)
     }
 }
 
+/// 서버 사용자 응답 매핑 — /users/me는 `id`, /users/search는 `userId` 키를 쓰므로 둘 다 수용.
+/// 이미지 키는 서버 표기 그대로 `profileImageUrl`.
 struct UserProfileResponseDTO: Decodable {
-    let id: String
+    let id: String?
+    let userId: String?
     let handle: String
     let nickname: String
-    let profileImageURL: String?
+    let profileImageUrl: String?
     let isSearchable: Bool?
 
     func toDomainModel() -> UserProfile {
         UserProfile(
-            id: UUID(uuidString: id) ?? UUID(),
+            id: UUID(uuidString: userId ?? id ?? "") ?? UUID(),
             handle: handle,
             nickname: nickname,
-            profileImageURL: profileImageURL.flatMap { URL(string: $0) },
+            profileImageURL: profileImageUrl.flatMap { URL(string: $0) },
             isSearchable: isSearchable ?? true
         )
     }

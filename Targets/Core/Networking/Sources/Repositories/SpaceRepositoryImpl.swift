@@ -10,96 +10,50 @@ public final class SpaceRepositoryImpl: SpaceRepositoryProtocol {
 
     public func mySpaces() async throws -> [Space] {
         let endpoint = SpaceEndpoints.getActiveSpace()
-        if let space: SpaceResponseDTO = try? await apiClient.request(endpoint) {
-            return [space.toDomainModel()]
-        }
-        return []
+        let spaces: [SpaceDTO] = try await apiClient.request(endpoint)
+        return spaces.map { $0.toDomainModel() }
     }
 
-    public func leave(spaceId: UUID) async throws {}
-    public func issueInviteCode(for spaceId: UUID) async throws -> String { "" }
-    public func sendInvitation(toUserId: UUID) async throws -> Invitation { throw DomainError.notFound }
-    public func sendInvitationByCode(code: String) async throws -> Invitation { throw DomainError.notFound }
+    public func leave(spaceId: UUID) async throws {
+        let endpoint = SpaceEndpoints.leave(spaceId: spaceId)
+        try await apiClient.requestVoid(endpoint)
+    }
+
+    public func issueInviteCode() async throws -> String {
+        let endpoint = InvitationEndpoints.issueInviteCode()
+        struct InviteCodeResponse: Decodable {
+            let code: String
+            let expiresAt: String
+        }
+        let dto: InviteCodeResponse = try await apiClient.request(endpoint)
+        return dto.code
+    }
+
+    public func sendInvitation(toUserId: UUID) async throws -> Invitation {
+        let body = SendInvitationRequest(toUserId: toUserId, code: nil)
+        let endpoint = InvitationEndpoints.sendInvitation(body: body)
+        let dto: InvitationDTO = try await apiClient.request(endpoint)
+        return dto.toDomainModel()
+    }
+
+    public func sendInvitationByCode(code: String) async throws -> Invitation {
+        let body = SendInvitationRequest(toUserId: nil, code: code)
+        let endpoint = InvitationEndpoints.sendInvitation(body: body)
+        let dto: InvitationDTO = try await apiClient.request(endpoint)
+        return dto.toDomainModel()
+    }
 
     public func invitations(direction: InvitationDirection) async throws -> [Invitation] {
-        let endpoint = InvitationEndpoints.listInvitations()
-        let dtos: [InvitationResponseDTO] = try await apiClient.request(endpoint)
+        let received = direction == .received
+        let endpoint = InvitationEndpoints.listInvitations(received: received)
+        let dtos: [InvitationDTO] = try await apiClient.request(endpoint)
         return dtos.map { $0.toDomainModel() }
     }
 
     public func respond(to invitationId: UUID, action: InvitationAction) async throws {
-        let status = action == .accept ? "ACCEPTED" : "DECLINED"
-        let endpoint = InvitationEndpoints.updateInvitation(invitationId: invitationId.uuidString, status: status)
+        let actionString = action == .accept ? "accept" : (action == .decline ? "decline" : "cancel")
+        let body = RespondInvitationRequest(action: actionString)
+        let endpoint = InvitationEndpoints.respondInvitation(invitationId: invitationId, body: body)
         try await apiClient.requestVoid(endpoint)
-    }
-}
-
-struct SpaceResponseDTO: Decodable {
-    let id: String
-    let type: String
-    let maxMembers: Int
-    let status: String
-    let members: [SpaceMemberDTO]?
-    let createdAt: Date
-
-    func toDomainModel() -> Space {
-        Space(
-            id: UUID(uuidString: id) ?? UUID(),
-            type: .oneToOne,
-            maxMembers: maxMembers,
-            status: status,
-            members: (members ?? []).map { $0.toDomainModel() },
-            createdAt: createdAt
-        )
-    }
-}
-
-struct SpaceMemberDTO: Decodable {
-    let id: String
-    let handle: String
-    let nickname: String
-    let profileImageURL: String?
-
-    func toDomainModel() -> UserProfile {
-        UserProfile(
-            id: UUID(uuidString: id) ?? UUID(),
-            handle: handle,
-            nickname: nickname,
-            profileImageURL: profileImageURL.flatMap { URL(string: $0) }
-        )
-    }
-}
-
-struct InvitationResponseDTO: Decodable {
-    let id: String
-    let via: String
-    let status: String
-    let counterpart: InvitationCounterpartDTO
-    let createdAt: Date
-
-    func toDomainModel() -> Invitation {
-        Invitation(
-            id: UUID(uuidString: id) ?? UUID(),
-            via: InvitationVia(rawValue: via) ?? .code,
-            status: InvitationStatus(rawValue: status) ?? .pending,
-            counterpart: counterpart.toDomainModel(),
-            createdAt: createdAt
-        )
-    }
-}
-
-struct InvitationCounterpartDTO: Decodable {
-    let id: String
-    let handle: String
-    let nickname: String
-    let profileImageURL: String?
-
-    func toDomainModel() -> UserProfile {
-        UserProfile(
-            id: UUID(uuidString: id) ?? UUID(),
-            handle: handle,
-            nickname: nickname,
-            profileImageURL: profileImageURL.flatMap { URL(string: $0) }
-        )
     }
 }

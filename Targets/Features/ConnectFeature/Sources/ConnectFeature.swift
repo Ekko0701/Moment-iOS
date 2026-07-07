@@ -83,8 +83,7 @@ public struct ConnectFeature {
                 return .run { send in
                     @Dependency(\.spaceRepository) var spaceRepository
                     do {
-                        // Use first space or a placeholder - in real app, would pass current space
-                        let code = try await spaceRepository.issueInviteCode(for: UUID())
+                        let code = try await spaceRepository.issueInviteCode()
                         await send(.codeResponse(.success(code)))
                     } catch {
                         let domainError = error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)
@@ -145,7 +144,13 @@ public struct ConnectFeature {
                     @Dependency(\.spaceRepository) var spaceRepository
                     do {
                         try await spaceRepository.respond(to: id, action: action)
-                        await send(.respondResponse(.success(())))
+                        // Only send connected delegate when accepting; for decline/cancel, just reload invitations
+                        if action == .accept {
+                            await send(.respondResponse(.success(())))
+                        } else {
+                            // Reload invitations list after decline/cancel
+                            await send(.onAppear)
+                        }
                     } catch {
                         let domainError = error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)
                         await send(.respondResponse(.failure(domainError)))
