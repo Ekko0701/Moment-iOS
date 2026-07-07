@@ -33,7 +33,9 @@ public extension DependencyValues {
 }
 
 private enum AuthRepositoryKey: DependencyKey {
-    static let liveValue: AuthRepositoryProtocol = AuthRepositoryImpl(apiClient: NetworkingLive.apiClient)
+    static let liveValue: AuthRepositoryProtocol = AuthRepositoryImpl(
+        apiClient: NetworkingLive.apiClient,
+        tokenStore: NetworkingLive.tokenStore)
 }
 
 private enum UserRepositoryKey: DependencyKey {

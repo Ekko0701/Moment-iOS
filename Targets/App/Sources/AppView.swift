@@ -60,7 +60,13 @@ struct AppView: View {
 
     // MARK: - Auth View
     private func authView(_ viewStore: ViewStoreOf<AppFeature>) -> some View {
-        ZStack {
+        let authState: AuthFeatureReducer.State? = {
+            if case .auth(let s) = viewStore.state { return s }
+            return nil
+        }()
+        let isLoading = authState?.isLoading ?? false
+
+        return ZStack {
             MomentColor.canvas.ignoresSafeArea()
 
             VStack(spacing: Spacing.lg) {
@@ -77,6 +83,23 @@ struct AppView: View {
                     .foregroundColor(MomentColor.ink)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, Spacing.xl)
+
+                // 에러 배너 (연결 화면과 동일 패턴)
+                if let error = authState?.error {
+                    HStack {
+                        Text(error.errorDescription ?? "로그인에 실패했어요")
+                            .font(MomentTypography.body)
+                            .foregroundColor(MomentColor.ink)
+                        Spacer()
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(MomentColor.ink)
+                            .onTapGesture { viewStore.send(.auth(.dismissError)) }
+                    }
+                    .padding(Spacing.md)
+                    .background(MomentColor.blockCoral.opacity(0.4))
+                    .cornerRadius(Spacing.Radius.sm)
+                    .padding(.horizontal, Spacing.lg)
+                }
 
                 Spacer()
 
@@ -99,9 +122,19 @@ struct AppView: View {
 
                 Spacer()
 
-                MomentPillButton("Apple로 시작하기", style: .primary) {
+                MomentPillButton(isLoading ? "로그인 중…" : "Apple로 시작하기", style: .primary) {
+                    guard !isLoading else { return }
                     let deviceId = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
                     viewStore.send(.auth(.appleSignInCompleted(identityToken: "dev-\(deviceId)")))
+                }
+                .disabled(isLoading)
+                .opacity(isLoading ? 0.6 : 1.0)
+                .overlay(alignment: .trailing) {
+                    if isLoading {
+                        ProgressView()
+                            .tint(MomentColor.canvas)
+                            .padding(.trailing, Spacing.xl + Spacing.lg)
+                    }
                 }
                 .padding(.horizontal, Spacing.lg)
 

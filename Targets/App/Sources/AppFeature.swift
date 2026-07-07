@@ -114,10 +114,20 @@ public struct AppFeature {
                     mainState.composeState.selectedSpaceId = spaces.first?.id
                     mainState.settingsState.currentSpace = spaces.first
                     state = .main(mainState)
+                } else if case .connect = state {
+                    // 이미 연결 화면이면 유지 (새로고침 결과가 "아직 스페이스 없음")
+                } else {
+                    // 로그인 직후 스페이스가 없는 신규/미연결 사용자 → 연결 화면으로
+                    state = .connect(ConnectFeatureReducer.State())
                 }
                 return .none
 
-            case .spacesLoaded(.failure):
+            case .spacesLoaded(.failure(let error)):
+                // 로그인 직후 스페이스 조회 실패 — 로그인 화면이면 에러를 노출해 무반응을 방지
+                if case .auth(var authState) = state {
+                    authState.error = error
+                    state = .auth(authState)
+                }
                 return .none
 
             case .refreshConnection:
