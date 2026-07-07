@@ -24,6 +24,11 @@ let project = Project(
                     "UILaunchStoryboardName": "LaunchScreen",
                     "NSLocalNetworkUsageDescription": "To communicate with the Moment server",
                     "NSBonjourServices": ["_http._tcp"],
+                    // 로컬 개발 서버(http://localhost:8080) 연결 허용.
+                    // ATS를 전역으로 끄지 않고 루프백/로컬 네트워킹만 예외 처리한다.
+                    "NSAppTransportSecurity": [
+                        "NSAllowsLocalNetworking": true,
+                    ],
                 ]
             ),
             sources: ["Targets/App/Sources/**"],
