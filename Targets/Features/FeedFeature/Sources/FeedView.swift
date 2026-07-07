@@ -1,0 +1,190 @@
+import SwiftUI
+import Domain
+import MomentUIKit
+import CoreKit
+
+// 매크로 없는 TCA 구성에서 모듈 경계를 지키기 위해 store.scope 대신 (state, send) 주입을 사용
+public struct FeedView: View {
+    let state: FeedFeature.State
+    let send: (FeedFeature.Action) -> Void
+
+    public init(state: FeedFeature.State, send: @escaping (FeedFeature.Action) -> Void) {
+        self.state = state
+        self.send = send
+    }
+
+    public var body: some View {
+        ZStack {
+            MomentColor.canvas.ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                VStack(alignment: .leading, spacing: Spacing.sm) {
+                    EyebrowText("피드")
+                        .padding(.horizontal, Spacing.lg)
+                        .padding(.top, Spacing.lg)
+
+                    Text("우리 둘의 순간")
+                        .font(MomentTypography.headline)
+                        .foregroundColor(MomentColor.ink)
+                        .padding(.horizontal, Spacing.lg)
+                }
+
+                if state.moments.isEmpty {
+                    Spacer()
+
+                    ColorBlock(color: .cream) {
+                        VStack(alignment: .center, spacing: Spacing.md) {
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 32, weight: .semibold))
+                                .foregroundColor(MomentColor.ink)
+
+                            Text("첫 순간을 기다리는 중")
+                                .font(MomentTypography.body)
+                                .foregroundColor(MomentColor.ink)
+                                .multilineTextAlignment(.center)
+                        }
+                    }
+                    .padding(.horizontal, Spacing.lg)
+                    .padding(.vertical, Spacing.xxl)
+
+                    Spacer()
+                } else {
+                    ScrollView {
+                        VStack(spacing: Spacing.lg) {
+                            momentsList(state.moments)
+                        }
+                        .padding(.horizontal, Spacing.lg)
+                        .padding(.vertical, Spacing.lg)
+                    }
+                }
+
+                if state.isLoading {
+                    ProgressView()
+                        .padding(.vertical, Spacing.lg)
+                }
+            }
+        }
+    }
+
+    private func momentsList(_ moments: [Moment]) -> some View {
+        VStack(spacing: Spacing.lg) {
+            ForEach(moments.enumerated().map({ $0 }), id: \.element.id) { index, moment in
+                momentCard(moment, index: index)
+            }
+        }
+    }
+
+    private func momentCard(_ moment: Moment, index: Int) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            if moment.imageURL == nil {
+                let blockColor = MomentColor.BlockColor.forFeedIndex(index)
+                ColorBlock(color: blockColor) {
+                    VStack(alignment: .center, spacing: Spacing.md) {
+                        Text(moment.text ?? "")
+                            .font(MomentTypography.subhead)
+                            .foregroundColor(blockColor.textColor)
+                            .multilineTextAlignment(.center)
+                            .lineLimit(5)
+                    }
+                }
+
+                HStack(spacing: Spacing.sm) {
+                    Text(moment.author.nickname)
+                        .font(MomentTypography.bodySM)
+                        .fontWeight(.medium)
+                        .foregroundColor(MomentColor.ink)
+
+                    Spacer()
+
+                    Text(moment.createdAt.relativeTimeString)
+                        .font(MomentTypography.caption)
+                        .tracking(0.8)
+                        .foregroundColor(MomentColor.ink.opacity(0.6))
+                }
+                .padding(.horizontal, Spacing.lg)
+                .padding(.vertical, Spacing.sm)
+
+            } else {
+                VStack(alignment: .leading, spacing: Spacing.sm) {
+                    AsyncImage(url: moment.imageURL) { phase in
+                        if let image = phase.image {
+                            image
+                                .resizable()
+                                .scaledToFill()
+                                .frame(maxHeight: 200)
+                                .clipped()
+                        } else if phase.error != nil {
+                            Color.gray.opacity(0.2)
+                                .frame(maxHeight: 200)
+                        } else {
+                            Color.gray.opacity(0.2)
+                                .frame(maxHeight: 200)
+                        }
+                    }
+                    .cornerRadius(Spacing.Radius.md)
+
+                    if let text = moment.text {
+                        Text(text)
+                            .font(MomentTypography.body)
+                            .foregroundColor(MomentColor.ink)
+                            .lineLimit(3)
+                    }
+
+                    HStack(spacing: Spacing.sm) {
+                        Text(moment.author.nickname)
+                            .font(MomentTypography.bodySM)
+                            .fontWeight(.medium)
+                            .foregroundColor(MomentColor.ink)
+
+                        Spacer()
+
+                        Text(moment.createdAt.relativeTimeString)
+                            .font(MomentTypography.caption)
+                            .tracking(0.8)
+                            .foregroundColor(MomentColor.ink.opacity(0.6))
+                    }
+                }
+            }
+
+            if !moment.reactions.isEmpty {
+                HStack(spacing: Spacing.xs) {
+                    ForEach(moment.reactions, id: \.emoji) { reaction in
+                        HStack(spacing: 4) {
+                            Text(reaction.emoji)
+                                .font(.system(size: 14))
+
+                            Text("\(reaction.count)")
+                                .font(MomentTypography.bodySM)
+                                .foregroundColor(moment.myReaction == reaction.emoji ? MomentColor.inverseInk : MomentColor.ink)
+                        }
+                        .padding(.horizontal, Spacing.sm)
+                        .padding(.vertical, Spacing.xxs)
+                        .background(moment.myReaction == reaction.emoji ? MomentColor.ink : MomentColor.surfaceSoft)
+                        .foregroundColor(moment.myReaction == reaction.emoji ? MomentColor.inverseInk : MomentColor.ink)
+                        .cornerRadius(Spacing.Radius.full)
+                    }
+
+                    Spacer()
+                }
+            }
+        }
+    }
+}
+
+extension Date {
+    fileprivate var relativeTimeString: String {
+        let calendar = Calendar.current
+        let now = Date()
+        let components = calendar.dateComponents([.minute, .hour, .day], from: self, to: now)
+
+        if let day = components.day, day >= 1 {
+            return "\(day)일 전"
+        } else if let hour = components.hour, hour >= 1 {
+            return "\(hour)시간 전"
+        } else if let minute = components.minute, minute >= 1 {
+            return "\(minute)분 전"
+        } else {
+            return "방금"
+        }
+    }
+}
