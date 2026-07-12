@@ -158,11 +158,11 @@ public final class MomentAPIClient: APIClientProtocol {
         case "UNAUTHORIZED", "INVALID_TOKEN":
             return .unauthorized
         case "NOT_FOUND":
-            return .notFound
+            return .notFound(message: message)
         case "CONFLICT":
-            return .conflict
+            return .conflict(message: message)
         case "TOO_MANY_REQUESTS":
-            return .tooManyRequests
+            return .tooManyRequests(message: message)
         default:
             return .unknown(code: code, message: message)
         }
