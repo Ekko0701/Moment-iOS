@@ -32,7 +32,7 @@ public final class MomentAPIClient: APIClientProtocol {
         }
         self.decoder = decoder
 
-        let interceptor = AuthRequestInterceptor(tokenStore: tokenStore)
+        let interceptor = AuthRequestInterceptor(tokenStore: tokenStore, baseURL: baseURL)
         self.session = Session(interceptor: interceptor)
     }
 
