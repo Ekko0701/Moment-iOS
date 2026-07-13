@@ -67,3 +67,18 @@ public struct ComposeView: View {
         }
     }
 }
+
+// MARK: - Xcode Previews
+
+#Preview("작성 — 입력 중") {
+    let state: ComposeFeature.State = {
+        var s = ComposeFeature.State()
+        s.text = "오늘 하루도 수고했어. 저녁에 산책 어때?"
+        return s
+    }()
+    ComposeView(state: state, send: { _ in })
+}
+
+#Preview("작성 — 빈 상태") {
+    ComposeView(state: ComposeFeature.State(), send: { _ in })
+}

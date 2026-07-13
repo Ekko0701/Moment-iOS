@@ -191,3 +191,31 @@ public struct ConnectView: View {
         }
     }
 }
+
+// MARK: - Xcode Previews
+
+#Preview("연결 — 코드 발급됨") {
+    let state: ConnectFeature.State = {
+        var s = ConnectFeature.State()
+        s.issuedCode = "YUTLGA"
+        return s
+    }()
+    ConnectView(state: state, send: { _ in }, onRefresh: {})
+}
+
+#Preview("연결 — 받은 초대 있음") {
+    let state: ConnectFeature.State = {
+        var s = ConnectFeature.State()
+        s.receivedInvitations = [
+            Invitation(
+                id: UUID(),
+                via: .code,
+                status: .pending,
+                counterpart: UserProfile(id: UUID(), handle: "moment_1234", nickname: "지은"),
+                createdAt: Date()
+            )
+        ]
+        return s
+    }()
+    ConnectView(state: state, send: { _ in }, onRefresh: {})
+}

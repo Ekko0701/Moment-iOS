@@ -188,3 +188,36 @@ extension Date {
         }
     }
 }
+
+// MARK: - Xcode Previews
+
+#Preview("피드 — 모먼트 목록") {
+    let state: FeedFeature.State = {
+        var s = FeedFeature.State()
+        let author = UserProfile(id: UUID(), handle: "moment_1234", nickname: "지은")
+        s.moments = [
+            Moment(
+                id: UUID(),
+                spaceId: UUID(),
+                author: author,
+                text: "오늘 점심 진짜 맛있었어! 다음엔 같이 가자",
+                createdAt: Date().addingTimeInterval(-3600),
+                myReaction: "❤️",
+                reactions: [ReactionCount(emoji: "❤️", count: 1)]
+            ),
+            Moment(
+                id: UUID(),
+                spaceId: UUID(),
+                author: author,
+                text: "퇴근길 하늘이 예뻐서 한 장",
+                createdAt: Date().addingTimeInterval(-86400)
+            ),
+        ]
+        return s
+    }()
+    FeedView(state: state, send: { _ in })
+}
+
+#Preview("피드 — 빈 상태") {
+    FeedView(state: FeedFeature.State(), send: { _ in })
+}

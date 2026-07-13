@@ -152,3 +152,31 @@ public struct AuthView: View {
         .padding(.horizontal, Spacing.lg)
     }
 }
+
+// MARK: - Xcode Previews
+
+#Preview("로그인 — Apple 기본") {
+    AuthView(state: AuthFeature.State(), send: { _ in })
+}
+
+#Preview("로그인 — 이메일 가입 폼") {
+    let state: AuthFeature.State = {
+        var s = AuthFeature.State()
+        s.mode = .emailSignup
+        s.email = "moment@example.com"
+        s.password = "password123"
+        s.nickname = "동주"
+        return s
+    }()
+    AuthView(state: state, send: { _ in })
+}
+
+#Preview("로그인 — 에러 배너") {
+    let state: AuthFeature.State = {
+        var s = AuthFeature.State()
+        s.mode = .emailLogin
+        s.error = .unknown(code: "UNAUTHORIZED", message: "이메일 또는 비밀번호가 올바르지 않아요.")
+        return s
+    }()
+    AuthView(state: state, send: { _ in })
+}

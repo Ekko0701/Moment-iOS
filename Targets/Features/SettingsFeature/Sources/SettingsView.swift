@@ -148,3 +148,25 @@ public struct SettingsView: View {
         }
     }
 }
+
+// MARK: - Xcode Previews
+
+#Preview("설정 — 연결된 상태") {
+    let me = UserProfile(id: UUID(), handle: "moment_5678", nickname: "동주")
+    let partner = UserProfile(id: UUID(), handle: "moment_1234", nickname: "지은")
+    let space = Space(
+        id: UUID(),
+        type: .oneToOne,
+        maxMembers: 2,
+        status: "ACTIVE",
+        members: [me, partner],
+        createdAt: Date()
+    )
+    let state: SettingsFeature.State = {
+        var s = SettingsFeature.State()
+        s.userProfile = me
+        s.currentSpace = space
+        return s
+    }()
+    SettingsView(state: state, send: { _ in }, currentUser: me, currentSpace: space)
+}
