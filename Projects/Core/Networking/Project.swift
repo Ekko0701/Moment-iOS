@@ -9,5 +9,6 @@ let project = Project.module(
         ModuleDependency.domain,
         .package(product: "Alamofire"),
         .package(product: "Dependencies"),
-    ]
+    ],
+    hasTests: true
 )

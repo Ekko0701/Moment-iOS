@@ -3,5 +3,6 @@ import ProjectDescriptionHelpers
 
 let project = Project.module(
     name: "CoreKit",
-    bundleId: "com.moment.corekit"
+    bundleId: "com.moment.corekit",
+    hasTests: true
 )
