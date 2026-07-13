@@ -3,6 +3,7 @@ import ComposableArchitecture
 import Domain
 import AuthFeature
 import ConnectFeature
+import HomeFeature
 import FeedFeature
 import ComposeFeature
 import SettingsFeature
@@ -26,20 +27,24 @@ public struct AppFeature {
     }
 
     public struct MainTabState: Equatable {
+        public var homeState: HomeFeatureReducer.State
         public var feedState: FeedFeatureReducer.State
         public var composeState: ComposeFeatureReducer.State
         public var settingsState: SettingsFeatureReducer.State
-        public var selectedTab: Tab = .feed
+        // 로그인 직후엔 홈(스페이스 카드)이 현관 역할을 한다
+        public var selectedTab: Tab = .home
         public var currentSpace: Space? = nil
         public var currentUser: UserProfile? = nil
 
         public enum Tab: Equatable {
+            case home
             case feed
             case compose
             case settings
         }
 
         public init() {
+            self.homeState = HomeFeatureReducer.State()
             self.feedState = FeedFeatureReducer.State()
             self.composeState = ComposeFeatureReducer.State()
             self.settingsState = SettingsFeatureReducer.State()
@@ -50,6 +55,8 @@ public struct AppFeature {
         case onAppear
         case appInitialized(result: Result<(UserProfile, [Space]), DomainError>)
         case spacesLoaded(result: Result<[Space], DomainError>)
+        // 로그인 직후 메인 전환 시 프로필을 뒤늦게 채운다 (홈 인사말·상대방 계산용)
+        case profileLoaded(UserProfile)
         // 연결 대기 중 새로고침: 받은 초대 목록을 갱신하는 동시에 스페이스를 재확인해
         // 상대가 수락했으면(스페이스 생성됨) 메인으로 전환한다.
         case refreshConnection
@@ -57,6 +64,7 @@ public struct AppFeature {
 
         case auth(AuthFeatureReducer.Action)
         case connect(ConnectFeatureReducer.Action)
+        case home(HomeFeatureReducer.Action)
         case feed(FeedFeatureReducer.Action)
         case compose(ComposeFeatureReducer.Action)
         case settings(SettingsFeatureReducer.Action)
@@ -82,6 +90,8 @@ public struct AppFeature {
                     var mainState = MainTabState()
                     mainState.currentUser = user
                     mainState.currentSpace = spaces.first
+                    mainState.homeState.space = spaces.first
+                    mainState.homeState.currentUser = user
                     mainState.feedState.selectedSpaceId = spaces.first?.id
                     mainState.composeState.selectedSpaceId = spaces.first?.id
                     mainState.settingsState.currentSpace = spaces.first
@@ -110,16 +120,32 @@ public struct AppFeature {
                 if !spaces.isEmpty {
                     var mainState = MainTabState()
                     mainState.currentSpace = spaces.first
+                    mainState.homeState.space = spaces.first
                     mainState.feedState.selectedSpaceId = spaces.first?.id
                     mainState.composeState.selectedSpaceId = spaces.first?.id
                     mainState.settingsState.currentSpace = spaces.first
                     state = .main(mainState)
+                    return .run { [userRepository = self.userRepository] send in
+                        if let user = try? await userRepository.me() {
+                            await send(.profileLoaded(user))
+                        }
+                    }
                 } else if case .connect = state {
                     // 이미 연결 화면이면 유지 (새로고침 결과가 "아직 스페이스 없음")
                 } else {
                     // 로그인 직후 스페이스가 없는 신규/미연결 사용자 → 연결 화면으로
                     state = .connect(ConnectFeatureReducer.State())
                 }
+                return .none
+
+            case .profileLoaded(let user):
+                guard case .main(var mainState) = state else {
+                    return .none
+                }
+                mainState.currentUser = user
+                mainState.homeState.currentUser = user
+                mainState.settingsState.userProfile = user
+                state = .main(mainState)
                 return .none
 
             case .spacesLoaded(.failure(let error)):
@@ -199,6 +225,21 @@ public struct AppFeature {
                 }
 
                 return effect.map { .connect($0) }
+
+            case .home(let action):
+                guard case .main(var mainState) = state else {
+                    return .none
+                }
+                let effect = HomeFeatureReducer().reduce(into: &mainState.homeState, action: action)
+                state = .main(mainState)
+
+                // 카드 탭 → 피드로 이동
+                if case .delegate(.openFeed) = action {
+                    return effect.map { .home($0) }
+                        .merge(with: .send(.selectTab(.feed)))
+                }
+
+                return effect.map { .home($0) }
 
             case .feed(let action):
                 guard case .main(var mainState) = state else {

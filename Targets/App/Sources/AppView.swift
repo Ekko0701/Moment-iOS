@@ -3,6 +3,7 @@ import ComposableArchitecture
 import Domain
 import AuthFeature
 import ConnectFeature
+import HomeFeature
 import FeedFeature
 import ComposeFeature
 import SettingsFeature
@@ -68,11 +69,23 @@ struct AppView: View {
             get: { mainTabState.selectedTab },
             set: { viewStore.send(.selectTab($0)) }
         )) {
+            homeTabView(viewStore, mainTabState)
             feedTabView(viewStore, mainTabState)
             composeTabView(viewStore, mainTabState)
             settingsTabView(viewStore, mainTabState)
         }
         .tint(MomentColor.ink)
+    }
+
+    // MARK: - Home Tab
+    private func homeTabView(_ viewStore: ViewStoreOf<AppFeature>, _ mainTabState: AppFeature.MainTabState) -> some View {
+        NavigationStack {
+            HomeView(state: mainTabState.homeState, send: { viewStore.send(.home($0)) })
+        }
+        .tabItem {
+            Label("Home", systemImage: "house")
+        }
+        .tag(AppFeature.MainTabState.Tab.home)
     }
 
     // MARK: - Feed Tab
@@ -84,7 +97,7 @@ struct AppView: View {
             viewStore.send(.feed(.onAppear))
         }
         .tabItem {
-            Label("Feed", systemImage: "house")
+            Label("Feed", systemImage: "photo.on.rectangle")
         }
         .tag(AppFeature.MainTabState.Tab.feed)
     }

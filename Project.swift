@@ -39,6 +39,7 @@ let project = Project(
                 .target(name: "Networking"),
                 .target(name: "AuthFeature"),
                 .target(name: "ConnectFeature"),
+                .target(name: "HomeFeature"),
                 .target(name: "FeedFeature"),
                 .target(name: "ComposeFeature"),
                 .target(name: "SettingsFeature"),
@@ -110,6 +111,24 @@ let project = Project(
                 .target(name: "Domain"),
                 .target(name: "Networking"),
                 .target(name: "MomentUIKit"),
+                .package(product: "ComposableArchitecture"),
+                .package(product: "Dependencies"),
+            ]
+        ),
+
+        // MARK: - Features: HomeFeature
+        .target(
+            name: "HomeFeature",
+            destinations: [.iPhone],
+            product: .framework,
+            bundleId: "com.moment.features.home",
+            deploymentTargets: .iOS("17.0"),
+            sources: ["Targets/Features/HomeFeature/Sources/**"],
+            dependencies: [
+                .target(name: "Domain"),
+                .target(name: "Networking"),
+                .target(name: "MomentUIKit"),
+                .target(name: "CoreKit"),
                 .package(product: "ComposableArchitecture"),
                 .package(product: "Dependencies"),
             ]
