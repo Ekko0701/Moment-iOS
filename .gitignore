@@ -6,8 +6,8 @@ xcuserdata/
 *.xcuserstate
 
 # Tuist 생성물 — tuist generate로 재생성되므로 커밋하지 않는다
-Moment.xcodeproj/
-Moment.xcworkspace/
+*.xcodeproj/
+*.xcworkspace/
 Derived/
 .build/
 Tuist/.build/
