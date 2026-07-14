@@ -3,7 +3,7 @@ import ProjectDescriptionHelpers
 
 let project = Project(
     name: "App",
-    packages: [MomentPackage.composableArchitecture],
+    packages: [MomentPackage.composableArchitecture, MomentPackage.dependencies],
     settings: .settings(base: ["SWIFT_ALLOW_MACRO_ATTESTATIONS": "YES"]),
     targets: [
         .target(
@@ -39,6 +39,7 @@ let project = Project(
                 ModuleDependency.feature("ComposeFeature"),
                 ModuleDependency.feature("SettingsFeature"),
                 .package(product: "ComposableArchitecture"),
+                .package(product: "Dependencies"),
                 .target(name: "MomentWidget"),
             ]
         ),

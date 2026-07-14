@@ -1,5 +1,6 @@
 import Foundation
 import ComposableArchitecture
+import Dependencies
 import Domain
 import AuthFeature
 import ConnectFeature
@@ -11,9 +12,7 @@ import CoreKit
 import WidgetKit
 
 public struct AppFeature {
-    let userRepository: UserRepositoryProtocol
-    let spaceRepository: SpaceRepositoryProtocol
-    let momentRepository: MomentRepositoryProtocol
+    @Dependency(\.sessionUseCase) var sessionUseCase
 
     public enum State: Equatable {
         case launching
@@ -74,11 +73,9 @@ public struct AppFeature {
         Reduce<State, Action> { state, action in
             switch action {
             case .onAppear:
-                return .run { [userRepository = self.userRepository, spaceRepository = self.spaceRepository] send in
+                return .run { [sessionUseCase = self.sessionUseCase] send in
                     let result: Result<(UserProfile, [Space]), DomainError> = await Result {
-                        let user = try await userRepository.me()
-                        let spaces = try await spaceRepository.mySpaces()
-                        return (user, spaces)
+                        try await sessionUseCase.bootstrap()
                     }.mapError { error in
                         error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)
                     }
@@ -125,8 +122,8 @@ public struct AppFeature {
                     mainState.composeState.selectedSpaceId = spaces.first?.id
                     mainState.settingsState.currentSpace = spaces.first
                     state = .main(mainState)
-                    return .run { [userRepository = self.userRepository] send in
-                        if let user = try? await userRepository.me() {
+                    return .run { [sessionUseCase = self.sessionUseCase] send in
+                        if let user = try? await sessionUseCase.myProfile() {
                             await send(.profileLoaded(user))
                         }
                     }
@@ -165,9 +162,9 @@ public struct AppFeature {
                 let effect = ConnectFeatureReducer().reduce(into: &connectState, action: .onAppear)
                 state = .connect(connectState)
                 return effect.map { Action.connect($0) }
-                    .merge(with: .run { [spaceRepository = self.spaceRepository] send in
+                    .merge(with: .run { [sessionUseCase = self.sessionUseCase] send in
                         let result: Result<[Space], DomainError> = await Result {
-                            try await spaceRepository.mySpaces()
+                            try await sessionUseCase.mySpaces()
                         }.mapError { error in
                             error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)
                         }
@@ -192,9 +189,9 @@ public struct AppFeature {
                 // Handle delegates from auth
                 if case .delegate(.loggedIn) = action {
                     return effect.map { .auth($0) }
-                        .merge(with: .run { [spaceRepository = self.spaceRepository] send in
+                        .merge(with: .run { [sessionUseCase = self.sessionUseCase] send in
                             let result: Result<[Space], DomainError> = await Result {
-                                try await spaceRepository.mySpaces()
+                                try await sessionUseCase.mySpaces()
                             }.mapError { error in
                                 error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)
                             }
@@ -214,9 +211,9 @@ public struct AppFeature {
                 // Handle delegates from connect
                 if case .delegate(.connected) = action {
                     return effect.map { .connect($0) }
-                        .merge(with: .run { [spaceRepository = self.spaceRepository] send in
+                        .merge(with: .run { [sessionUseCase = self.sessionUseCase] send in
                             let result: Result<[Space], DomainError> = await Result {
-                                try await spaceRepository.mySpaces()
+                                try await sessionUseCase.mySpaces()
                             }.mapError { error in
                                 error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)
                             }
@@ -311,15 +308,6 @@ public struct AppFeature {
         }
     }
 
-    public init(
-        userRepository: UserRepositoryProtocol,
-        spaceRepository: SpaceRepositoryProtocol,
-        momentRepository: MomentRepositoryProtocol
-    ) {
-        self.userRepository = userRepository
-        self.spaceRepository = spaceRepository
-        self.momentRepository = momentRepository
-    }
 }
 
 extension AppFeature: Reducer {}

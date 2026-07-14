@@ -79,7 +79,8 @@ public extension Project {
         )
     }
 
-    /// Feature 모듈 표준형: TCA + Domain/Networking/DesignSystem/CoreKit 의존
+    /// Feature 모듈 표준형: TCA + Domain/DesignSystem/CoreKit 의존
+    /// Networking은 Domain 모듈(UseCase 경로)을 통해만 접근하므로 직접 의존하지 않음
     static func feature(
         name: String,
         bundleIdSuffix: String,
@@ -91,7 +92,6 @@ public extension Project {
             packages: [MomentPackage.composableArchitecture, MomentPackage.dependencies],
             dependencies: [
                 ModuleDependency.domain,
-                ModuleDependency.networking,
                 ModuleDependency.designSystem,
                 ModuleDependency.coreKit,
                 .package(product: "ComposableArchitecture"),

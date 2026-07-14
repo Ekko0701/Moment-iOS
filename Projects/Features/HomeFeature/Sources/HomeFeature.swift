@@ -1,7 +1,7 @@
 import Foundation
 import ComposableArchitecture
 import Domain
-import Networking
+import Dependencies
 
 public struct HomeFeature {
     public struct State: Equatable {
@@ -47,9 +47,9 @@ public struct HomeFeature {
                 guard let spaceId = state.space?.id else { return .none }
                 state.isLoading = true
                 return .run { send in
-                    @Dependency(\.momentRepository) var momentRepository
+                    @Dependency(\.homeUseCase) var homeUseCase
                     do {
-                        let moment = try await momentRepository.latestExcludingMine(spaceId: spaceId)
+                        let moment = try await homeUseCase.latestPartnerMoment(spaceId: spaceId)
                         await send(.latestLoaded(.success(moment)))
                     } catch {
                         let domainError = error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)

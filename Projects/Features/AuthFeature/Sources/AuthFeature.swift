@@ -1,8 +1,8 @@
 import Foundation
 import SwiftUI
 import ComposableArchitecture
+import Dependencies
 import Domain
-import Networking
 import MomentUIKit
 
 public struct AuthFeature {
@@ -39,7 +39,7 @@ public struct AuthFeature {
         case passwordChanged(String)
         case nicknameChanged(String)
         case emailSubmitTapped
-        case loginResponse(Result<(TokenPair, Bool), DomainError>)
+        case loginResponse(Result<Bool, DomainError>)
         case dismissError
         case delegate(Delegate)
 
@@ -58,11 +58,10 @@ public struct AuthFeature {
             case .appleSignInCompleted(let token):
                 state.isLoading = true
                 return .run { send in
-                    @Dependency(\.authRepository) var authRepository
+                    @Dependency(\.authUseCase) var authUseCase
                     do {
-                        let defaultNickname = "User\(Int.random(in: 1000...9999))"
-                        let result = try await authRepository.loginWithApple(identityToken: token, nickname: defaultNickname)
-                        await send(.loginResponse(.success(result)))
+                        let isNewUser = try await authUseCase.loginWithApple(identityToken: token)
+                        await send(.loginResponse(.success(isNewUser)))
                     } catch {
                         let domainError = error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)
                         await send(.loginResponse(.failure(domainError)))
@@ -94,14 +93,14 @@ public struct AuthFeature {
                 let password = state.password
                 let nickname = state.nickname.trimmingCharacters(in: .whitespaces)
                 return .run { send in
-                    @Dependency(\.authRepository) var authRepository
+                    @Dependency(\.authUseCase) var authUseCase
                     do {
                         if mode == .emailSignup {
-                            let result = try await authRepository.signUpWithEmail(email: email, password: password, nickname: nickname)
-                            await send(.loginResponse(.success(result)))
+                            let isNewUser = try await authUseCase.signUpWithEmail(email: email, password: password, nickname: nickname)
+                            await send(.loginResponse(.success(isNewUser)))
                         } else {
-                            let pair = try await authRepository.loginWithEmail(email: email, password: password)
-                            await send(.loginResponse(.success((pair, false))))
+                            try await authUseCase.loginWithEmail(email: email, password: password)
+                            await send(.loginResponse(.success(false)))
                         }
                     } catch {
                         let domainError = error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)
@@ -109,10 +108,10 @@ public struct AuthFeature {
                     }
                 }
 
-            case .loginResponse(.success(let result)):
+            case .loginResponse(.success(let isNewUser)):
                 state.isLoading = false
                 state.error = nil
-                return .send(.delegate(.loggedIn(isNewUser: result.1)))
+                return .send(.delegate(.loggedIn(isNewUser: isNewUser)))
 
             case .loginResponse(.failure(let error)):
                 state.isLoading = false

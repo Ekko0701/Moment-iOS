@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 import ComposableArchitecture
 import Domain
-import Networking
+import Dependencies
 import CoreKit
 import MomentUIKit
 
@@ -57,10 +57,10 @@ public struct ConnectFeature {
             case .onAppear:
                 state.isLoading = true
                 return .run { send in
-                    @Dependency(\.spaceRepository) var spaceRepository
+                    @Dependency(\.connectUseCase) var connectUseCase
                     do {
-                        let received = try await spaceRepository.invitations(direction: .received)
-                        let sent = try await spaceRepository.invitations(direction: .sent)
+                        let received = try await connectUseCase.invitations(direction: .received)
+                        let sent = try await connectUseCase.invitations(direction: .sent)
                         await send(.invitationsResponse(.success((received: received, sent: sent))))
                     } catch {
                         let domainError = error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)
@@ -83,9 +83,9 @@ public struct ConnectFeature {
             case .issueCodeTapped:
                 state.isLoading = true
                 return .run { send in
-                    @Dependency(\.spaceRepository) var spaceRepository
+                    @Dependency(\.connectUseCase) var connectUseCase
                     do {
-                        let code = try await spaceRepository.issueInviteCode()
+                        let code = try await connectUseCase.issueCode()
                         await send(.codeResponse(.success(code)))
                     } catch {
                         let domainError = error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)
@@ -100,9 +100,9 @@ public struct ConnectFeature {
                 }
                 state.isLoading = true
                 return .run { [code = state.codeInput] send in
-                    @Dependency(\.spaceRepository) var spaceRepository
+                    @Dependency(\.connectUseCase) var connectUseCase
                     do {
-                        let invitation = try await spaceRepository.sendInvitationByCode(code: code)
+                        let invitation = try await connectUseCase.requestJoin(code: code)
                         await send(.submitCodeResponse(.success(invitation)))
                     } catch {
                         let domainError = error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)
@@ -117,9 +117,9 @@ public struct ConnectFeature {
                 }
                 state.isLoading = true
                 return .run { [handle = state.searchHandle] send in
-                    @Dependency(\.userRepository) var userRepository
+                    @Dependency(\.connectUseCase) var connectUseCase
                     do {
-                        let user = try await userRepository.search(handle: handle)
+                        let user = try await connectUseCase.searchUser(handle: handle)
                         await send(.searchResponse(.success(user)))
                     } catch {
                         let domainError = error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)
@@ -130,9 +130,9 @@ public struct ConnectFeature {
             case .sendToUserTapped(let userId):
                 state.isLoading = true
                 return .run { [userId] send in
-                    @Dependency(\.spaceRepository) var spaceRepository
+                    @Dependency(\.connectUseCase) var connectUseCase
                     do {
-                        let invitation = try await spaceRepository.sendInvitation(toUserId: userId)
+                        let invitation = try await connectUseCase.sendInvitation(toUserId: userId)
                         await send(.submitCodeResponse(.success(invitation)))
                     } catch {
                         let domainError = error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)
@@ -143,9 +143,9 @@ public struct ConnectFeature {
             case .respondTapped(let id, let action):
                 state.isLoading = true
                 return .run { [id, action] send in
-                    @Dependency(\.spaceRepository) var spaceRepository
+                    @Dependency(\.connectUseCase) var connectUseCase
                     do {
-                        try await spaceRepository.respond(to: id, action: action)
+                        try await connectUseCase.respond(to: id, action: action)
                         // Only send connected delegate when accepting; for decline/cancel, just reload invitations
                         if action == .accept {
                             await send(.respondResponse(.success(())))

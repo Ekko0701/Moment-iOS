@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 import ComposableArchitecture
 import Domain
-import Networking
+import Dependencies
 import MomentUIKit
 
 public struct SettingsFeature {
@@ -52,9 +52,9 @@ public struct SettingsFeature {
             case .onAppear:
                 state.isLoading = true
                 return .run { send in
-                    @Dependency(\.userRepository) var userRepository
+                    @Dependency(\.settingsUseCase) var settingsUseCase
                     do {
-                        let profile = try await userRepository.me()
+                        let profile = try await settingsUseCase.myProfile()
                         await send(.profileResponse(.success(profile)))
                     } catch {
                         let domainError = error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)
@@ -75,9 +75,9 @@ public struct SettingsFeature {
 
                 state.isLoading = true
                 return .run { [nickname] send in
-                    @Dependency(\.userRepository) var userRepository
+                    @Dependency(\.settingsUseCase) var settingsUseCase
                     do {
-                        let profile = try await userRepository.updateMe(nickname: nickname, profileImageKey: nil)
+                        let profile = try await settingsUseCase.updateNickname(nickname)
                         await send(.nicknameUpdateResponse(.success(profile)))
                     } catch {
                         let domainError = error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)
@@ -108,9 +108,9 @@ public struct SettingsFeature {
                 state.isLoading = true
                 state.showDisconnectConfirm = false
                 return .run { [spaceId] send in
-                    @Dependency(\.spaceRepository) var spaceRepository
+                    @Dependency(\.settingsUseCase) var settingsUseCase
                     do {
-                        try await spaceRepository.leave(spaceId: spaceId)
+                        try await settingsUseCase.leaveSpace(spaceId: spaceId)
                         await send(.disconnectResponse(.success(())))
                     } catch {
                         let domainError = error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)
@@ -130,9 +130,9 @@ public struct SettingsFeature {
                 state.isLoading = true
                 state.showDeleteAccountConfirm = false
                 return .run { send in
-                    @Dependency(\.userRepository) var userRepository
+                    @Dependency(\.settingsUseCase) var settingsUseCase
                     do {
-                        try await userRepository.deleteMe()
+                        try await settingsUseCase.deleteAccount()
                         await send(.deleteResponse(.success(())))
                     } catch {
                         let domainError = error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)

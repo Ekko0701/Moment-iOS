@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 import ComposableArchitecture
 import Domain
-import Networking
+import Dependencies
 import MomentUIKit
 import CoreKit
 
@@ -42,9 +42,9 @@ public struct FeedFeature {
                 }
                 state.isLoading = true
                 return .run { [spaceId] send in
-                    @Dependency(\.momentRepository) var momentRepository
+                    @Dependency(\.feedUseCase) var feedUseCase
                     do {
-                        let moments = try await momentRepository.timeline(
+                        let moments = try await feedUseCase.timeline(
                             spaceId: spaceId,
                             cursor: nil,
                             limit: 20
@@ -64,9 +64,9 @@ public struct FeedFeature {
                 state.moments = []
                 state.nextCursor = nil
                 return .run { [spaceId] send in
-                    @Dependency(\.momentRepository) var momentRepository
+                    @Dependency(\.feedUseCase) var feedUseCase
                     do {
-                        let moments = try await momentRepository.timeline(
+                        let moments = try await feedUseCase.timeline(
                             spaceId: spaceId,
                             cursor: nil,
                             limit: 20
@@ -86,9 +86,9 @@ public struct FeedFeature {
                 }
                 state.isLoadingMore = true
                 return .run { [spaceId, nextCursor] send in
-                    @Dependency(\.momentRepository) var momentRepository
+                    @Dependency(\.feedUseCase) var feedUseCase
                     do {
-                        let moments = try await momentRepository.timeline(
+                        let moments = try await feedUseCase.timeline(
                             spaceId: spaceId,
                             cursor: nextCursor,
                             limit: 20
@@ -106,9 +106,9 @@ public struct FeedFeature {
                 if previousReaction == emoji {
                     state.selectedReactions.removeValue(forKey: momentId)
                     return .run { [momentId] send in
-                        @Dependency(\.momentRepository) var momentRepository
+                        @Dependency(\.feedUseCase) var feedUseCase
                         do {
-                            try await momentRepository.removeReaction(from: momentId)
+                            try await feedUseCase.removeReaction(from: momentId)
                             await send(.removeReactionResponse(momentId: momentId, .success(())))
                         } catch {
                             let domainError = error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)
@@ -118,9 +118,9 @@ public struct FeedFeature {
                 } else {
                     state.selectedReactions[momentId] = emoji
                     return .run { [momentId, emoji] send in
-                        @Dependency(\.momentRepository) var momentRepository
+                        @Dependency(\.feedUseCase) var feedUseCase
                         do {
-                            try await momentRepository.react(to: momentId, emoji: emoji)
+                            try await feedUseCase.react(to: momentId, emoji: emoji)
                             await send(.reactionResponse(momentId: momentId, emoji: emoji, .success(())))
                         } catch {
                             let domainError = error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)
@@ -132,9 +132,9 @@ public struct FeedFeature {
             case .removeReaction(let momentId):
                 state.selectedReactions.removeValue(forKey: momentId)
                 return .run { [momentId] send in
-                    @Dependency(\.momentRepository) var momentRepository
+                    @Dependency(\.feedUseCase) var feedUseCase
                     do {
-                        try await momentRepository.removeReaction(from: momentId)
+                        try await feedUseCase.removeReaction(from: momentId)
                         await send(.removeReactionResponse(momentId: momentId, .success(())))
                     } catch {
                         let domainError = error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)
