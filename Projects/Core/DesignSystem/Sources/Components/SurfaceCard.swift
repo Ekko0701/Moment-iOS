@@ -9,13 +9,14 @@ public struct SurfaceCard<Content: View>: View {
 
     public var body: some View {
         content
-            .background(MomentColor.surface)
-            .cornerRadius(20)
+            .background(.ultraThinMaterial)
+            .background(Color.white.opacity(0.35))
+            .clipShape(RoundedRectangle(cornerRadius: 22))
             .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(MomentColor.hairline, lineWidth: 1)
+                RoundedRectangle(cornerRadius: 22)
+                    .stroke(Color.white.opacity(0.75), lineWidth: 1)
             )
-            .shadow(color: MomentColor.ink.opacity(0.08), radius: 15, x: 0, y: 10)
+            .shadow(color: MomentColor.ink.opacity(0.10), radius: 14, x: 0, y: 8)
     }
 }
 

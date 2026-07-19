@@ -98,27 +98,55 @@ public struct HomeView: View {
 
                     // 최신 모먼트 미리보기
                     VStack(alignment: .leading, spacing: Spacing.xs) {
-                        EyebrowText("최근 모먼트")
+                        EyebrowText("LATEST MOMENT")
                         if let moment = state.latestMoment {
-                            Text(moment.text ?? "사진 모먼트")
-                                .font(MomentTypography.body)
-                                .foregroundColor(MomentColor.ink)
-                                .lineLimit(2)
-                                .multilineTextAlignment(.leading)
+                            // 이미지가 있으면 먼저 표시
+                            if let imageURL = moment.imageURL {
+                                AsyncImage(url: imageURL) { phase in
+                                    switch phase {
+                                    case .success(let image):
+                                        image
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(height: 150)
+                                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                                    case .empty:
+                                        RoundedRectangle(cornerRadius: 14)
+                                            .fill(MomentColor.hairline)
+                                            .frame(height: 150)
+                                    case .failure:
+                                        RoundedRectangle(cornerRadius: 14)
+                                            .fill(MomentColor.hairline)
+                                            .frame(height: 150)
+                                    @unknown default:
+                                        RoundedRectangle(cornerRadius: 14)
+                                            .fill(MomentColor.hairline)
+                                            .frame(height: 150)
+                                    }
+                                }
+                            }
+                            // 텍스트가 있으면 아래에 표시
+                            if let text = moment.text, !text.isEmpty {
+                                Text(text)
+                                    .font(MomentTypography.caption)
+                                    .foregroundColor(MomentColor.ink)
+                                    .lineLimit(2)
+                                    .multilineTextAlignment(.leading)
+                            }
                         } else if state.isLoading {
                             Text("불러오는 중…")
-                                .font(MomentTypography.body)
+                                .font(MomentTypography.caption)
                                 .foregroundColor(MomentColor.ink.opacity(0.5))
                         } else {
                             Text("아직 상대방의 모먼트가 없어요")
-                                .font(MomentTypography.body)
+                                .font(MomentTypography.caption)
                                 .foregroundColor(MomentColor.ink.opacity(0.5))
                         }
                     }
 
                     HStack {
                         Spacer()
-                        Text("피드 보기 →")
+                        Text("스페이스 열기 →")
                             .font(MomentTypography.bodySM)
                             .foregroundColor(MomentColor.accent)
                     }

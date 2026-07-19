@@ -1,42 +1,40 @@
 import SwiftUI
 
 public struct MomentColor {
-    // MARK: - Core Monochrome (Light mode only per spec)
-    // Note: Dark mode is not documented in the design spec.
-    // Light mode is the canonical implementation.
-    public static let ink = Color(red: 0.067, green: 0.176, blue: 0.306) // #112D4E (deep navy)
-    public static let canvas = Color(red: 0.976, green: 0.968, blue: 0.968) // #F9F7F7 (cream background)
-    public static let inverseCanvas = Color(red: 0.067, green: 0.176, blue: 0.306) // #112D4E
+    // MARK: - Core Monochrome (Warm Paper Theme - Design F)
+    public static let ink = Color(red: 0.17, green: 0.155, blue: 0.13) // #2B2721 (warm ink)
+    public static let canvas = Color(red: 0.965, green: 0.945, blue: 0.905) // #F6F1E7 (warm paper)
+    public static let inverseCanvas = Color(red: 0.17, green: 0.155, blue: 0.13) // #2B2721
     public static let inverseInk = Color(red: 1.0, green: 1.0, blue: 1.0) // #ffffff
 
     // MARK: - Hairline & Surface Soft
-    public static let hairline = Color(red: 0.859, green: 0.886, blue: 0.937) // #DBE2EF (soft blue)
-    public static let hairlineSoft = Color(red: 0.910, green: 0.929, blue: 0.965) // #E8EDF6
-    public static let surfaceSoft = Color(red: 0.859, green: 0.886, blue: 0.937) // #DBE2EF (soft blue)
+    public static let hairline = Color(red: 0.90, green: 0.88, blue: 0.84) // #E5E1D7 (warm gray)
+    public static let hairlineSoft = Color(red: 0.93, green: 0.915, blue: 0.88) // #EDEBE0 (warm gray soft)
+    public static let surfaceSoft = Color(red: 0.93, green: 0.905, blue: 0.855) // #EDEA7A (warm paper darker)
 
-    // MARK: - Pastel Color Blocks (unified to soft blue)
-    public static let blockLime = Color(red: 0.859, green: 0.886, blue: 0.937) // #DBE2EF (soft blue)
-    public static let blockLilac = Color(red: 0.859, green: 0.886, blue: 0.937) // #DBE2EF (soft blue)
-    public static let blockCream = Color(red: 0.859, green: 0.886, blue: 0.937) // #DBE2EF (soft blue)
-    public static let blockPink = Color(red: 0.859, green: 0.886, blue: 0.937) // #DBE2EF (soft blue)
-    public static let blockMint = Color(red: 0.859, green: 0.886, blue: 0.937) // #DBE2EF (soft blue)
-    public static let blockCoral = Color(red: 0.949, green: 0.780, blue: 0.737) // #F2C7BC (soft coral - error banner)
-    public static let blockNavy = Color(red: 0.067, green: 0.176, blue: 0.306) // #112D4E
+    // MARK: - Pastel Color Blocks (warm palette)
+    public static let blockLime = Color(red: 0.93, green: 0.905, blue: 0.855) // #EDEA5A (warm paper darker)
+    public static let blockLilac = Color(red: 0.93, green: 0.905, blue: 0.855) // #EDEA5A (warm paper darker)
+    public static let blockCream = Color(red: 0.93, green: 0.905, blue: 0.855) // #EDEA5A (warm paper darker)
+    public static let blockPink = Color(red: 0.93, green: 0.905, blue: 0.855) // #EDEA5A (warm paper darker)
+    public static let blockMint = Color(red: 0.93, green: 0.905, blue: 0.855) // #EDEA5A (warm paper darker)
+    public static let blockCoral = Color(red: 0.95, green: 0.78, blue: 0.72) // #F2C7B8 (warm coral - error banner)
+    public static let blockNavy = Color(red: 0.17, green: 0.155, blue: 0.13) // #2B2721 (warm ink)
 
     // MARK: - Semantic & Accent
-    public static let accentMagenta = Color(red: 0.247, green: 0.447, blue: 0.686) // #3F72AF (blue accent)
+    public static let accentMagenta = Color(red: 0.17, green: 0.155, blue: 0.13) // #2B2721 (warm ink as accent)
     public static let success = Color(red: 0.120, green: 0.651, blue: 0.290) // #1ea64a
 
     // MARK: - New Design Tokens
-    public static let accent = Color(red: 0.247, green: 0.447, blue: 0.686) // #3F72AF (blue accent)
-    public static let muted = Color(red: 0.486, green: 0.545, blue: 0.647) // #7C8BA5 (muted text)
+    public static let accent = Color(red: 0.17, green: 0.155, blue: 0.13) // #2B2721 (warm ink as accent)
+    public static let muted = Color(red: 0.54, green: 0.52, blue: 0.47) // #8A8579 (warm gray muted)
     public static let surface = Color(red: 1.0, green: 1.0, blue: 1.0) // #FFFFFF (white card surface)
 
-    // MARK: - Ambient Orb Colors
-    public static let orbCoral = Color(red: 0.95, green: 0.62, blue: 0.50)      // soft coral orb
-    public static let orbBlue = Color(red: 0.55, green: 0.68, blue: 0.88)       // blue orb
-    public static let orbLavender = Color(red: 0.68, green: 0.65, blue: 0.90)   // lavender orb
-    public static let orbYellow = Color(red: 0.97, green: 0.84, blue: 0.50)     // yellow orb
+    // MARK: - Ambient Orb Colors (Design F)
+    public static let orbCoral = Color(red: 0.95, green: 0.48, blue: 0.32)      // coral orb
+    public static let orbBlue = Color(red: 0.36, green: 0.60, blue: 0.94)       // blue orb
+    public static let orbLavender = Color(red: 0.63, green: 0.58, blue: 0.92)   // lavender orb
+    public static let orbYellow = Color(red: 0.98, green: 0.78, blue: 0.28)     // yellow orb
 
     // MARK: - Composite aliases for readability
     public static let primary = ink

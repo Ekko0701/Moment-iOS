@@ -56,8 +56,9 @@ struct AppView: View {
         } else if url.host == "moment" {
             let pathComponents = url.pathComponents.filter { $0 != "/" }
             if let momentIdString = pathComponents.last,
-               let momentId = UUID(uuidString: momentIdString) {
-                viewStore.send(.selectTab(.feed))
+               UUID(uuidString: momentIdString) != nil {
+                viewStore.send(.selectTab(.home))
+                viewStore.send(.setHistoryPresented(true))
                 viewStore.send(.feed(.refresh))
             }
         }
@@ -70,7 +71,6 @@ struct AppView: View {
             set: { viewStore.send(.selectTab($0)) }
         )) {
             homeTabView(viewStore, mainTabState)
-            feedTabView(viewStore, mainTabState)
             composeTabView(viewStore, mainTabState)
             settingsTabView(viewStore, mainTabState)
         }
@@ -81,25 +81,22 @@ struct AppView: View {
     private func homeTabView(_ viewStore: ViewStoreOf<AppFeature>, _ mainTabState: AppFeature.MainTabState) -> some View {
         NavigationStack {
             HomeView(state: mainTabState.homeState, send: { viewStore.send(.home($0)) })
+                .navigationDestination(
+                    isPresented: Binding(
+                        get: { mainTabState.isHistoryPresented },
+                        set: { viewStore.send(.setHistoryPresented($0)) }
+                    )
+                ) {
+                    FeedView(state: mainTabState.feedState, send: { viewStore.send(.feed($0)) })
+                        .navigationTitle(
+                            "\(mainTabState.homeState.partner?.nickname ?? "우리")님과의 스페이스"
+                        )
+                }
         }
         .tabItem {
             Label("Home", systemImage: "house")
         }
         .tag(AppFeature.MainTabState.Tab.home)
-    }
-
-    // MARK: - Feed Tab
-    private func feedTabView(_ viewStore: ViewStoreOf<AppFeature>, _ mainTabState: AppFeature.MainTabState) -> some View {
-        NavigationStack {
-            FeedView(state: mainTabState.feedState, send: { viewStore.send(.feed($0)) })
-        }
-        .onAppear {
-            viewStore.send(.feed(.onAppear))
-        }
-        .tabItem {
-            Label("Feed", systemImage: "photo.on.rectangle")
-        }
-        .tag(AppFeature.MainTabState.Tab.feed)
     }
 
     // MARK: - Compose Tab

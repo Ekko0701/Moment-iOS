@@ -34,10 +34,11 @@ public struct AppFeature {
         public var selectedTab: Tab = .home
         public var currentSpace: Space? = nil
         public var currentUser: UserProfile? = nil
+        // 히스토리(Feed)를 네비게이션 스택으로 표시할지 여부
+        public var isHistoryPresented = false
 
         public enum Tab: Equatable {
             case home
-            case feed
             case compose
             case settings
         }
@@ -60,6 +61,7 @@ public struct AppFeature {
         // 상대가 수락했으면(스페이스 생성됨) 메인으로 전환한다.
         case refreshConnection
         case selectTab(MainTabState.Tab)
+        case setHistoryPresented(Bool)
 
         case auth(AuthFeatureReducer.Action)
         case connect(ConnectFeatureReducer.Action)
@@ -179,6 +181,14 @@ public struct AppFeature {
                 state = .main(mainState)
                 return .none
 
+            case .setHistoryPresented(let isPresented):
+                guard case .main(var mainState) = state else {
+                    return .none
+                }
+                mainState.isHistoryPresented = isPresented
+                state = .main(mainState)
+                return .none
+
             case .auth(let action):
                 guard case .auth(var authState) = state else {
                     return .none
@@ -230,10 +240,10 @@ public struct AppFeature {
                 let effect = HomeFeatureReducer().reduce(into: &mainState.homeState, action: action)
                 state = .main(mainState)
 
-                // 카드 탭 → 피드로 이동
+                // 카드 탭 → 히스토리 네비게이션 스택 표시
                 if case .delegate(.openFeed) = action {
                     return effect.map { .home($0) }
-                        .merge(with: .send(.selectTab(.feed)))
+                        .merge(with: .send(.setHistoryPresented(true)))
                 }
 
                 return effect.map { .home($0) }
@@ -267,7 +277,8 @@ public struct AppFeature {
                 if case .delegate(.shared) = action {
                     var newMainState = mainState
                     newMainState.composeState = ComposeFeatureReducer.State()
-                    newMainState.selectedTab = .feed
+                    newMainState.selectedTab = .home
+                    newMainState.isHistoryPresented = true
                     newMainState.feedState = FeedFeatureReducer.State()
                     newMainState.feedState.selectedSpaceId = newMainState.currentSpace?.id
                     state = .main(newMainState)
@@ -278,7 +289,7 @@ public struct AppFeature {
                 if case .delegate(.dismissed) = action {
                     var newMainState = mainState
                     newMainState.composeState = ComposeFeatureReducer.State()
-                    newMainState.selectedTab = .feed
+                    newMainState.selectedTab = .home
                     state = .main(newMainState)
                     return effect.map { .compose($0) }
                 }

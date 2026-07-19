@@ -21,35 +21,36 @@ public struct OrbBackground: View {
                 Circle()
                     .fill(orb.color.opacity(orb.opacity))
                     .frame(width: orb.size, height: orb.size)
-                    .blur(radius: 60)
+                    .blur(radius: 55)
                     .position(x: orb.x + orb.size / 2, y: orb.y + orb.size / 2)
                     .allowsHitTesting(false)
             }
         }
     }
 
-    // MARK: - Presets
+    // MARK: - Presets (Design F - Warm Paper Theme)
     public static func home() -> OrbBackground {
         OrbBackground([
-            Orb(color: MomentColor.orbBlue, size: 220, x: 230 - 110, y: -40, opacity: 0.40),
-            Orb(color: MomentColor.orbCoral, size: 200, x: 40, y: 430, opacity: 0.30),
-            Orb(color: MomentColor.orbLavender, size: 180, x: 220, y: 520, opacity: 0.32),
-            Orb(color: MomentColor.orbYellow, size: 140, x: 110, y: 630, opacity: 0.25),
+            Orb(color: MomentColor.orbCoral, size: 210, x: 140, y: 150, opacity: 0.5),
+            Orb(color: MomentColor.orbYellow, size: 170, x: -40, y: 330, opacity: 0.5),
+            Orb(color: MomentColor.orbBlue, size: 170, x: 230, y: 380, opacity: 0.42),
+            Orb(color: MomentColor.orbLavender, size: 160, x: 90, y: 560, opacity: 0.42),
         ])
     }
 
     public static func login() -> OrbBackground {
         OrbBackground([
-            Orb(color: MomentColor.orbCoral, size: 220, x: -60, y: 60, opacity: 0.28),
-            Orb(color: MomentColor.orbBlue, size: 190, x: 240, y: 200, opacity: 0.35),
-            Orb(color: MomentColor.orbLavender, size: 200, x: 100, y: 480, opacity: 0.25),
+            Orb(color: MomentColor.orbCoral, size: 220, x: -60, y: 60, opacity: 0.35),
+            Orb(color: MomentColor.orbBlue, size: 190, x: 240, y: 200, opacity: 0.4),
+            Orb(color: MomentColor.orbLavender, size: 200, x: 100, y: 480, opacity: 0.3),
         ])
     }
 
     public static func feed() -> OrbBackground {
         OrbBackground([
-            Orb(color: MomentColor.orbBlue, size: 180, x: 260, y: 20, opacity: 0.30),
-            Orb(color: MomentColor.orbCoral, size: 200, x: -70, y: 560, opacity: 0.22),
+            Orb(color: MomentColor.orbBlue, size: 190, x: 240, y: 60, opacity: 0.4),
+            Orb(color: MomentColor.orbCoral, size: 190, x: -60, y: 260, opacity: 0.42),
+            Orb(color: MomentColor.orbYellow, size: 180, x: 220, y: 500, opacity: 0.4),
         ])
     }
 }
