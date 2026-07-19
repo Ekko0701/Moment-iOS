@@ -17,6 +17,7 @@ public struct AuthView: View {
 
         ZStack {
             MomentColor.canvas.ignoresSafeArea()
+            OrbBackground.login().ignoresSafeArea()
 
             VStack(spacing: Spacing.lg) {
                 EyebrowText("MOMENT — 우리 둘의 순간")
@@ -29,7 +30,7 @@ public struct AuthView: View {
 
                 Text("두 사람만의 소중한 순간을 함께 기록해보세요")
                     .font(MomentTypography.subhead)
-                    .foregroundColor(MomentColor.ink)
+                    .foregroundColor(MomentColor.muted)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, Spacing.xl)
 
@@ -99,7 +100,7 @@ public struct AuthView: View {
             send(.modeChanged(.emailLogin))
         }
         .font(MomentTypography.bodySM)
-        .foregroundColor(MomentColor.ink)
+        .foregroundColor(MomentColor.accent)
         .padding(.top, Spacing.xs)
     }
 

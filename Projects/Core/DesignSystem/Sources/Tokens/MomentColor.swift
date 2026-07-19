@@ -4,28 +4,39 @@ public struct MomentColor {
     // MARK: - Core Monochrome (Light mode only per spec)
     // Note: Dark mode is not documented in the design spec.
     // Light mode is the canonical implementation.
-    public static let ink = Color(red: 0.0, green: 0.0, blue: 0.0) // #000000
-    public static let canvas = Color(red: 1.0, green: 1.0, blue: 1.0) // #ffffff
-    public static let inverseCanvas = Color(red: 0.0, green: 0.0, blue: 0.0) // #000000
+    public static let ink = Color(red: 0.067, green: 0.176, blue: 0.306) // #112D4E (deep navy)
+    public static let canvas = Color(red: 0.976, green: 0.968, blue: 0.968) // #F9F7F7 (cream background)
+    public static let inverseCanvas = Color(red: 0.067, green: 0.176, blue: 0.306) // #112D4E
     public static let inverseInk = Color(red: 1.0, green: 1.0, blue: 1.0) // #ffffff
 
     // MARK: - Hairline & Surface Soft
-    public static let hairline = Color(red: 0.9, green: 0.9, blue: 0.9) // #e6e6e6
-    public static let hairlineSoft = Color(red: 0.945, green: 0.945, blue: 0.945) // #f1f1f1
-    public static let surfaceSoft = Color(red: 0.969, green: 0.969, blue: 0.961) // #f7f7f5
+    public static let hairline = Color(red: 0.859, green: 0.886, blue: 0.937) // #DBE2EF (soft blue)
+    public static let hairlineSoft = Color(red: 0.910, green: 0.929, blue: 0.965) // #E8EDF6
+    public static let surfaceSoft = Color(red: 0.859, green: 0.886, blue: 0.937) // #DBE2EF (soft blue)
 
-    // MARK: - Pastel Color Blocks
-    public static let blockLime = Color(red: 0.863, green: 0.933, blue: 0.694) // #dceeb1
-    public static let blockLilac = Color(red: 0.773, green: 0.690, blue: 0.957) // #c5b0f4
-    public static let blockCream = Color(red: 0.957, green: 0.933, blue: 0.839) // #f4ecd6
-    public static let blockPink = Color(red: 0.937, green: 0.835, blue: 0.835) // #efd4d4
-    public static let blockMint = Color(red: 0.784, green: 0.902, blue: 0.804) // #c8e6cd
-    public static let blockCoral = Color(red: 0.953, green: 0.788, blue: 0.714) // #f3c9b6
-    public static let blockNavy = Color(red: 0.122, green: 0.114, blue: 0.239) // #1f1d3d
+    // MARK: - Pastel Color Blocks (unified to soft blue)
+    public static let blockLime = Color(red: 0.859, green: 0.886, blue: 0.937) // #DBE2EF (soft blue)
+    public static let blockLilac = Color(red: 0.859, green: 0.886, blue: 0.937) // #DBE2EF (soft blue)
+    public static let blockCream = Color(red: 0.859, green: 0.886, blue: 0.937) // #DBE2EF (soft blue)
+    public static let blockPink = Color(red: 0.859, green: 0.886, blue: 0.937) // #DBE2EF (soft blue)
+    public static let blockMint = Color(red: 0.859, green: 0.886, blue: 0.937) // #DBE2EF (soft blue)
+    public static let blockCoral = Color(red: 0.949, green: 0.780, blue: 0.737) // #F2C7BC (soft coral - error banner)
+    public static let blockNavy = Color(red: 0.067, green: 0.176, blue: 0.306) // #112D4E
 
     // MARK: - Semantic & Accent
-    public static let accentMagenta = Color(red: 1.0, green: 0.239, blue: 0.545) // #ff3d8b
+    public static let accentMagenta = Color(red: 0.247, green: 0.447, blue: 0.686) // #3F72AF (blue accent)
     public static let success = Color(red: 0.120, green: 0.651, blue: 0.290) // #1ea64a
+
+    // MARK: - New Design Tokens
+    public static let accent = Color(red: 0.247, green: 0.447, blue: 0.686) // #3F72AF (blue accent)
+    public static let muted = Color(red: 0.486, green: 0.545, blue: 0.647) // #7C8BA5 (muted text)
+    public static let surface = Color(red: 1.0, green: 1.0, blue: 1.0) // #FFFFFF (white card surface)
+
+    // MARK: - Ambient Orb Colors
+    public static let orbCoral = Color(red: 0.95, green: 0.62, blue: 0.50)      // soft coral orb
+    public static let orbBlue = Color(red: 0.55, green: 0.68, blue: 0.88)       // blue orb
+    public static let orbLavender = Color(red: 0.68, green: 0.65, blue: 0.90)   // lavender orb
+    public static let orbYellow = Color(red: 0.97, green: 0.84, blue: 0.50)     // yellow orb
 
     // MARK: - Composite aliases for readability
     public static let primary = ink

@@ -74,7 +74,7 @@ struct AppView: View {
             composeTabView(viewStore, mainTabState)
             settingsTabView(viewStore, mainTabState)
         }
-        .tint(MomentColor.ink)
+        .tint(MomentColor.accent)
     }
 
     // MARK: - Home Tab

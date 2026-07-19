@@ -16,15 +16,29 @@ public struct HomeView: View {
     public var body: some View {
         ZStack {
             MomentColor.canvas.ignoresSafeArea()
+            OrbBackground.home().ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: Spacing.lg) {
-                EyebrowText("HOME — 우리의 공간")
+                EyebrowText("HOME — 우리의 스페이스")
                     .padding(.top, Spacing.xl)
 
-                Text(greeting)
-                    .font(MomentTypography.displayLG)
-                    .tracking(-1.0)
-                    .foregroundColor(MomentColor.ink)
+                if let nickname = state.currentUser?.nickname {
+                    HStack(spacing: 0) {
+                        Text("\(nickname)")
+                            .font(MomentTypography.displayLG)
+                            .tracking(-1.0)
+                            .foregroundColor(MomentColor.accent)
+                        Text("님, 안녕하세요")
+                            .font(MomentTypography.displayLG)
+                            .tracking(-1.0)
+                            .foregroundColor(MomentColor.ink)
+                    }
+                } else {
+                    Text("안녕하세요")
+                        .font(MomentTypography.displayLG)
+                        .tracking(-1.0)
+                        .foregroundColor(MomentColor.ink)
+                }
 
                 if state.space != nil {
                     spaceCard
@@ -42,46 +56,45 @@ public struct HomeView: View {
         .onAppear { send(.onAppear) }
     }
 
-    private var greeting: String {
-        if let nickname = state.currentUser?.nickname {
-            return "\(nickname)님, 안녕하세요"
-        }
-        return "안녕하세요"
-    }
-
     // MARK: - 스페이스 카드 (박스)
 
     private var spaceCard: some View {
         Button {
             send(.spaceCardTapped)
         } label: {
-            ColorBlock(color: .lilac) {
+            SurfaceCard {
                 VStack(alignment: .leading, spacing: Spacing.md) {
                     HStack(alignment: .firstTextBaseline) {
                         VStack(alignment: .leading, spacing: Spacing.xs) {
                             if let partner = state.partner {
-                                Text("\(partner.nickname)님과의 공간")
+                                Text("\(partner.nickname)님과의 스페이스")
                                     .font(MomentTypography.headline)
                                     .foregroundColor(MomentColor.ink)
                                 Text("@\(partner.handle)")
                                     .font(MomentTypography.caption)
                                     .foregroundColor(MomentColor.ink.opacity(0.6))
                             } else {
-                                Text("우리 둘의 공간")
+                                Text("우리 둘의 스페이스")
                                     .font(MomentTypography.headline)
                                     .foregroundColor(MomentColor.ink)
                             }
                         }
                         Spacer()
                         if let days = state.daysTogether {
-                            Text("D+\(days)")
-                                .font(MomentTypography.headline)
-                                .foregroundColor(MomentColor.ink)
+                            HStack(spacing: Spacing.xs) {
+                                Text("D+\(days)")
+                                    .font(.system(.caption, design: .default).bold())
+                                    .foregroundColor(MomentColor.accent)
+                            }
+                            .padding(.horizontal, Spacing.sm)
+                            .padding(.vertical, Spacing.xs)
+                            .background(MomentColor.hairline)
+                            .cornerRadius(6)
                         }
                     }
 
                     Divider()
-                        .overlay(MomentColor.ink.opacity(0.15))
+                        .overlay(MomentColor.hairline)
 
                     // 최신 모먼트 미리보기
                     VStack(alignment: .leading, spacing: Spacing.xs) {
@@ -107,7 +120,7 @@ public struct HomeView: View {
                         Spacer()
                         Text("피드 보기 →")
                             .font(MomentTypography.bodySM)
-                            .foregroundColor(MomentColor.ink)
+                            .foregroundColor(MomentColor.accent)
                     }
                 }
                 .padding(Spacing.lg)

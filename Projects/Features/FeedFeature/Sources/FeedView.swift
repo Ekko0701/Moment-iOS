@@ -16,6 +16,7 @@ public struct FeedView: View {
     public var body: some View {
         ZStack {
             MomentColor.canvas.ignoresSafeArea()
+            OrbBackground.feed().ignoresSafeArea()
 
             VStack(spacing: 0) {
                 VStack(alignment: .leading, spacing: Spacing.sm) {
@@ -75,37 +76,36 @@ public struct FeedView: View {
     }
 
     private func momentCard(_ moment: Moment, index: Int) -> some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
-            if moment.imageURL == nil {
-                let blockColor = MomentColor.BlockColor.forFeedIndex(index)
-                ColorBlock(color: blockColor) {
-                    VStack(alignment: .center, spacing: Spacing.md) {
-                        Text(moment.text ?? "")
-                            .font(MomentTypography.subhead)
-                            .foregroundColor(blockColor.textColor)
-                            .multilineTextAlignment(.center)
-                            .lineLimit(5)
-                    }
-                }
-
+        SurfaceCard {
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                // Author header
                 HStack(spacing: Spacing.sm) {
-                    Text(moment.author.nickname)
-                        .font(MomentTypography.bodySM)
-                        .fontWeight(.medium)
-                        .foregroundColor(MomentColor.ink)
+                    Circle()
+                        .fill(MomentColor.hairline)
+                        .frame(width: 34, height: 34)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(moment.author.nickname)
+                            .font(.system(.body, design: .default).bold())
+                            .foregroundColor(MomentColor.ink)
+
+                        Text(moment.createdAt.relativeTimeString)
+                            .font(MomentTypography.caption)
+                            .foregroundColor(MomentColor.muted)
+                    }
 
                     Spacer()
-
-                    Text(moment.createdAt.relativeTimeString)
-                        .font(MomentTypography.caption)
-                        .tracking(0.8)
-                        .foregroundColor(MomentColor.ink.opacity(0.6))
                 }
-                .padding(.horizontal, Spacing.lg)
-                .padding(.vertical, Spacing.sm)
 
-            } else {
-                VStack(alignment: .leading, spacing: Spacing.sm) {
+                // Content
+                if moment.imageURL == nil {
+                    if let text = moment.text {
+                        Text(text)
+                            .font(MomentTypography.body)
+                            .foregroundColor(MomentColor.ink)
+                            .lineLimit(5)
+                    }
+                } else {
                     AsyncImage(url: moment.imageURL) { phase in
                         if let image = phase.image {
                             image
@@ -129,44 +129,31 @@ public struct FeedView: View {
                             .foregroundColor(MomentColor.ink)
                             .lineLimit(3)
                     }
+                }
 
-                    HStack(spacing: Spacing.sm) {
-                        Text(moment.author.nickname)
-                            .font(MomentTypography.bodySM)
-                            .fontWeight(.medium)
-                            .foregroundColor(MomentColor.ink)
+                // Reactions
+                if !moment.reactions.isEmpty {
+                    HStack(spacing: Spacing.xs) {
+                        ForEach(moment.reactions, id: \.emoji) { reaction in
+                            HStack(spacing: 4) {
+                                Text(reaction.emoji)
+                                    .font(.system(size: 14))
+
+                                Text("\(reaction.count)")
+                                    .font(MomentTypography.bodySM)
+                            }
+                            .padding(.horizontal, Spacing.sm)
+                            .padding(.vertical, Spacing.xxs)
+                            .background(moment.myReaction == reaction.emoji ? MomentColor.accent : MomentColor.hairline)
+                            .foregroundColor(moment.myReaction == reaction.emoji ? MomentColor.inverseInk : MomentColor.ink)
+                            .cornerRadius(Spacing.Radius.full)
+                        }
 
                         Spacer()
-
-                        Text(moment.createdAt.relativeTimeString)
-                            .font(MomentTypography.caption)
-                            .tracking(0.8)
-                            .foregroundColor(MomentColor.ink.opacity(0.6))
                     }
                 }
             }
-
-            if !moment.reactions.isEmpty {
-                HStack(spacing: Spacing.xs) {
-                    ForEach(moment.reactions, id: \.emoji) { reaction in
-                        HStack(spacing: 4) {
-                            Text(reaction.emoji)
-                                .font(.system(size: 14))
-
-                            Text("\(reaction.count)")
-                                .font(MomentTypography.bodySM)
-                                .foregroundColor(moment.myReaction == reaction.emoji ? MomentColor.inverseInk : MomentColor.ink)
-                        }
-                        .padding(.horizontal, Spacing.sm)
-                        .padding(.vertical, Spacing.xxs)
-                        .background(moment.myReaction == reaction.emoji ? MomentColor.ink : MomentColor.surfaceSoft)
-                        .foregroundColor(moment.myReaction == reaction.emoji ? MomentColor.inverseInk : MomentColor.ink)
-                        .cornerRadius(Spacing.Radius.full)
-                    }
-
-                    Spacer()
-                }
-            }
+            .padding(Spacing.lg)
         }
     }
 }
