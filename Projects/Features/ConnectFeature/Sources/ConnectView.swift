@@ -68,7 +68,7 @@ public struct ConnectView: View {
                     // 보낸 요청 대기 안내
                     if state.sentInvitations.contains(where: { $0.status == .pending }) {
                         Text("요청을 보냈어요 — 상대방의 수락을 기다리는 중")
-                            .font(.system(size: 12, design: .monospaced))
+                            .font(.system(size: 12, design: .default))
                             .tracking(0.4)
                             .foregroundColor(MomentColor.ink.opacity(0.55))
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -103,19 +103,19 @@ public struct ConnectView: View {
         SurfaceCard {
             VStack(spacing: Spacing.sm) {
                 Text("MY CODE")
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(.system(size: 11, design: .default))
                     .tracking(1.2)
                     .foregroundColor(MomentColor.ink.opacity(0.5))
 
                 if let code = state.issuedCode {
                     Text(code)
-                        .font(.system(size: 40, weight: .bold, design: .monospaced))
+                        .font(.system(size: 40, weight: .bold, design: .default))
                         .tracking(-1)
                         .foregroundColor(MomentColor.ink)
                         .textSelection(.enabled)
 
                     Text("VALID FOR 24H")
-                        .font(.system(size: 11, design: .monospaced))
+                        .font(.system(size: 11, design: .default))
                         .tracking(1.0)
                         .foregroundColor(MomentColor.ink.opacity(0.5))
 
@@ -171,7 +171,7 @@ public struct ConnectView: View {
     private var receivedInvitations: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             Text("RECEIVED")
-                .font(.system(size: 11, design: .monospaced))
+                .font(.system(size: 11, design: .default))
                 .tracking(1.2)
                 .foregroundColor(MomentColor.ink.opacity(0.5))
 
@@ -188,7 +188,7 @@ public struct ConnectView: View {
                                 .foregroundColor(MomentColor.ink)
 
                             Text("@\(invitation.counterpart.handle)")
-                                .font(.system(size: 11, design: .monospaced))
+                                .font(.system(size: 11, design: .default))
                                 .foregroundColor(MomentColor.ink.opacity(0.55))
                         }
 

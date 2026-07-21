@@ -35,12 +35,12 @@ public struct MomentTypography {
     // link: 17pt .medium tracking -0.1 (inline link emphasis)
     public static let link = Font.system(size: 17, weight: .medium, design: .default)
 
-    // MARK: - Monospace (Eyebrow & Caption)
-    // eyebrow: 13pt monospaced .regular tracking +1.2 (always UPPERCASE)
-    public static let eyebrow = Font.system(size: 13, weight: .regular, design: .monospaced)
+    // MARK: - Eyebrow & Caption (small labels)
+    // eyebrow: 13pt .regular tracking +1.2 (always UPPERCASE, 기본 폰트)
+    public static let eyebrow = Font.system(size: 13, weight: .regular, design: .default)
 
-    // caption: 11pt monospaced .regular tracking +0.8 (always UPPERCASE)
-    public static let caption = Font.system(size: 11, weight: .regular, design: .monospaced)
+    // caption: 11pt .regular tracking +0.8 (always UPPERCASE, 기본 폰트)
+    public static let caption = Font.system(size: 11, weight: .regular, design: .default)
 
     // MARK: - View Extension Helper
     // Use: .momentType(.body), .momentType(.headline), etc.

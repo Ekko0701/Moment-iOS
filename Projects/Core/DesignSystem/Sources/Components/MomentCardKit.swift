@@ -23,7 +23,7 @@ public struct SpacePill: View {
 
             if let days {
                 Text("D+\(days)")
-                    .font(.system(size: 12, design: .monospaced))
+                    .font(.system(size: 12, design: .default))
                     .foregroundColor(MomentColor.ink.opacity(0.55))
             }
         }
@@ -60,7 +60,7 @@ public struct SenderChip: View {
                 .foregroundColor(.white)
 
             Text(timeText)
-                .font(.system(size: 11, design: .monospaced))
+                .font(.system(size: 11, design: .default))
                 .foregroundColor(.white.opacity(0.75))
         }
         .padding(.leading, Spacing.xs)

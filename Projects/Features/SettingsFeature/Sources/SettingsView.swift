@@ -71,7 +71,7 @@ public struct SettingsView: View {
                         .foregroundColor(MomentColor.ink)
 
                     Text("@\(profile.handle)")
-                        .font(.system(size: 11, design: .monospaced))
+                        .font(.system(size: 11, design: .default))
                         .foregroundColor(MomentColor.ink.opacity(0.55))
                 }
 
@@ -96,7 +96,7 @@ public struct SettingsView: View {
         SurfaceCard {
             VStack(alignment: .leading, spacing: Spacing.sm) {
                 Text("MY SPACE")
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(.system(size: 11, design: .default))
                     .tracking(1.2)
                     .foregroundColor(MomentColor.ink.opacity(0.5))
 
@@ -115,7 +115,7 @@ public struct SettingsView: View {
 
                     let daysConnected = Calendar.current.dateComponents([.day], from: space.createdAt, to: Date()).day ?? 0
                     Text("D+\(daysConnected)")
-                        .font(.system(size: 13, design: .monospaced))
+                        .font(.system(size: 13, design: .default))
                         .foregroundColor(MomentColor.ink.opacity(0.55))
                 }
 
@@ -139,7 +139,7 @@ public struct SettingsView: View {
         SurfaceCard {
             VStack(alignment: .leading, spacing: Spacing.sm) {
                 Text("ACCOUNT")
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(.system(size: 11, design: .default))
                     .tracking(1.2)
                     .foregroundColor(MomentColor.ink.opacity(0.5))
 

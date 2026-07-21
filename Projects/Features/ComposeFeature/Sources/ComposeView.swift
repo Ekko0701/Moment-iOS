@@ -65,7 +65,7 @@ public struct ComposeView: View {
                 HStack {
                     Spacer()
                     Text("\(state.characterCount) / 500")
-                        .font(.system(size: 11, design: .monospaced))
+                        .font(.system(size: 11, design: .default))
                         .tracking(0.8)
                         .foregroundColor(MomentColor.ink.opacity(0.45))
                 }

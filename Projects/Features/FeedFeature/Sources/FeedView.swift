@@ -96,7 +96,7 @@ public struct FeedView: View {
                     .foregroundColor(MomentColor.ink)
 
                 Text(moment.createdAt.feedRelativeTimeString)
-                    .font(.system(size: 10, design: .monospaced))
+                    .font(.system(size: 10, design: .default))
                     .foregroundColor(MomentColor.ink.opacity(0.5))
             }
 

@@ -124,7 +124,7 @@ public struct HomeView: View {
             send(.spaceCardTapped)
         } label: {
             Text("↑ 지난 순간 모아보기")
-                .font(.system(size: 12, design: .monospaced))
+                .font(.system(size: 12, design: .default))
                 .tracking(0.8)
                 .foregroundColor(MomentColor.ink.opacity(0.45))
         }
