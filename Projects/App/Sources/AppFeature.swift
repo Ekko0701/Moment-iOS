@@ -197,6 +197,12 @@ public struct AppFeature {
                 }
                 mainState.isHistoryPresented = isPresented
                 state = .main(mainState)
+                // 히스토리를 열 때마다 타임라인을 로드한다.
+                // (피드가 탭이던 시절에는 탭 진입이 로드를 트리거했지만,
+                //  홈 카드 push 구조에서는 여기가 유일한 진입 트리거다)
+                if isPresented {
+                    return .send(.feed(.onAppear))
+                }
                 return .none
 
             case .auth(let action):

@@ -52,8 +52,8 @@ struct AppView: View {
             if let momentIdString = pathComponents.last,
                UUID(uuidString: momentIdString) != nil {
                 viewStore.send(.selectTab(.home))
+                // setHistoryPresented(true)가 타임라인 로드까지 트리거한다
                 viewStore.send(.setHistoryPresented(true))
-                viewStore.send(.feed(.refresh))
             }
         }
     }
