@@ -2,7 +2,8 @@ import SwiftUI
 import MomentUIKit
 import UIKit
 
-// 매크로 없는 TCA 구성에서 모듈 경계를 지키기 위해 store.scope 대신 (state, send) 주입을 사용
+/// 로그인 — Final-MVP: 타이틀/포스터 없이 중앙 워드마크 + 서브타이틀, 하단 다크 필 CTA.
+/// 매크로 없는 TCA 구성에서 모듈 경계를 지키기 위해 store.scope 대신 (state, send) 주입을 사용.
 public struct AuthView: View {
     let state: AuthFeature.State
     let send: (AuthFeature.Action) -> Void
@@ -19,37 +20,28 @@ public struct AuthView: View {
             MomentColor.canvas.ignoresSafeArea()
             OrbBackground.login().ignoresSafeArea()
 
-            VStack(spacing: Spacing.lg) {
-                EyebrowText("MOMENT — 우리 둘의 순간")
-                    .padding(.top, Spacing.xxl)
+            VStack(spacing: 0) {
+                // 에러 배너
+                if let error = state.error {
+                    errorBanner(error.errorDescription ?? "로그인에 실패했어요")
+                        .padding(.horizontal, Spacing.lg)
+                        .padding(.top, Spacing.md)
+                }
 
+                Spacer()
+
+                // 중앙 워드마크
                 Text("Moment")
                     .font(MomentTypography.displayXL)
                     .tracking(-1.6)
                     .foregroundColor(MomentColor.ink)
 
-                Text("두 사람만의 소중한 순간을 함께 기록해보세요")
-                    .font(MomentTypography.subhead)
-                    .foregroundColor(MomentColor.muted)
+                Text("두 사람만의 소중한 순간을\n함께 기록해보세요")
+                    .font(MomentTypography.body)
+                    .foregroundColor(MomentColor.ink.opacity(0.65))
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, Spacing.xl)
-
-                // 에러 배너
-                if let error = state.error {
-                    HStack {
-                        Text(error.errorDescription ?? "로그인에 실패했어요")
-                            .font(MomentTypography.body)
-                            .foregroundColor(MomentColor.ink)
-                        Spacer()
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(MomentColor.ink)
-                            .onTapGesture { send(.dismissError) }
-                    }
-                    .padding(Spacing.md)
-                    .background(MomentColor.blockCoral.opacity(0.4))
-                    .cornerRadius(Spacing.Radius.sm)
-                    .padding(.horizontal, Spacing.lg)
-                }
+                    .lineSpacing(6)
+                    .padding(.top, Spacing.md)
 
                 Spacer()
 
@@ -58,50 +50,48 @@ public struct AuthView: View {
                 } else {
                     emailAuthSection(isLoading: isLoading)
                 }
-
-                Spacer()
-                    .frame(height: Spacing.lg)
             }
-            .padding(.vertical, Spacing.lg)
+            .padding(.bottom, Spacing.xl)
         }
+    }
+
+    private func errorBanner(_ message: String) -> some View {
+        HStack {
+            Text(message)
+                .font(MomentTypography.body)
+                .foregroundColor(MomentColor.ink)
+            Spacer()
+            Image(systemName: "xmark.circle.fill")
+                .foregroundColor(MomentColor.ink)
+                .onTapGesture { send(.dismissError) }
+        }
+        .padding(Spacing.md)
+        .background(MomentColor.blockCoral.opacity(0.5))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.white.opacity(0.6), lineWidth: 1)
+        )
     }
 
     @ViewBuilder
     private func appleAuthSection(isLoading: Bool) -> some View {
-        // 포스터 카피 — CTA와 중복되지 않는 서비스 서사 (여백 넉넉히, 문서의 poster 원칙)
-        ColorBlock(color: .lilac) {
-            VStack(alignment: .center, spacing: Spacing.sm) {
-                Text("사진 한 장, 짧은 글 하나로")
-                    .font(MomentTypography.subhead)
-                    .foregroundColor(MomentColor.ink)
-                    .multilineTextAlignment(.center)
-                Text("서로의 홈 화면에 스며들어요")
-                    .font(MomentTypography.headline)
-                    .foregroundColor(MomentColor.ink)
-                    .multilineTextAlignment(.center)
+        VStack(spacing: Spacing.md) {
+            MomentPillButton(isLoading ? "로그인 중…" : " Apple로 시작하기", style: .primary) {
+                guard !isLoading else { return }
+                let deviceId = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
+                send(.appleSignInCompleted(identityToken: "dev-\(deviceId)"))
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, Spacing.xl)
+            .disabled(isLoading)
+            .opacity(isLoading ? 0.6 : 1.0)
+
+            Button("이메일로 계속하기") {
+                send(.modeChanged(.emailLogin))
+            }
+            .font(.system(size: 14, weight: .medium))
+            .foregroundColor(MomentColor.ink.opacity(0.7))
         }
         .padding(.horizontal, Spacing.lg)
-
-        Spacer()
-
-        MomentPillButton(isLoading ? "로그인 중…" : "Apple로 시작하기", style: .primary) {
-            guard !isLoading else { return }
-            let deviceId = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
-            send(.appleSignInCompleted(identityToken: "dev-\(deviceId)"))
-        }
-        .disabled(isLoading)
-        .opacity(isLoading ? 0.6 : 1.0)
-        .padding(.horizontal, Spacing.lg)
-
-        Button("이메일로 계속하기") {
-            send(.modeChanged(.emailLogin))
-        }
-        .font(MomentTypography.bodySM)
-        .foregroundColor(MomentColor.accent)
-        .padding(.top, Spacing.xs)
     }
 
     @ViewBuilder
@@ -110,9 +100,6 @@ public struct AuthView: View {
         let canSubmit = state.canSubmitEmail
 
         VStack(spacing: Spacing.md) {
-            EyebrowText(isSignup ? "이메일로 가입" : "이메일로 로그인")
-                .frame(maxWidth: .infinity, alignment: .leading)
-
             MomentTextField("이메일", text: Binding(
                 get: { state.email },
                 set: { send(.emailChanged($0)) }

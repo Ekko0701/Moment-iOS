@@ -1,8 +1,11 @@
 import SwiftUI
 import Domain
 import MomentUIKit
+import UIKit
 
-// 매크로 없는 TCA 구성에서 모듈 경계를 지키기 위해 store.scope 대신 (state, send) 주입을 사용
+/// 설정 — Final-MVP: 타이틀 없이 프로필 / MY SPACE / ACCOUNT 글래스 카드 3장.
+/// 파괴적 액션(연결 해제, 계정 삭제)은 웜 레드로 구분한다.
+/// 매크로 없는 TCA 구성에서 모듈 경계를 지키기 위해 store.scope 대신 (state, send) 주입을 사용.
 public struct SettingsView: View {
     let state: SettingsFeature.State
     let send: (SettingsFeature.Action) -> Void
@@ -24,127 +27,149 @@ public struct SettingsView: View {
     public var body: some View {
         ZStack {
             MomentColor.canvas.ignoresSafeArea()
+            OrbBackground.settings().ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                VStack(alignment: .leading, spacing: Spacing.sm) {
-                    EyebrowText("설정")
-                        .padding(.horizontal, Spacing.lg)
-                        .padding(.top, Spacing.lg)
-
-                    Text("프로필 및 설정")
-                        .font(MomentTypography.headline)
-                        .foregroundColor(MomentColor.ink)
-                        .padding(.horizontal, Spacing.lg)
-                }
-
-                ScrollView {
-                    VStack(spacing: Spacing.lg) {
-                        if let profile = state.userProfile {
-                            VStack(alignment: .leading, spacing: Spacing.md) {
-                                EyebrowText("프로필")
-
-                                HStack(spacing: Spacing.md) {
-                                    VStack(alignment: .leading, spacing: Spacing.xs) {
-                                        Text(profile.nickname)
-                                            .font(MomentTypography.cardTitle)
-                                            .foregroundColor(MomentColor.ink)
-
-                                        Text("@\(profile.handle)")
-                                            .font(MomentTypography.caption)
-                                            .tracking(0.8)
-                                            .foregroundColor(MomentColor.ink.opacity(0.6))
-                                    }
-
-                                    Spacer()
-
-                                    MomentIconCircleButton(systemName: "square.on.square") {
-                                        UIPasteboard.general.string = profile.handle
-                                    }
-                                }
-                            }
-                            .padding(.horizontal, Spacing.lg)
-                            .padding(.vertical, Spacing.lg)
-
-                            HairlineDivider()
-                                .padding(.horizontal, Spacing.lg)
-                        }
-
-                        if let space = currentSpace {
-                            ColorBlock(color: .mint) {
-                                VStack(alignment: .leading, spacing: Spacing.md) {
-                                    EyebrowText("연결 정보")
-
-                                    if let partner = space.members.first(where: { $0.id != currentUser?.id }) {
-                                        VStack(alignment: .leading, spacing: Spacing.xs) {
-                                            Text("함께하는 사람")
-                                                .font(MomentTypography.bodySM)
-                                                .foregroundColor(MomentColor.ink.opacity(0.7))
-
-                                            Text(partner.nickname)
-                                                .font(MomentTypography.cardTitle)
-                                                .foregroundColor(MomentColor.ink)
-
-                                            let daysConnected = Calendar.current.dateComponents([.day], from: space.createdAt, to: Date()).day ?? 0
-                                            Text("D+\(daysConnected)")
-                                                .font(MomentTypography.bodySM)
-                                                .foregroundColor(MomentColor.ink.opacity(0.6))
-                                        }
-                                    }
-                                }
-                            }
-                            .padding(.horizontal, Spacing.lg)
-                        }
-
-                        VStack(alignment: .leading, spacing: Spacing.md) {
-                            EyebrowText("위험한 작업")
-
-                            VStack(spacing: Spacing.sm) {
-                                Button {
-                                    send(.disconnectTapped)
-                                } label: {
-                                    Text("연결 해제")
-                                        .font(MomentTypography.button)
-                                        .foregroundColor(MomentColor.ink)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                }
-
-                                HairlineDivider()
-
-                                Button {
-                                    send(.logoutTapped)
-                                } label: {
-                                    Text("로그아웃")
-                                        .font(MomentTypography.button)
-                                        .foregroundColor(MomentColor.ink)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                }
-
-                                HairlineDivider()
-
-                                Button {
-                                    send(.deleteAccountTapped)
-                                } label: {
-                                    Text("계정 삭제")
-                                        .font(MomentTypography.button)
-                                        .foregroundColor(MomentColor.accentMagenta)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                }
-                            }
-                        }
-                        .padding(.horizontal, Spacing.lg)
-                        .padding(.vertical, Spacing.lg)
+            ScrollView {
+                VStack(spacing: Spacing.md) {
+                    if let profile = state.userProfile {
+                        profileCard(profile)
                     }
-                    .padding(.vertical, Spacing.lg)
-                }
 
-                if state.isLoading {
-                    ProgressView()
-                        .padding(.vertical, Spacing.lg)
+                    if let space = currentSpace {
+                        spaceCard(space)
+                    }
+
+                    accountCard
+
+                    if state.isLoading {
+                        ProgressView()
+                            .tint(MomentColor.ink)
+                            .padding(.vertical, Spacing.md)
+                    }
                 }
+                .padding(.horizontal, Spacing.lg)
+                .padding(.vertical, Spacing.lg)
             }
         }
         .onAppear {
             send(.onAppear)
+        }
+    }
+
+    // MARK: - 프로필 카드
+
+    private func profileCard(_ profile: UserProfile) -> some View {
+        SurfaceCard {
+            HStack(spacing: Spacing.md) {
+                Circle()
+                    .fill(MomentColor.hairline)
+                    .frame(width: 46, height: 46)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(profile.nickname)
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundColor(MomentColor.ink)
+
+                    Text("@\(profile.handle)")
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundColor(MomentColor.ink.opacity(0.55))
+                }
+
+                Spacer()
+
+                Button {
+                    UIPasteboard.general.string = profile.handle
+                } label: {
+                    Text("ID 복사")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(MomentColor.ink.opacity(0.6))
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(Spacing.md)
+        }
+    }
+
+    // MARK: - MY SPACE 카드
+
+    private func spaceCard(_ space: Space) -> some View {
+        SurfaceCard {
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                Text("MY SPACE")
+                    .font(.system(size: 11, design: .monospaced))
+                    .tracking(1.2)
+                    .foregroundColor(MomentColor.ink.opacity(0.5))
+
+                HStack {
+                    if let partner = space.members.first(where: { $0.id != currentUser?.id }) {
+                        Text("\(partner.nickname)님과의 스페이스")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundColor(MomentColor.ink)
+                    } else {
+                        Text("우리 둘의 스페이스")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundColor(MomentColor.ink)
+                    }
+
+                    Spacer()
+
+                    let daysConnected = Calendar.current.dateComponents([.day], from: space.createdAt, to: Date()).day ?? 0
+                    Text("D+\(daysConnected)")
+                        .font(.system(size: 13, design: .monospaced))
+                        .foregroundColor(MomentColor.ink.opacity(0.55))
+                }
+
+                Button {
+                    send(.disconnectTapped)
+                } label: {
+                    Text("연결 해제")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(MomentColor.destructive)
+                }
+                .buttonStyle(.plain)
+                .padding(.top, Spacing.xxs)
+            }
+            .padding(Spacing.md)
+        }
+    }
+
+    // MARK: - ACCOUNT 카드
+
+    private var accountCard: some View {
+        SurfaceCard {
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                Text("ACCOUNT")
+                    .font(.system(size: 11, design: .monospaced))
+                    .tracking(1.2)
+                    .foregroundColor(MomentColor.ink.opacity(0.5))
+
+                Button {
+                    send(.logoutTapped)
+                } label: {
+                    Text("로그아웃")
+                        .font(MomentTypography.body)
+                        .foregroundColor(MomentColor.ink)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(.plain)
+                .padding(.vertical, Spacing.xxs)
+
+                Rectangle()
+                    .fill(MomentColor.ink.opacity(0.1))
+                    .frame(height: 1)
+
+                Button {
+                    send(.deleteAccountTapped)
+                } label: {
+                    Text("계정 삭제")
+                        .font(MomentTypography.body)
+                        .foregroundColor(MomentColor.destructive)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(.plain)
+                .padding(.vertical, Spacing.xxs)
+            }
+            .padding(Spacing.md)
         }
     }
 }
@@ -160,7 +185,7 @@ public struct SettingsView: View {
         maxMembers: 2,
         status: "ACTIVE",
         members: [me, partner],
-        createdAt: Date()
+        createdAt: Calendar.current.date(byAdding: .day, value: -99, to: Date()) ?? Date()
     )
     let state: SettingsFeature.State = {
         var s = SettingsFeature.State()

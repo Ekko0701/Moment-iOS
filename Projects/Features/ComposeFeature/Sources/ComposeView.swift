@@ -1,7 +1,8 @@
 import SwiftUI
 import MomentUIKit
 
-// 매크로 없는 TCA 구성에서 모듈 경계를 지키기 위해 store.scope 대신 (state, send) 주입을 사용
+/// 작성 — Final-MVP: 타이틀 없이 글래스 에디터 카드 + 카운터 + 다크 필 공유 버튼.
+/// 매크로 없는 TCA 구성에서 모듈 경계를 지키기 위해 store.scope 대신 (state, send) 주입을 사용.
 public struct ComposeView: View {
     let state: ComposeFeature.State
     let send: (ComposeFeature.Action) -> Void
@@ -14,20 +15,43 @@ public struct ComposeView: View {
     public var body: some View {
         ZStack {
             MomentColor.canvas.ignoresSafeArea()
+            OrbBackground.compose().ignoresSafeArea()
 
             VStack(spacing: Spacing.lg) {
-                EyebrowText("새 순간")
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, Spacing.lg)
+                editorCard
                     .padding(.top, Spacing.lg)
 
-                Text("우리의 순간을 기록하세요")
-                    .font(MomentTypography.headline)
-                    .foregroundColor(MomentColor.ink)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, Spacing.lg)
+                MomentPillButton("공유하기", style: state.canSubmit ? .primary : .secondary) {
+                    send(.submitTapped)
+                }
+                .disabled(!state.canSubmit)
 
-                VStack(alignment: .leading, spacing: Spacing.sm) {
+                if state.isUploading {
+                    ProgressView()
+                        .tint(MomentColor.ink)
+                }
+
+                Spacer()
+            }
+            .padding(.horizontal, Spacing.lg)
+            .padding(.vertical, Spacing.lg)
+        }
+    }
+
+    // MARK: - 에디터 카드
+
+    private var editorCard: some View {
+        SurfaceCard {
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                ZStack(alignment: .topLeading) {
+                    if state.text.isEmpty {
+                        Text("오늘의 순간을 남겨보세요…")
+                            .font(MomentTypography.body)
+                            .foregroundColor(MomentColor.ink.opacity(0.4))
+                            .padding(.top, 8)
+                            .padding(.leading, 5)
+                    }
+
                     TextEditor(text: Binding(
                         get: { state.text },
                         set: { send(.textChanged($0)) }
@@ -35,35 +59,18 @@ public struct ComposeView: View {
                     .font(MomentTypography.body)
                     .foregroundColor(MomentColor.ink)
                     .scrollContentBackground(.hidden)
-                    .background(MomentColor.canvas)
-                    .border(MomentColor.hairline, width: 1)
-                    .cornerRadius(Spacing.Radius.md)
-                    .frame(minHeight: 120)
-
-                    HStack(alignment: .center, spacing: Spacing.sm) {
-                        Spacer()
-
-                        Text(String(format: "%04d / 0500", state.characterCount))
-                            .font(MomentTypography.caption)
-                            .tracking(0.8)
-                            .foregroundColor(MomentColor.ink.opacity(0.6))
-                    }
-                }
-                .padding(.horizontal, Spacing.lg)
-
-                MomentPillButton("공유하기", style: state.canSubmit ? .primary : .secondary) {
-                    send(.submitTapped)
-                }
-                .disabled(!state.canSubmit)
-                .padding(.horizontal, Spacing.lg)
-
-                if state.isUploading {
-                    ProgressView()
+                    .frame(minHeight: 180)
                 }
 
-                Spacer()
+                HStack {
+                    Spacer()
+                    Text("\(state.characterCount) / 500")
+                        .font(.system(size: 11, design: .monospaced))
+                        .tracking(0.8)
+                        .foregroundColor(MomentColor.ink.opacity(0.45))
+                }
             }
-            .padding(.vertical, Spacing.lg)
+            .padding(Spacing.md)
         }
     }
 }
