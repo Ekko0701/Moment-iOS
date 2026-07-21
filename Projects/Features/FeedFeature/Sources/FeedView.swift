@@ -3,14 +3,22 @@ import Domain
 import MomentUIKit
 import CoreKit
 
-// 매크로 없는 TCA 구성에서 모듈 경계를 지키기 위해 store.scope 대신 (state, send) 주입을 사용
+/// 스페이스 히스토리 — 날짜 구분선 + iMessage식 말풍선 타임라인.
+/// 상대의 모먼트는 왼쪽 정렬(왼쪽 아래 모서리 6px), 내 모먼트는 오른쪽 정렬(오른쪽 아래 6px).
+/// 매크로 없는 TCA 구성에서 모듈 경계를 지키기 위해 store.scope 대신 (state, send) 주입을 사용.
 public struct FeedView: View {
     let state: FeedFeature.State
     let send: (FeedFeature.Action) -> Void
+    let currentUserId: UUID?
 
-    public init(state: FeedFeature.State, send: @escaping (FeedFeature.Action) -> Void) {
+    public init(
+        state: FeedFeature.State,
+        send: @escaping (FeedFeature.Action) -> Void,
+        currentUserId: UUID? = nil
+    ) {
         self.state = state
         self.send = send
+        self.currentUserId = currentUserId
     }
 
     public var body: some View {
@@ -18,176 +26,202 @@ public struct FeedView: View {
             MomentColor.canvas.ignoresSafeArea()
             OrbBackground.feed().ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                VStack(alignment: .leading, spacing: Spacing.sm) {
-                    EyebrowText("피드")
-                        .padding(.horizontal, Spacing.lg)
-                        .padding(.top, Spacing.lg)
+            if state.moments.isEmpty {
+                emptyState
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: Spacing.md) {
+                        ForEach(daySections, id: \.label) { section in
+                            DateDividerPill(section.label)
+                                .frame(maxWidth: .infinity)
+                                .padding(.top, Spacing.xs)
 
-                    Text("우리 둘의 순간")
-                        .font(MomentTypography.headline)
-                        .foregroundColor(MomentColor.ink)
-                        .padding(.horizontal, Spacing.lg)
-                }
+                            ForEach(section.moments, id: \.id) { moment in
+                                bubbleRow(moment)
+                            }
+                        }
 
-                if state.moments.isEmpty {
-                    Spacer()
-
-                    ColorBlock(color: .cream) {
-                        VStack(alignment: .center, spacing: Spacing.md) {
-                            Image(systemName: "sparkles")
-                                .font(.system(size: 32, weight: .semibold))
-                                .foregroundColor(MomentColor.ink)
-
-                            Text("첫 순간을 기다리는 중")
-                                .font(MomentTypography.body)
-                                .foregroundColor(MomentColor.ink)
-                                .multilineTextAlignment(.center)
+                        if state.nextCursor != nil {
+                            ProgressView()
+                                .padding(.vertical, Spacing.md)
+                                .onAppear { send(.loadMore) }
                         }
                     }
                     .padding(.horizontal, Spacing.lg)
-                    .padding(.vertical, Spacing.xxl)
-
-                    Spacer()
-                } else {
-                    ScrollView {
-                        VStack(spacing: Spacing.lg) {
-                            momentsList(state.moments)
-                        }
-                        .padding(.horizontal, Spacing.lg)
-                        .padding(.vertical, Spacing.lg)
-                    }
+                    .padding(.vertical, Spacing.md)
                 }
+            }
 
-                if state.isLoading {
-                    ProgressView()
-                        .padding(.vertical, Spacing.lg)
-                }
+            if state.isLoading && state.moments.isEmpty {
+                ProgressView()
+                    .tint(MomentColor.ink)
             }
         }
     }
 
-    private func momentsList(_ moments: [Moment]) -> some View {
-        VStack(spacing: Spacing.lg) {
-            ForEach(moments.enumerated().map({ $0 }), id: \.element.id) { index, moment in
-                momentCard(moment, index: index)
-            }
+    // MARK: - 날짜 그룹핑
+
+    private var daySections: [(label: String, moments: [Moment])] {
+        let calendar = Calendar.current
+        let grouped = Dictionary(grouping: state.moments) { calendar.startOfDay(for: $0.createdAt) }
+        return grouped.keys.sorted(by: >).map { day in
+            (
+                label: day.feedDividerLabel,
+                moments: (grouped[day] ?? []).sorted { $0.createdAt > $1.createdAt }
+            )
         }
     }
 
-    private func momentCard(_ moment: Moment, index: Int) -> some View {
-        SurfaceCard {
-            VStack(alignment: .leading, spacing: Spacing.sm) {
-                // Author header
-                HStack(spacing: Spacing.sm) {
-                    Circle()
-                        .fill(MomentColor.hairline)
-                        .frame(width: 34, height: 34)
+    // MARK: - 말풍선
 
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(moment.author.nickname)
-                            .font(.system(.body, design: .default).bold())
-                            .foregroundColor(MomentColor.ink)
+    private func bubbleRow(_ moment: Moment) -> some View {
+        let isMine = moment.author.id == currentUserId
+        return HStack(spacing: 0) {
+            if isMine { Spacer(minLength: Spacing.xxl) }
+            bubble(moment, isMine: isMine)
+            if !isMine { Spacer(minLength: Spacing.xxl) }
+        }
+    }
 
-                        Text(moment.createdAt.relativeTimeString)
-                            .font(MomentTypography.caption)
-                            .foregroundColor(MomentColor.muted)
-                    }
+    private func bubble(_ moment: Moment, isMine: Bool) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            // 발신자 헤더
+            HStack(spacing: Spacing.xs) {
+                Circle()
+                    .fill(isMine ? MomentColor.hairline : MomentColor.orbCoral.opacity(0.6))
+                    .frame(width: 26, height: 26)
 
-                    Spacer()
-                }
+                Text(moment.author.nickname)
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(MomentColor.ink)
 
-                // Content
-                if moment.imageURL == nil {
-                    if let text = moment.text {
-                        Text(text)
-                            .font(MomentTypography.body)
-                            .foregroundColor(MomentColor.ink)
-                            .lineLimit(5)
-                    }
-                } else {
-                    AsyncImage(url: moment.imageURL) { phase in
-                        if let image = phase.image {
-                            image
-                                .resizable()
-                                .scaledToFill()
-                                .frame(maxHeight: 200)
-                                .clipped()
-                        } else if phase.error != nil {
-                            Color.gray.opacity(0.2)
-                                .frame(maxHeight: 200)
-                        } else {
-                            Color.gray.opacity(0.2)
-                                .frame(maxHeight: 200)
-                        }
-                    }
-                    .cornerRadius(Spacing.Radius.md)
+                Text(moment.createdAt.feedRelativeTimeString)
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundColor(MomentColor.ink.opacity(0.5))
+            }
 
-                    if let text = moment.text {
-                        Text(text)
-                            .font(MomentTypography.body)
-                            .foregroundColor(MomentColor.ink)
-                            .lineLimit(3)
+            // 사진
+            if let imageURL = moment.imageURL {
+                AsyncImage(url: imageURL) { phase in
+                    if let image = phase.image {
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    } else {
+                        MomentSunsetGradient()
                     }
                 }
+                .frame(maxHeight: 200)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
 
-                // Reactions
-                if !moment.reactions.isEmpty {
-                    HStack(spacing: Spacing.xs) {
-                        ForEach(moment.reactions, id: \.emoji) { reaction in
+            // 텍스트
+            if let text = moment.text, !text.isEmpty {
+                Text(text)
+                    .font(MomentTypography.body)
+                    .foregroundColor(MomentColor.ink)
+                    .multilineTextAlignment(.leading)
+            }
+
+            // 리액션 칩
+            if !moment.reactions.isEmpty {
+                HStack(spacing: Spacing.xs) {
+                    ForEach(moment.reactions, id: \.emoji) { reaction in
+                        Button {
+                            send(.reactionTapped(momentId: moment.id, emoji: reaction.emoji))
+                        } label: {
                             HStack(spacing: 4) {
                                 Text(reaction.emoji)
-                                    .font(.system(size: 14))
-
+                                    .font(.system(size: 13))
                                 Text("\(reaction.count)")
-                                    .font(MomentTypography.bodySM)
+                                    .font(.system(size: 12, weight: .medium))
                             }
                             .padding(.horizontal, Spacing.sm)
-                            .padding(.vertical, Spacing.xxs)
-                            .background(moment.myReaction == reaction.emoji ? MomentColor.accent : MomentColor.hairline)
-                            .foregroundColor(moment.myReaction == reaction.emoji ? MomentColor.inverseInk : MomentColor.ink)
-                            .cornerRadius(Spacing.Radius.full)
+                            .padding(.vertical, 6)
+                            .background(
+                                moment.myReaction == reaction.emoji
+                                    ? MomentColor.ink.opacity(0.85)
+                                    : MomentColor.ink.opacity(0.06)
+                            )
+                            .foregroundColor(
+                                moment.myReaction == reaction.emoji
+                                    ? MomentColor.inverseInk
+                                    : MomentColor.ink
+                            )
+                            .clipShape(Capsule())
                         }
-
-                        Spacer()
+                        .buttonStyle(.plain)
                     }
                 }
             }
-            .padding(Spacing.lg)
         }
+        .padding(Spacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.ultraThinMaterial)
+        .background(Color.white.opacity(0.35))
+        .bubbleCorners(isMine: isMine)
+        .shadow(color: MomentColor.ink.opacity(0.08), radius: 10, x: 0, y: 6)
+    }
+
+    // MARK: - 빈 상태
+
+    private var emptyState: some View {
+        SurfaceCard {
+            VStack(spacing: Spacing.md) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 32, weight: .semibold))
+                    .foregroundColor(MomentColor.ink)
+
+                Text("첫 순간을 기다리는 중")
+                    .font(MomentTypography.body)
+                    .foregroundColor(MomentColor.ink)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, Spacing.xl)
+        }
+        .padding(.horizontal, Spacing.lg)
     }
 }
 
 extension Date {
-    fileprivate var relativeTimeString: String {
+    fileprivate var feedDividerLabel: String {
         let calendar = Calendar.current
-        let now = Date()
-        let components = calendar.dateComponents([.minute, .hour, .day], from: self, to: now)
+        if calendar.isDateInToday(self) { return "오늘" }
+        if calendar.isDateInYesterday(self) { return "어제" }
 
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        let sameYear = calendar.component(.year, from: self) == calendar.component(.year, from: Date())
+        formatter.dateFormat = sameYear ? "M월 d일" : "yyyy년 M월 d일"
+        return formatter.string(from: self)
+    }
+
+    fileprivate var feedRelativeTimeString: String {
+        let components = Calendar.current.dateComponents([.minute, .hour, .day], from: self, to: Date())
         if let day = components.day, day >= 1 {
             return "\(day)일 전"
         } else if let hour = components.hour, hour >= 1 {
             return "\(hour)시간 전"
         } else if let minute = components.minute, minute >= 1 {
             return "\(minute)분 전"
-        } else {
-            return "방금"
         }
+        return "방금"
     }
 }
 
 // MARK: - Xcode Previews
 
-#Preview("피드 — 모먼트 목록") {
+#Preview("피드 — 말풍선 타임라인") {
+    let me = UserProfile(id: UUID(), handle: "moment_5678", nickname: "동주")
+    let partner = UserProfile(id: UUID(), handle: "moment_1234", nickname: "지은")
     let state: FeedFeature.State = {
         var s = FeedFeature.State()
-        let author = UserProfile(id: UUID(), handle: "moment_1234", nickname: "지은")
         s.moments = [
             Moment(
                 id: UUID(),
                 spaceId: UUID(),
-                author: author,
-                text: "오늘 점심 진짜 맛있었어! 다음엔 같이 가자",
+                author: partner,
+                text: "퇴근길 하늘이 예뻐서 한 장 🌇",
                 createdAt: Date().addingTimeInterval(-3600),
                 myReaction: "❤️",
                 reactions: [ReactionCount(emoji: "❤️", count: 1)]
@@ -195,14 +229,15 @@ extension Date {
             Moment(
                 id: UUID(),
                 spaceId: UUID(),
-                author: author,
-                text: "퇴근길 하늘이 예뻐서 한 장",
-                createdAt: Date().addingTimeInterval(-86400)
+                author: me,
+                text: "오늘 점심 진짜 맛있었어! 다음엔 같이 가자",
+                createdAt: Date().addingTimeInterval(-90000),
+                reactions: [ReactionCount(emoji: "😂", count: 1)]
             ),
         ]
         return s
     }()
-    FeedView(state: state, send: { _ in })
+    FeedView(state: state, send: { _ in }, currentUserId: me.id)
 }
 
 #Preview("피드 — 빈 상태") {

@@ -87,7 +87,11 @@ struct AppView: View {
                         set: { viewStore.send(.setHistoryPresented($0)) }
                     )
                 ) {
-                    FeedView(state: mainTabState.feedState, send: { viewStore.send(.feed($0)) })
+                    FeedView(
+                        state: mainTabState.feedState,
+                        send: { viewStore.send(.feed($0)) },
+                        currentUserId: mainTabState.currentUser?.id
+                    )
                         .navigationTitle(
                             "\(mainTabState.homeState.partner?.nickname ?? "우리")님과의 스페이스"
                         )
