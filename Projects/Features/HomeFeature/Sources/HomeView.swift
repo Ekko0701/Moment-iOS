@@ -2,7 +2,8 @@ import SwiftUI
 import Domain
 import MomentUIKit
 
-/// 로그인 직후 진입하는 홈 — 참여한 스페이스를 카드(박스)로 보여주는 현관 화면.
+/// 로그인 직후 진입하는 홈 — Locket 스타일. 파트너의 최신 모먼트 카드가 화면 중앙을 크게 차지하고,
+/// 상단에는 스페이스 필, 하단에는 히스토리 진입 힌트만 둔다 (타이틀 없음).
 /// 매크로 없는 TCA 구성에서 모듈 경계를 지키기 위해 store.scope 대신 (state, send) 주입을 사용.
 public struct HomeView: View {
     let state: HomeFeature.State
@@ -18,30 +19,15 @@ public struct HomeView: View {
             MomentColor.canvas.ignoresSafeArea()
             OrbBackground.home().ignoresSafeArea()
 
-            VStack(alignment: .leading, spacing: Spacing.lg) {
-                EyebrowText("HOME — 우리의 스페이스")
-                    .padding(.top, Spacing.xl)
+            VStack(spacing: 0) {
+                SpacePill(title: spaceTitle, days: state.daysTogether)
+                    .padding(.top, Spacing.md)
 
-                if let nickname = state.currentUser?.nickname {
-                    HStack(spacing: 0) {
-                        Text("\(nickname)")
-                            .font(MomentTypography.displayLG)
-                            .tracking(-1.0)
-                            .foregroundColor(MomentColor.accent)
-                        Text("님, 안녕하세요")
-                            .font(MomentTypography.displayLG)
-                            .tracking(-1.0)
-                            .foregroundColor(MomentColor.ink)
-                    }
-                } else {
-                    Text("안녕하세요")
-                        .font(MomentTypography.displayLG)
-                        .tracking(-1.0)
-                        .foregroundColor(MomentColor.ink)
-                }
+                Spacer(minLength: Spacing.lg)
 
                 if state.space != nil {
-                    spaceCard
+                    momentCard
+                        .padding(.horizontal, Spacing.lg)
                 } else {
                     // 이론상 홈 진입 시 스페이스가 항상 있지만, 방어적으로 안내를 남긴다
                     Text("아직 연결된 스페이스가 없어요")
@@ -49,112 +35,114 @@ public struct HomeView: View {
                         .foregroundColor(MomentColor.ink.opacity(0.6))
                 }
 
-                Spacer()
+                Spacer(minLength: Spacing.lg)
+
+                historyHint
+                    .padding(.bottom, Spacing.md)
             }
-            .padding(.horizontal, Spacing.lg)
         }
         .onAppear { send(.onAppear) }
     }
 
-    // MARK: - 스페이스 카드 (박스)
+    private var spaceTitle: String {
+        if let partner = state.partner {
+            return "\(partner.nickname)님과의 스페이스"
+        }
+        return "우리 둘의 스페이스"
+    }
 
-    private var spaceCard: some View {
+    // MARK: - 메인 모먼트 카드 (Locket 스타일 대형 카드)
+
+    private var momentCard: some View {
         Button {
             send(.spaceCardTapped)
         } label: {
-            SurfaceCard {
-                VStack(alignment: .leading, spacing: Spacing.md) {
-                    HStack(alignment: .firstTextBaseline) {
-                        VStack(alignment: .leading, spacing: Spacing.xs) {
-                            if let partner = state.partner {
-                                Text("\(partner.nickname)님과의 스페이스")
-                                    .font(MomentTypography.headline)
-                                    .foregroundColor(MomentColor.ink)
-                                Text("@\(partner.handle)")
-                                    .font(MomentTypography.caption)
-                                    .foregroundColor(MomentColor.ink.opacity(0.6))
-                            } else {
-                                Text("우리 둘의 스페이스")
-                                    .font(MomentTypography.headline)
-                                    .foregroundColor(MomentColor.ink)
-                            }
-                        }
-                        Spacer()
-                        if let days = state.daysTogether {
-                            HStack(spacing: Spacing.xs) {
-                                Text("D+\(days)")
-                                    .font(.system(.caption, design: .default).bold())
-                                    .foregroundColor(MomentColor.accent)
-                            }
-                            .padding(.horizontal, Spacing.sm)
-                            .padding(.vertical, Spacing.xs)
-                            .background(MomentColor.hairline)
-                            .cornerRadius(6)
-                        }
-                    }
+            ZStack {
+                cardBackground
 
-                    Divider()
-                        .overlay(MomentColor.hairline)
-
-                    // 최신 모먼트 미리보기
-                    VStack(alignment: .leading, spacing: Spacing.xs) {
-                        EyebrowText("LATEST MOMENT")
-                        if let moment = state.latestMoment {
-                            // 이미지가 있으면 먼저 표시
-                            if let imageURL = moment.imageURL {
-                                AsyncImage(url: imageURL) { phase in
-                                    switch phase {
-                                    case .success(let image):
-                                        image
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(height: 150)
-                                            .clipShape(RoundedRectangle(cornerRadius: 14))
-                                    case .empty:
-                                        RoundedRectangle(cornerRadius: 14)
-                                            .fill(MomentColor.hairline)
-                                            .frame(height: 150)
-                                    case .failure:
-                                        RoundedRectangle(cornerRadius: 14)
-                                            .fill(MomentColor.hairline)
-                                            .frame(height: 150)
-                                    @unknown default:
-                                        RoundedRectangle(cornerRadius: 14)
-                                            .fill(MomentColor.hairline)
-                                            .frame(height: 150)
-                                    }
-                                }
-                            }
-                            // 텍스트가 있으면 아래에 표시
-                            if let text = moment.text, !text.isEmpty {
-                                Text(text)
-                                    .font(MomentTypography.caption)
-                                    .foregroundColor(MomentColor.ink)
-                                    .lineLimit(2)
-                                    .multilineTextAlignment(.leading)
-                            }
-                        } else if state.isLoading {
-                            Text("불러오는 중…")
-                                .font(MomentTypography.caption)
-                                .foregroundColor(MomentColor.ink.opacity(0.5))
-                        } else {
-                            Text("아직 상대방의 모먼트가 없어요")
-                                .font(MomentTypography.caption)
-                                .foregroundColor(MomentColor.ink.opacity(0.5))
-                        }
-                    }
-
-                    HStack {
-                        Spacer()
-                        Text("스페이스 열기 →")
-                            .font(MomentTypography.bodySM)
-                            .foregroundColor(MomentColor.accent)
-                    }
+                if state.isLoading && state.latestMoment == nil {
+                    ProgressView()
+                        .tint(.white)
                 }
-                .padding(Spacing.lg)
             }
+            .frame(maxWidth: .infinity)
+            .aspectRatio(345.0 / 430.0, contentMode: .fit)
+            .clipShape(RoundedRectangle(cornerRadius: 32))
+            .overlay(alignment: .topLeading) { senderChip.padding(Spacing.md) }
+            .overlay(alignment: .bottom) { captionPill.padding(.bottom, 20) }
+            .shadow(color: MomentColor.ink.opacity(0.16), radius: 24, x: 0, y: 14)
+            .shadow(color: MomentColor.ink.opacity(0.05), radius: 4, x: 0, y: 2)
         }
         .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private var cardBackground: some View {
+        if let imageURL = state.latestMoment?.imageURL {
+            AsyncImage(url: imageURL) { phase in
+                if let image = phase.image {
+                    image
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    MomentSunsetGradient()
+                }
+            }
+        } else {
+            // 텍스트 모먼트(또는 빈 상태)는 선셋 그라디언트가 사진 자리를 대신한다
+            MomentSunsetGradient()
+        }
+    }
+
+    @ViewBuilder
+    private var senderChip: some View {
+        if let moment = state.latestMoment {
+            SenderChip(
+                name: moment.author.nickname,
+                timeText: moment.createdAt.homeRelativeTimeString
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var captionPill: some View {
+        if let moment = state.latestMoment {
+            if let text = moment.text, !text.isEmpty {
+                CaptionPill(text)
+                    .padding(.horizontal, Spacing.lg)
+            }
+        } else if !state.isLoading {
+            CaptionPill("아직 상대방의 모먼트가 없어요")
+                .padding(.horizontal, Spacing.lg)
+        }
+    }
+
+    // MARK: - 히스토리 진입 힌트
+
+    private var historyHint: some View {
+        Button {
+            send(.spaceCardTapped)
+        } label: {
+            Text("↑ 지난 순간 모아보기")
+                .font(.system(size: 12, design: .monospaced))
+                .tracking(0.8)
+                .foregroundColor(MomentColor.ink.opacity(0.45))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+extension Date {
+    fileprivate var homeRelativeTimeString: String {
+        let components = Calendar.current.dateComponents([.minute, .hour, .day], from: self, to: Date())
+        if let day = components.day, day >= 1 {
+            return "\(day)D AGO"
+        } else if let hour = components.hour, hour >= 1 {
+            return "\(hour)H AGO"
+        } else if let minute = components.minute, minute >= 1 {
+            return "\(minute)M AGO"
+        }
+        return "JUST NOW"
     }
 }
 
@@ -178,8 +166,8 @@ public struct HomeView: View {
             id: UUID(),
             spaceId: UUID(),
             author: partner,
-            text: "퇴근길 하늘이 예뻐서 한 장",
-            createdAt: Date()
+            text: "퇴근길 하늘이 예뻐서 한 장 🌇",
+            createdAt: Date().addingTimeInterval(-3600)
         )
         return s
     }()
