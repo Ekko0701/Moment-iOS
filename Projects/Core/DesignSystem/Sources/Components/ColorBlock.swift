@@ -76,10 +76,13 @@ public struct MomentTextField: View {
         .font(MomentTypography.body)
         .textInputAutocapitalization(disablesAutocapitalization ? .never : .sentences)
         .autocorrectionDisabled(disablesAutocapitalization)
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .background(MomentColor.canvas)
-        .border(isFocused ? MomentColor.ink : MomentColor.hairline, width: 1)
-        .cornerRadius(Spacing.Radius.md)
+        .padding(.horizontal, 18)
+        .padding(.vertical, 14)
+        .background(Color.white.opacity(0.66))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.white.opacity(0.7), lineWidth: 1)
+        )
     }
 }

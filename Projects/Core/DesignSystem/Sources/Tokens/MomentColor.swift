@@ -24,6 +24,7 @@ public struct MomentColor {
     // MARK: - Semantic & Accent
     public static let accentMagenta = Color(red: 0.17, green: 0.155, blue: 0.13) // #2B2721 (warm ink as accent)
     public static let success = Color(red: 0.120, green: 0.651, blue: 0.290) // #1ea64a
+    public static let destructive = Color(red: 0.78, green: 0.29, blue: 0.24) // #C74A3D (warm red — 연결 해제/계정 삭제)
 
     // MARK: - New Design Tokens
     public static let accent = Color(red: 0.17, green: 0.155, blue: 0.13) // #2B2721 (warm ink as accent)

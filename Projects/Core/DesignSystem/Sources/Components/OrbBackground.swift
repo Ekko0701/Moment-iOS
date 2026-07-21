@@ -28,29 +28,53 @@ public struct OrbBackground: View {
         }
     }
 
-    // MARK: - Presets (Design F - Warm Paper Theme)
-    public static func home() -> OrbBackground {
-        OrbBackground([
-            Orb(color: MomentColor.orbCoral, size: 210, x: 140, y: 150, opacity: 0.5),
-            Orb(color: MomentColor.orbYellow, size: 170, x: -40, y: 330, opacity: 0.5),
-            Orb(color: MomentColor.orbBlue, size: 170, x: 230, y: 380, opacity: 0.42),
-            Orb(color: MomentColor.orbLavender, size: 160, x: 90, y: 560, opacity: 0.42),
-        ])
-    }
+    // MARK: - Presets (Final-MVP — 화면별 3색 조합, 투명도 22~40%)
 
     public static func login() -> OrbBackground {
         OrbBackground([
             Orb(color: MomentColor.orbCoral, size: 220, x: -60, y: 60, opacity: 0.35),
-            Orb(color: MomentColor.orbBlue, size: 190, x: 240, y: 200, opacity: 0.4),
-            Orb(color: MomentColor.orbLavender, size: 200, x: 100, y: 480, opacity: 0.3),
+            Orb(color: MomentColor.orbLavender, size: 200, x: 100, y: 500, opacity: 0.30),
+            Orb(color: MomentColor.orbYellow, size: 140, x: 250, y: 300, opacity: 0.22),
+        ])
+    }
+
+    public static func connect() -> OrbBackground {
+        OrbBackground([
+            Orb(color: MomentColor.orbYellow, size: 190, x: 220, y: 80, opacity: 0.40),
+            Orb(color: MomentColor.orbBlue, size: 190, x: -50, y: 300, opacity: 0.35),
+            Orb(color: MomentColor.orbLavender, size: 150, x: 150, y: 600, opacity: 0.25),
+        ])
+    }
+
+    public static func home() -> OrbBackground {
+        OrbBackground([
+            Orb(color: MomentColor.orbCoral, size: 230, x: 200, y: -70, opacity: 0.35),
+            Orb(color: MomentColor.orbYellow, size: 190, x: -50, y: 480, opacity: 0.32),
+            Orb(color: MomentColor.orbLavender, size: 160, x: 240, y: 560, opacity: 0.28),
         ])
     }
 
     public static func feed() -> OrbBackground {
         OrbBackground([
-            Orb(color: MomentColor.orbBlue, size: 190, x: 240, y: 60, opacity: 0.4),
-            Orb(color: MomentColor.orbCoral, size: 190, x: -60, y: 260, opacity: 0.42),
-            Orb(color: MomentColor.orbYellow, size: 180, x: 220, y: 500, opacity: 0.4),
+            Orb(color: MomentColor.orbBlue, size: 190, x: 240, y: 40, opacity: 0.38),
+            Orb(color: MomentColor.orbCoral, size: 190, x: -60, y: 500, opacity: 0.35),
+            Orb(color: MomentColor.orbYellow, size: 140, x: 100, y: 690, opacity: 0.25),
+        ])
+    }
+
+    public static func compose() -> OrbBackground {
+        OrbBackground([
+            Orb(color: MomentColor.orbLavender, size: 200, x: -50, y: 100, opacity: 0.38),
+            Orb(color: MomentColor.orbYellow, size: 180, x: 250, y: 340, opacity: 0.38),
+            Orb(color: MomentColor.orbBlue, size: 150, x: 60, y: 640, opacity: 0.25),
+        ])
+    }
+
+    public static func settings() -> OrbBackground {
+        OrbBackground([
+            Orb(color: MomentColor.orbBlue, size: 180, x: 240, y: 60, opacity: 0.35),
+            Orb(color: MomentColor.orbCoral, size: 190, x: -60, y: 440, opacity: 0.30),
+            Orb(color: MomentColor.orbLavender, size: 150, x: 170, y: 680, opacity: 0.25),
         ])
     }
 }
