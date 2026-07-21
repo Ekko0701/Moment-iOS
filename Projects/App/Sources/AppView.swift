@@ -25,13 +25,6 @@ struct AppView: View {
                 case .auth(let authState):
                     AuthView(state: authState, send: { viewStore.send(.auth($0)) })
 
-                case .connect(let connectState):
-                    ConnectView(
-                        state: connectState,
-                        send: { viewStore.send(.connect($0)) },
-                        onRefresh: { viewStore.send(.refreshConnection) }
-                    )
-
                 case .main(let mainTabState):
                     mainTabView(viewStore, mainTabState)
                 }
@@ -50,8 +43,9 @@ struct AppView: View {
                 return
             }
         } else if url.host == "connect" {
-            if case .connect = viewStore.state {
-                return
+            // 연결 화면은 홈 탭의 빈 상태이므로 홈 탭으로 이동
+            if case .main(let mainTabState) = viewStore.state, mainTabState.currentSpace == nil {
+                viewStore.send(.selectTab(.home))
             }
         } else if url.host == "moment" {
             let pathComponents = url.pathComponents.filter { $0 != "/" }
@@ -78,24 +72,35 @@ struct AppView: View {
     }
 
     // MARK: - Home Tab
+    // 스페이스가 없으면 홈 탭이 연결 화면을 보여준다 (연결 성립 시 자연스럽게 스페이스 홈으로 전환)
     private func homeTabView(_ viewStore: ViewStoreOf<AppFeature>, _ mainTabState: AppFeature.MainTabState) -> some View {
         NavigationStack {
-            HomeView(state: mainTabState.homeState, send: { viewStore.send(.home($0)) })
-                .navigationDestination(
-                    isPresented: Binding(
-                        get: { mainTabState.isHistoryPresented },
-                        set: { viewStore.send(.setHistoryPresented($0)) }
+            Group {
+                if mainTabState.currentSpace == nil {
+                    ConnectView(
+                        state: mainTabState.connectState,
+                        send: { viewStore.send(.connect($0)) },
+                        onRefresh: { viewStore.send(.refreshConnection) }
                     )
-                ) {
-                    FeedView(
-                        state: mainTabState.feedState,
-                        send: { viewStore.send(.feed($0)) },
-                        currentUserId: mainTabState.currentUser?.id
-                    )
-                        .navigationTitle(
-                            "\(mainTabState.homeState.partner?.nickname ?? "우리")님과의 스페이스"
-                        )
+                } else {
+                    HomeView(state: mainTabState.homeState, send: { viewStore.send(.home($0)) })
                 }
+            }
+            .navigationDestination(
+                isPresented: Binding(
+                    get: { mainTabState.isHistoryPresented },
+                    set: { viewStore.send(.setHistoryPresented($0)) }
+                )
+            ) {
+                FeedView(
+                    state: mainTabState.feedState,
+                    send: { viewStore.send(.feed($0)) },
+                    currentUserId: mainTabState.currentUser?.id
+                )
+                    .navigationTitle(
+                        "\(mainTabState.homeState.partner?.nickname ?? "우리")님과의 스페이스"
+                    )
+            }
         }
         .tabItem {
             Label("Home", systemImage: "house")
@@ -106,12 +111,41 @@ struct AppView: View {
     // MARK: - Compose Tab
     private func composeTabView(_ viewStore: ViewStoreOf<AppFeature>, _ mainTabState: AppFeature.MainTabState) -> some View {
         NavigationStack {
-            ComposeView(state: mainTabState.composeState, send: { viewStore.send(.compose($0)) })
+            if mainTabState.currentSpace == nil {
+                connectRequiredView(viewStore)
+            } else {
+                ComposeView(state: mainTabState.composeState, send: { viewStore.send(.compose($0)) })
+            }
         }
         .tabItem {
             Label("Compose", systemImage: "plus")
         }
         .tag(AppFeature.MainTabState.Tab.compose)
+    }
+
+    // 스페이스 미연결 상태에서 작성 탭에 표시하는 안내
+    private func connectRequiredView(_ viewStore: ViewStoreOf<AppFeature>) -> some View {
+        ZStack {
+            MomentColor.canvas.ignoresSafeArea()
+            OrbBackground.compose().ignoresSafeArea()
+
+            VStack(spacing: Spacing.md) {
+                Image(systemName: "person.2")
+                    .font(.system(size: 32, weight: .semibold))
+                    .foregroundColor(MomentColor.ink.opacity(0.7))
+
+                Text("먼저 상대방과 연결해 주세요")
+                    .font(MomentTypography.body)
+                    .foregroundColor(MomentColor.ink)
+
+                MomentPillButton("연결하러 가기", style: .primary) {
+                    viewStore.send(.selectTab(.home))
+                }
+                .padding(.horizontal, Spacing.xxl)
+                .padding(.top, Spacing.sm)
+            }
+            .padding(.horizontal, Spacing.lg)
+        }
     }
 
     // MARK: - Settings Tab

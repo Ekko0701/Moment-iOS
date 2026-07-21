@@ -17,7 +17,6 @@ public struct AppFeature {
     public enum State: Equatable {
         case launching
         case auth(AuthFeatureReducer.State)
-        case connect(ConnectFeatureReducer.State)
         case main(MainTabState)
 
         public init() {
@@ -30,6 +29,8 @@ public struct AppFeature {
         public var feedState: FeedFeatureReducer.State
         public var composeState: ComposeFeatureReducer.State
         public var settingsState: SettingsFeatureReducer.State
+        // 스페이스 미연결 상태에서 홈 탭이 표시할 연결 화면 상태
+        public var connectState: ConnectFeatureReducer.State
         // 로그인 직후엔 홈(스페이스 카드)이 현관 역할을 한다
         public var selectedTab: Tab = .home
         public var currentSpace: Space? = nil
@@ -48,6 +49,7 @@ public struct AppFeature {
             self.feedState = FeedFeatureReducer.State()
             self.composeState = ComposeFeatureReducer.State()
             self.settingsState = SettingsFeatureReducer.State()
+            self.connectState = ConnectFeatureReducer.State()
         }
     }
 
@@ -85,27 +87,26 @@ public struct AppFeature {
                 }
 
             case .appInitialized(.success((let user, let spaces))):
-                if !spaces.isEmpty {
-                    var mainState = MainTabState()
-                    mainState.currentUser = user
-                    mainState.currentSpace = spaces.first
-                    mainState.homeState.space = spaces.first
-                    mainState.homeState.currentUser = user
-                    mainState.feedState.selectedSpaceId = spaces.first?.id
-                    mainState.composeState.selectedSpaceId = spaces.first?.id
-                    mainState.settingsState.currentSpace = spaces.first
-                    mainState.settingsState.userProfile = user
-                    state = .main(mainState)
-                    // Save widget state: has spaces, no need to check moment yet
-                    return .none
+                // 스페이스 유무와 무관하게 메인 탭으로 진입한다.
+                // 스페이스가 없으면 홈 탭이 연결 화면(connectState)을 보여준다.
+                var mainState = MainTabState()
+                mainState.currentUser = user
+                mainState.homeState.currentUser = user
+                mainState.settingsState.userProfile = user
+                if let space = spaces.first {
+                    mainState.currentSpace = space
+                    mainState.homeState.space = space
+                    mainState.feedState.selectedSpaceId = space.id
+                    mainState.composeState.selectedSpaceId = space.id
+                    mainState.settingsState.currentSpace = space
                 } else {
-                    state = .connect(ConnectFeatureReducer.State())
                     // Save widget state: need to connect
                     let store = WidgetMomentStore()
                     store.saveState(.needConnect)
                     WidgetCenter.shared.reloadAllTimelines()
-                    return .none
                 }
+                state = .main(mainState)
+                return .none
 
             case .appInitialized(.failure):
                 state = .auth(AuthFeatureReducer.State())
@@ -116,24 +117,33 @@ public struct AppFeature {
                 return .none
 
             case .spacesLoaded(.success(let spaces)):
-                if !spaces.isEmpty {
-                    var mainState = MainTabState()
-                    mainState.currentSpace = spaces.first
-                    mainState.homeState.space = spaces.first
-                    mainState.feedState.selectedSpaceId = spaces.first?.id
-                    mainState.composeState.selectedSpaceId = spaces.first?.id
-                    mainState.settingsState.currentSpace = spaces.first
-                    state = .main(mainState)
+                // 기존 메인 상태가 있으면 유지(currentUser 등 보존), 없으면 새로 만든다.
+                var mainState: MainTabState
+                if case .main(let existing) = state {
+                    mainState = existing
+                } else {
+                    mainState = MainTabState()
+                }
+                if let space = spaces.first {
+                    mainState.currentSpace = space
+                    mainState.homeState.space = space
+                    mainState.feedState.selectedSpaceId = space.id
+                    mainState.composeState.selectedSpaceId = space.id
+                    mainState.settingsState.currentSpace = space
+                    mainState.connectState = ConnectFeatureReducer.State()
+                } else {
+                    // 아직 스페이스 없음 → 홈 탭이 연결 화면을 유지한다
+                    let store = WidgetMomentStore()
+                    store.saveState(.needConnect)
+                    WidgetCenter.shared.reloadAllTimelines()
+                }
+                state = .main(mainState)
+                if mainState.currentUser == nil {
                     return .run { [sessionUseCase = self.sessionUseCase] send in
                         if let user = try? await sessionUseCase.myProfile() {
                             await send(.profileLoaded(user))
                         }
                     }
-                } else if case .connect = state {
-                    // 이미 연결 화면이면 유지 (새로고침 결과가 "아직 스페이스 없음")
-                } else {
-                    // 로그인 직후 스페이스가 없는 신규/미연결 사용자 → 연결 화면으로
-                    state = .connect(ConnectFeatureReducer.State())
                 }
                 return .none
 
@@ -156,13 +166,13 @@ public struct AppFeature {
                 return .none
 
             case .refreshConnection:
-                guard case .connect(var connectState) = state else {
+                guard case .main(var mainState) = state, mainState.currentSpace == nil else {
                     return .none
                 }
                 // 받은 초대 목록 갱신 + 스페이스 재확인을 동시에 수행.
-                // 스페이스가 생겼으면 spacesLoaded 핸들러가 메인으로 전환한다.
-                let effect = ConnectFeatureReducer().reduce(into: &connectState, action: .onAppear)
-                state = .connect(connectState)
+                // 스페이스가 생겼으면 spacesLoaded 핸들러가 홈 탭을 스페이스 홈으로 전환한다.
+                let effect = ConnectFeatureReducer().reduce(into: &mainState.connectState, action: .onAppear)
+                state = .main(mainState)
                 return effect.map { Action.connect($0) }
                     .merge(with: .run { [sessionUseCase = self.sessionUseCase] send in
                         let result: Result<[Space], DomainError> = await Result {
@@ -212,11 +222,11 @@ public struct AppFeature {
                 return effect.map { .auth($0) }
 
             case .connect(let action):
-                guard case .connect(var connectState) = state else {
+                guard case .main(var mainState) = state else {
                     return .none
                 }
-                let effect = ConnectFeatureReducer().reduce(into: &connectState, action: action)
-                state = .connect(connectState)
+                let effect = ConnectFeatureReducer().reduce(into: &mainState.connectState, action: action)
+                state = .main(mainState)
 
                 // Handle delegates from connect
                 if case .delegate(.connected) = action {
@@ -310,7 +320,21 @@ public struct AppFeature {
                 }
 
                 if case .delegate(.disconnected) = action {
-                    state = .connect(ConnectFeatureReducer.State())
+                    // 연결 해제 → 메인 탭 유지, 홈 탭이 연결 화면으로 돌아간다
+                    var newMainState = mainState
+                    newMainState.currentSpace = nil
+                    newMainState.homeState = HomeFeatureReducer.State()
+                    newMainState.homeState.currentUser = newMainState.currentUser
+                    newMainState.feedState = FeedFeatureReducer.State()
+                    newMainState.composeState = ComposeFeatureReducer.State()
+                    newMainState.settingsState.currentSpace = nil
+                    newMainState.connectState = ConnectFeatureReducer.State()
+                    newMainState.selectedTab = .home
+                    newMainState.isHistoryPresented = false
+                    state = .main(newMainState)
+                    let store = WidgetMomentStore()
+                    store.saveState(.needConnect)
+                    WidgetCenter.shared.reloadAllTimelines()
                     return effect.map { .settings($0) }
                 }
 
