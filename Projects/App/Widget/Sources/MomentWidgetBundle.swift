@@ -9,7 +9,7 @@ struct MomentWidgetBundle: WidgetBundle {
 }
 
 struct MomentWidget: Widget {
-    let kind: String = "com.moment.app.widget"
+    let kind: String = "com.ekko.moment.widget"
 
     var body: some WidgetConfiguration {
         StaticConfiguration(

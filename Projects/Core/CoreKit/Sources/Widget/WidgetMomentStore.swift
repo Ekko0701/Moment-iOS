@@ -46,7 +46,7 @@ public struct WidgetMomentSnapshot: Codable, Sendable {
 
 // MARK: - Widget Moment Store
 public final class WidgetMomentStore: Sendable {
-    private static let appGroupIdentifier = "group.com.moment.app"
+    private static let appGroupIdentifier = "group.com.ekko.moment"
     private static let stateKey = "widgetMomentState"
     private static let imageCacheDirectory = "WidgetMomentCache"
 

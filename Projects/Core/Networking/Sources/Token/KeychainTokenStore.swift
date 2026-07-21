@@ -2,7 +2,7 @@ import Foundation
 import Security
 
 public final actor KeychainTokenStore: TokenStoreProtocol {
-    private let service = "com.moment.app"
+    private let service = "com.ekko.moment"
     private let accessTokenKey = "moment.accessToken"
     private let refreshTokenKey = "moment.refreshToken"
 

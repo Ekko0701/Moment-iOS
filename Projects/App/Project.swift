@@ -10,7 +10,7 @@ let project = Project(
             name: "MomentApp",
             destinations: [.iPhone],
             product: .app,
-            bundleId: "com.moment.app",
+            bundleId: "com.ekko.moment",
             deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(
                 with: [
@@ -47,7 +47,7 @@ let project = Project(
             name: "MomentWidget",
             destinations: [.iPhone],
             product: .appExtension,
-            bundleId: "com.moment.app.widget",
+            bundleId: "com.ekko.moment.widget",
             deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(
                 with: [
