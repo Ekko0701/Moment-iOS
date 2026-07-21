@@ -23,12 +23,6 @@ public struct AuthView: View {
             OrbBackground.login().ignoresSafeArea()
 
             VStack(spacing: 0) {
-                if let error = state.error {
-                    errorBanner(error.errorDescription ?? "로그인에 실패했어요")
-                        .padding(.horizontal, Spacing.lg)
-                        .padding(.top, Spacing.md)
-                }
-
                 switch state.mode {
                 case .apple:
                     welcomeSection
@@ -43,6 +37,15 @@ public struct AuthView: View {
             Button("확인", role: .cancel) {}
         } message: {
             Text("곧 이메일로 재설정 링크를 보내드릴 수 있게 준비하고 있어요.")
+        }
+        .alert(
+            state.error?.errorDescription ?? "로그인에 실패했어요",
+            isPresented: Binding(
+                get: { state.error != nil },
+                set: { if !$0 { send(.dismissError) } }
+            )
+        ) {
+            Button("확인", role: .cancel) {}
         }
     }
 
@@ -225,24 +228,6 @@ public struct AuthView: View {
         }
     }
 
-    private func errorBanner(_ message: String) -> some View {
-        HStack {
-            Text(message)
-                .font(MomentTypography.body)
-                .foregroundColor(MomentColor.ink)
-            Spacer()
-            Image(systemName: "xmark.circle.fill")
-                .foregroundColor(MomentColor.ink)
-                .onTapGesture { send(.dismissError) }
-        }
-        .padding(Spacing.md)
-        .background(MomentColor.blockCoral.opacity(0.5))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.white.opacity(0.6), lineWidth: 1)
-        )
-    }
 }
 
 // MARK: - Xcode Previews

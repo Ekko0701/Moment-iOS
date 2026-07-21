@@ -27,11 +27,6 @@ public struct ConnectView: View {
 
             ScrollView {
                 VStack(spacing: Spacing.lg) {
-                    // 에러 배너
-                    if let error = state.error {
-                        errorBanner(error.errorDescription ?? "오류가 발생했습니다")
-                    }
-
                     if state.isLoading {
                         ProgressView()
                             .tint(MomentColor.ink)
@@ -94,6 +89,15 @@ public struct ConnectView: View {
         }
         .onAppear {
             send(.onAppear)
+        }
+        .alert(
+            state.error?.errorDescription ?? "오류가 발생했어요",
+            isPresented: Binding(
+                get: { state.error != nil },
+                set: { if !$0 { send(.dismissError) } }
+            )
+        ) {
+            Button("확인", role: .cancel) {}
         }
     }
 
@@ -220,20 +224,6 @@ public struct ConnectView: View {
         }
     }
 
-    private func errorBanner(_ message: String) -> some View {
-        HStack {
-            Text(message)
-                .font(MomentTypography.body)
-                .foregroundColor(MomentColor.ink)
-            Spacer()
-            Image(systemName: "xmark.circle.fill")
-                .foregroundColor(MomentColor.ink)
-                .onTapGesture { send(.dismissError) }
-        }
-        .padding(Spacing.md)
-        .background(MomentColor.blockCoral.opacity(0.5))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-    }
 }
 
 // MARK: - Xcode Previews

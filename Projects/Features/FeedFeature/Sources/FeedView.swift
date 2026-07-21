@@ -57,6 +57,15 @@ public struct FeedView: View {
                     .tint(MomentColor.ink)
             }
         }
+        .alert(
+            state.error?.errorDescription ?? "오류가 발생했어요",
+            isPresented: Binding(
+                get: { state.error != nil },
+                set: { if !$0 { send(.dismissError) } }
+            )
+        ) {
+            Button("확인", role: .cancel) {}
+        }
     }
 
     // MARK: - 날짜 그룹핑
