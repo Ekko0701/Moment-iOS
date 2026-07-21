@@ -55,6 +55,31 @@ public struct MomentPillButton: View {
     }
 }
 
+// MARK: - Glass Pill Button (Final-MVP — 오브 배경 위 보조 CTA)
+public struct MomentGlassPillButton: View {
+    let title: String
+    let action: () -> Void
+
+    public init(_ title: String, action: @escaping () -> Void) {
+        self.title = title
+        self.action = action
+    }
+
+    public var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(MomentTypography.button)
+                .frame(maxWidth: .infinity)
+                .frame(minHeight: 44)
+                .foregroundColor(MomentColor.ink)
+                .background(.ultraThinMaterial)
+                .background(Color.white.opacity(0.35))
+                .clipShape(Capsule())
+                .overlay(Capsule().stroke(Color.white.opacity(0.75), lineWidth: 1))
+        }
+    }
+}
+
 // MARK: - Secondary Button with hairline border (mobile legibility adjustment)
 public struct MomentSecondaryPillButton: View {
     let title: String
