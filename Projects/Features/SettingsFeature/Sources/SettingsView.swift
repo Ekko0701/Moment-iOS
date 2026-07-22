@@ -63,6 +63,71 @@ public struct SettingsView: View {
         ) {
             Button("확인", role: .cancel) {}
         }
+        // 연결 해제 2단계 확인 (F-02-07) — Feature의 showDisconnectConfirm을 소비해야
+        // confirmDisconnect가 발행되어 실제 해제가 실행된다
+        .confirmationDialog(
+            "연결을 해제할까요?",
+            isPresented: Binding(
+                get: { state.showDisconnectConfirm },
+                set: { if !$0 { send(.cancelDisconnect) } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("연결 해제", role: .destructive) { send(.confirmDisconnect) }
+            Button("취소", role: .cancel) { send(.cancelDisconnect) }
+        } message: {
+            Text("스페이스가 종료되고 상대방에게 알림이 가요.\n지금까지의 모먼트는 각자 본인이 쓴 것만 보관돼요.")
+        }
+        // 계정 삭제 2단계 확인 (F-10)
+        .confirmationDialog(
+            "정말 계정을 삭제할까요?",
+            isPresented: Binding(
+                get: { state.showDeleteAccountConfirm },
+                set: { if !$0 { send(.cancelDeleteAccount) } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("계정 삭제", role: .destructive) { send(.confirmDeleteAccount) }
+            Button("취소", role: .cancel) { send(.cancelDeleteAccount) }
+        } message: {
+            Text("연결이 종료되고 계정 정보가 삭제돼요. 되돌릴 수 없어요.")
+        }
+        // 닉네임 변경 시트
+        .sheet(isPresented: Binding(
+            get: { state.showNicknameSheet },
+            set: { if !$0 { send(.hideNicknameEditSheet) } }
+        )) {
+            nicknameSheet
+        }
+    }
+
+    // MARK: - 닉네임 변경 시트
+
+    private var nicknameSheet: some View {
+        ZStack {
+            MomentColor.canvas.ignoresSafeArea()
+
+            VStack(spacing: Spacing.md) {
+                Text("닉네임 변경")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundColor(MomentColor.ink)
+                    .padding(.top, Spacing.lg)
+
+                MomentTextField("닉네임 (2~12자)", text: Binding(
+                    get: { state.nicknameInput },
+                    set: { send(.nicknameChanged($0)) }
+                ))
+
+                MomentPillButton(state.isLoading ? "저장 중…" : "저장", style: .primary) {
+                    send(.nicknameSubmitTapped)
+                }
+                .disabled(state.isLoading)
+
+                Spacer()
+            }
+            .padding(.horizontal, Spacing.lg)
+        }
+        .presentationDetents([.height(240)])
     }
 
     // MARK: - 프로필 카드
@@ -86,14 +151,25 @@ public struct SettingsView: View {
 
                 Spacer()
 
-                Button {
-                    UIPasteboard.general.string = profile.handle
-                } label: {
-                    Text("ID 복사")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(MomentColor.ink.opacity(0.6))
+                VStack(alignment: .trailing, spacing: Spacing.xs) {
+                    Button {
+                        send(.showNicknameEditSheet)
+                    } label: {
+                        Text("닉네임 변경")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(MomentColor.ink.opacity(0.6))
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        UIPasteboard.general.string = profile.handle
+                    } label: {
+                        Text("ID 복사")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(MomentColor.ink.opacity(0.6))
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
             .padding(Spacing.md)
         }
