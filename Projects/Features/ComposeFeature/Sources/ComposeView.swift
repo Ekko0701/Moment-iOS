@@ -25,6 +25,8 @@ public struct ComposeView: View {
                     send(.submitTapped)
                 }
                 .disabled(!state.canSubmit)
+                // 임계(글자 입력)를 넘어 버튼이 "켜지는" 순간을 부드럽게
+                .animation(.easeOut(duration: 0.15), value: state.canSubmit)
 
                 if state.isUploading {
                     ProgressView()

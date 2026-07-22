@@ -132,10 +132,12 @@ public struct FeedView: View {
                     .multilineTextAlignment(.leading)
             }
 
-            // 리액션 칩
+            // 리액션 칩 — 서버 왕복 전에도 즉시 반영되도록 낙관 상태(selectedReactions)를 우선한다
             if !moment.reactions.isEmpty {
+                let mine = state.selectedReactions[moment.id] ?? moment.myReaction
                 HStack(spacing: Spacing.xs) {
                     ForEach(moment.reactions, id: \.emoji) { reaction in
+                        let isSelected = mine == reaction.emoji
                         Button {
                             send(.reactionTapped(momentId: moment.id, emoji: reaction.emoji))
                         } label: {
@@ -147,21 +149,15 @@ public struct FeedView: View {
                             }
                             .padding(.horizontal, Spacing.sm)
                             .padding(.vertical, 6)
-                            .background(
-                                moment.myReaction == reaction.emoji
-                                    ? MomentColor.ink.opacity(0.85)
-                                    : MomentColor.ink.opacity(0.06)
-                            )
-                            .foregroundColor(
-                                moment.myReaction == reaction.emoji
-                                    ? MomentColor.inverseInk
-                                    : MomentColor.ink
-                            )
+                            .background(isSelected ? MomentColor.ink.opacity(0.85) : MomentColor.ink.opacity(0.06))
+                            .foregroundColor(isSelected ? MomentColor.inverseInk : MomentColor.ink)
                             .clipShape(Capsule())
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(MomentPressStyle())
                     }
                 }
+                // 선택 하이라이트가 스냅 없이 부드럽게 이동
+                .animation(.easeOut(duration: 0.15), value: mine)
             }
         }
         .padding(Spacing.md)

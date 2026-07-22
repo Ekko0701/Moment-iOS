@@ -29,6 +29,8 @@ public struct HomeView: View {
                 if state.space != nil {
                     momentContent
                         .padding(.horizontal, Spacing.lg)
+                        // 비동기 모먼트가 도착할 때 스냅 교체 대신 부드럽게 안착
+                        .animation(.easeOut(duration: 0.25), value: state.latestMoment)
                 } else {
                     // 이론상 홈 진입 시 스페이스가 항상 있지만, 방어적으로 안내를 남긴다
                     Text("아직 연결된 스페이스가 없어요")
@@ -112,7 +114,7 @@ public struct HomeView: View {
             .shadow(color: MomentColor.ink.opacity(0.16), radius: 24, x: 0, y: 14)
             .shadow(color: MomentColor.ink.opacity(0.05), radius: 4, x: 0, y: 2)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MomentPressStyle(scale: 0.98))
     }
 
     // MARK: - 텍스트 모먼트 카드 (높이가 내용에 맞는 글래스 카드)
@@ -148,7 +150,7 @@ public struct HomeView: View {
                 }
             }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MomentPressStyle(scale: 0.98))
     }
 
     // 글래스 카드 공통 래퍼 — 높이는 콘텐츠에 맞게 동적으로 결정된다

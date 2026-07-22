@@ -134,7 +134,7 @@ public struct ConnectView: View {
                             .background(MomentColor.ink.opacity(0.07))
                             .clipShape(Capsule())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(MomentPressStyle())
                     .padding(.top, Spacing.xs)
                 } else {
                     Text("상대방에게 전달할 코드를 발급해 보세요")
@@ -151,6 +151,8 @@ public struct ConnectView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, Spacing.lg)
             .padding(.horizontal, Spacing.md)
+            // 코드 발급 순간, 스냅 교체 대신 부드럽게 드러나도록 (최초 1회성 이벤트)
+            .animation(.easeOut(duration: 0.2), value: state.issuedCode)
         }
     }
 

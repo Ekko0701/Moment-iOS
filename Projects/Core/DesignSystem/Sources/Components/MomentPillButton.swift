@@ -1,5 +1,25 @@
 import SwiftUI
 
+// MARK: - Press Feedback Style
+
+/// 눌리는 순간 살짝 축소되는 촉감 피드백. 모든 pressable 요소가 공유한다.
+/// scale은 접근성 "동작 줄이기"에서 비활성화하되, opacity 피드백은 유지한다.
+public struct MomentPressStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let scale: CGFloat
+
+    public init(scale: CGFloat = 0.97) {
+        self.scale = scale
+    }
+
+    public func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed && !reduceMotion ? scale : 1)
+            .opacity(configuration.isPressed ? 0.92 : 1)
+            .animation(.easeOut(duration: 0.16), value: configuration.isPressed)
+    }
+}
+
 public enum MomentPillButtonStyle {
     case primary
     case secondary
@@ -27,11 +47,7 @@ public struct MomentPillButton: View {
                 .background(backgroundColor)
                 .cornerRadius(Spacing.Radius.pill)
         }
-        .pressState { isPressed in
-            if isPressed {
-                // Scale on press for tactile feedback (no darkening per spec)
-            }
-        }
+        .buttonStyle(MomentPressStyle())
     }
 
     private var backgroundColor: Color {
@@ -77,6 +93,7 @@ public struct MomentGlassPillButton: View {
                 .clipShape(Capsule())
                 .overlay(Capsule().stroke(Color.white.opacity(0.75), lineWidth: 1))
         }
+        .buttonStyle(MomentPressStyle())
     }
 }
 
@@ -104,6 +121,7 @@ public struct MomentSecondaryPillButton: View {
                 )
                 .cornerRadius(Spacing.Radius.pill)
         }
+        .buttonStyle(MomentPressStyle())
     }
 }
 
@@ -132,25 +150,6 @@ public struct MomentIconCircleButton: View {
                 )
                 .cornerRadius(Spacing.Radius.full)
         }
-    }
-}
-
-// MARK: - Helper modifier for press state
-struct PressStateModifier: ViewModifier {
-    let onPress: (Bool) -> Void
-
-    func body(content: Content) -> some View {
-        content
-            .simultaneousGesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { _ in onPress(true) }
-                    .onEnded { _ in onPress(false) }
-            )
-    }
-}
-
-extension View {
-    fileprivate func pressState(onPress: @escaping (Bool) -> Void) -> some View {
-        modifier(PressStateModifier(onPress: onPress))
+        .buttonStyle(MomentPressStyle(scale: 0.9))
     }
 }
