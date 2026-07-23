@@ -10,8 +10,20 @@ public struct TokenPair: Sendable, Equatable {
     }
 }
 
+public struct AppleLoginCredential: Sendable, Equatable {
+    public let identityToken: String
+    public let authorizationCode: String
+    public let nonce: String
+
+    public init(identityToken: String, authorizationCode: String, nonce: String) {
+        self.identityToken = identityToken
+        self.authorizationCode = authorizationCode
+        self.nonce = nonce
+    }
+}
+
 public protocol AuthRepositoryProtocol: Sendable {
-    func loginWithApple(identityToken: String, nickname: String) async throws -> (tokenPair: TokenPair, isNewUser: Bool)
+    func loginWithApple(credential: AppleLoginCredential, nickname: String) async throws -> (tokenPair: TokenPair, isNewUser: Bool)
     func signUpWithEmail(email: String, password: String, nickname: String) async throws -> (tokenPair: TokenPair, isNewUser: Bool)
     func loginWithEmail(email: String, password: String) async throws -> TokenPair
     func refresh(refreshToken: String) async throws -> TokenPair

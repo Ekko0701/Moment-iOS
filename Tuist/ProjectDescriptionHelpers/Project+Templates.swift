@@ -46,7 +46,8 @@ public extension Project {
         bundleId: String,
         packages: [Package] = [],
         dependencies: [TargetDependency] = [],
-        hasTests: Bool = false
+        hasTests: Bool = false,
+        testDependencies: [TargetDependency] = []
     ) -> Project {
         var targets: [Target] = [
             .target(
@@ -60,6 +61,9 @@ public extension Project {
             ),
         ]
         if hasTests {
+            // 테스트 번들은 @testable import로 대상 모듈을 링크하지만,
+            // TCA 매크로가 생성한 코드가 참조하는 패키지 심볼(ComposableArchitecture 등)은
+            // 테스트 타깃에도 직접 링크되어 있어야 링크 단계에서 해소된다.
             targets.append(
                 .target(
                     name: "\(name)Tests",
@@ -68,7 +72,7 @@ public extension Project {
                     bundleId: "\(bundleId).tests",
                     deploymentTargets: deploymentTarget,
                     sources: ["Tests/**"],
-                    dependencies: [.target(name: name)]
+                    dependencies: [.target(name: name)] + testDependencies
                 ))
         }
         return Project(
@@ -97,7 +101,11 @@ public extension Project {
                 .package(product: "ComposableArchitecture"),
                 .package(product: "Dependencies"),
             ],
-            hasTests: hasTests
+            hasTests: hasTests,
+            testDependencies: [
+                .package(product: "ComposableArchitecture"),
+                .package(product: "Dependencies"),
+            ]
         )
     }
 }

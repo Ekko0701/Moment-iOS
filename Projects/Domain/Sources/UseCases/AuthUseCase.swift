@@ -8,10 +8,10 @@ public struct AuthUseCase: Sendable {
     public init() {}
 
     /// Apple 로그인. 신규 가입 시 임시 기본 닉네임을 부여한다(온보딩에서 변경 가능).
-    public func loginWithApple(identityToken: String) async throws -> Bool {
+    public func loginWithApple(credential: AppleLoginCredential) async throws -> Bool {
         let defaultNickname = "User\(Int.random(in: 1000...9999))"
         let result = try await authRepository.loginWithApple(
-            identityToken: identityToken, nickname: defaultNickname)
+            credential: credential, nickname: defaultNickname)
         return result.isNewUser
     }
 

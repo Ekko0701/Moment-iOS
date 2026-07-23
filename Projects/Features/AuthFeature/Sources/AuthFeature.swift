@@ -33,7 +33,9 @@ public struct AuthFeature {
 
     public enum Action {
         case appleSignInTapped
-        case appleSignInCompleted(identityToken: String)
+        case appleSignInCompleted(AppleLoginCredential)
+        case appleSignInCancelled
+        case appleSignInFailed(String)
         case modeChanged(Mode)
         case emailChanged(String)
         case passwordChanged(String)
@@ -55,18 +57,27 @@ public struct AuthFeature {
                 state.isLoading = true
                 return .none
 
-            case .appleSignInCompleted(let token):
+            case .appleSignInCompleted(let credential):
                 state.isLoading = true
                 return .run { send in
                     @Dependency(\.authUseCase) var authUseCase
                     do {
-                        let isNewUser = try await authUseCase.loginWithApple(identityToken: token)
+                        let isNewUser = try await authUseCase.loginWithApple(credential: credential)
                         await send(.loginResponse(.success(isNewUser)))
                     } catch {
                         let domainError = error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)
                         await send(.loginResponse(.failure(domainError)))
                     }
                 }
+
+            case .appleSignInCancelled:
+                state.isLoading = false
+                return .none
+
+            case .appleSignInFailed(let message):
+                state.isLoading = false
+                state.error = .unknown(code: "APPLE_AUTH_FAILED", message: message)
+                return .none
 
             case .modeChanged(let mode):
                 state.mode = mode

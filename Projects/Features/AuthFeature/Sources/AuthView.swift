@@ -1,6 +1,8 @@
 import SwiftUI
 import MomentUIKit
-import UIKit
+import AuthenticationServices
+import CryptoKit
+import Domain
 
 /// 인증 — Final-MVP v2 (Pinterest 레퍼런스 플로우):
 /// 웰컴(브랜드 + 버튼 스택) → 로그인 / 회원가입(중앙 타이틀 + 폼) 상호 전환.
@@ -11,6 +13,7 @@ public struct AuthView: View {
     let send: (AuthFeature.Action) -> Void
 
     @State private var showsResetNotice = false
+    @State private var currentAppleNonce: String?
 
     public init(state: AuthFeature.State, send: @escaping (AuthFeature.Action) -> Void) {
         self.state = state
@@ -32,6 +35,8 @@ public struct AuthView: View {
                     signupSection
                 }
             }
+            // 웰컴↔로그인↔회원가입 전환이 스냅되지 않고 부드럽게 크로스페이드 (간헐적 액션)
+            .animation(.easeOut(duration: 0.22), value: state.mode)
         }
         .alert("비밀번호 재설정은 준비 중이에요", isPresented: $showsResetNotice) {
             Button("확인", role: .cancel) {}
@@ -72,7 +77,7 @@ public struct AuthView: View {
             Spacer()
 
             VStack(spacing: Spacing.sm) {
-                appleLoginButton(title: isLoading ? "로그인 중…" : " Apple로 시작하기")
+                appleLoginButton(isGlass: false)
 
                 MomentGlassPillButton("✉ 이메일로 시작하기") {
                     send(.modeChanged(.emailSignup))
@@ -125,7 +130,7 @@ public struct AuthView: View {
                 orDivider
                     .padding(.vertical, Spacing.md)
 
-                appleLoginButton(title: " Apple로 계속하기", isGlass: true)
+                appleLoginButton(isGlass: true)
             }
             .padding(.horizontal, Spacing.lg)
 
@@ -180,22 +185,64 @@ public struct AuthView: View {
 
     // MARK: - 공용 컴포넌트
 
-    private func appleLoginButton(title: String, isGlass: Bool = false) -> some View {
-        Group {
-            if isGlass {
-                MomentGlassPillButton(title) { performAppleLogin() }
-            } else {
-                MomentPillButton(title, style: .primary) { performAppleLogin() }
-            }
+    private func appleLoginButton(isGlass: Bool) -> some View {
+        SignInWithAppleButton(.continue) { request in
+            let nonce = Self.makeNonce()
+            currentAppleNonce = nonce
+            request.nonce = Self.sha256(nonce)
+            send(.appleSignInTapped)
+        } onCompletion: { result in
+            handleAppleAuthorization(result)
         }
+        .signInWithAppleButtonStyle(isGlass ? .whiteOutline : .black)
+        .frame(height: 54)
+        .clipShape(Capsule())
         .disabled(isLoading)
         .opacity(isLoading ? 0.6 : 1.0)
     }
 
-    private func performAppleLogin() {
-        guard !isLoading else { return }
-        let deviceId = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
-        send(.appleSignInCompleted(identityToken: "dev-\(deviceId)"))
+    private func handleAppleAuthorization(_ result: Result<ASAuthorization, Error>) {
+        switch result {
+        case .success(let authorization):
+            guard
+                let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+                let identityTokenData = credential.identityToken,
+                let authorizationCodeData = credential.authorizationCode,
+                let identityToken = String(data: identityTokenData, encoding: .utf8),
+                let authorizationCode = String(data: authorizationCodeData, encoding: .utf8),
+                let nonce = currentAppleNonce
+            else {
+                currentAppleNonce = nil
+                send(.appleSignInFailed("Apple 인증 정보를 확인할 수 없어요."))
+                return
+            }
+
+            currentAppleNonce = nil
+            send(.appleSignInCompleted(AppleLoginCredential(
+                identityToken: identityToken,
+                authorizationCode: authorizationCode,
+                nonce: nonce
+            )))
+
+        case .failure(let error):
+            currentAppleNonce = nil
+            let nsError = error as NSError
+            if nsError.domain == ASAuthorizationError.errorDomain,
+               nsError.code == ASAuthorizationError.canceled.rawValue {
+                send(.appleSignInCancelled)
+            } else {
+                send(.appleSignInFailed("Apple 로그인에 실패했어요. 잠시 후 다시 시도해 주세요."))
+            }
+        }
+    }
+
+    private static func makeNonce() -> String {
+        UUID().uuidString.replacingOccurrences(of: "-", with: "")
+            + UUID().uuidString.replacingOccurrences(of: "-", with: "")
+    }
+
+    private static func sha256(_ value: String) -> String {
+        SHA256.hash(data: Data(value.utf8)).map { String(format: "%02x", $0) }.joined()
     }
 
     private func modeSwitchLink(prompt: String, action: String, target: AuthFeature.Mode) -> some View {

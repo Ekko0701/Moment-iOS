@@ -10,8 +10,8 @@ public final class AuthRepositoryImpl: AuthRepositoryProtocol {
         self.tokenStore = tokenStore
     }
 
-    public func loginWithApple(identityToken: String, nickname: String) async throws -> (tokenPair: TokenPair, isNewUser: Bool) {
-        let endpoint = AuthEndpoints.loginWithApple(identityToken: identityToken, nickname: nickname)
+    public func loginWithApple(credential: AppleLoginCredential, nickname: String) async throws -> (tokenPair: TokenPair, isNewUser: Bool) {
+        let endpoint = AuthEndpoints.loginWithApple(credential: credential, nickname: nickname)
         let response: LoginAppleResponse = try await apiClient.request(endpoint)
         let pair = TokenPair(accessToken: response.accessToken, refreshToken: response.refreshToken)
         try await persist(pair)

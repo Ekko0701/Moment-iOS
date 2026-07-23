@@ -1,4 +1,5 @@
 import Foundation
+import Domain
 
 public struct Endpoint: Sendable {
     public enum HTTPMethod: String, Sendable {
@@ -33,8 +34,13 @@ public struct Endpoint: Sendable {
 // MARK: - Auth Endpoints
 
 public enum AuthEndpoints {
-    static func loginWithApple(identityToken: String, nickname: String?) -> Endpoint {
-        let body = LoginAppleRequest(identityToken: identityToken, nickname: nickname)
+    static func loginWithApple(credential: AppleLoginCredential, nickname: String?) -> Endpoint {
+        let body = LoginAppleRequest(
+            identityToken: credential.identityToken,
+            authorizationCode: credential.authorizationCode,
+            nonce: credential.nonce,
+            nickname: nickname
+        )
         return Endpoint(
             path: "/v1/auth/apple",
             method: .post,
@@ -266,6 +272,8 @@ struct PresignRequest: Encodable, Sendable {
 
 struct LoginAppleRequest: Encodable, Sendable {
     let identityToken: String
+    let authorizationCode: String
+    let nonce: String
     let nickname: String?
 }
 
