@@ -8,6 +8,7 @@ import FeedFeature
 import ComposeFeature
 import SettingsFeature
 import MomentUIKit
+import Networking
 
 struct AppView: View {
     let store: StoreOf<AppFeature>
@@ -32,6 +33,12 @@ struct AppView: View {
             .onOpenURL { url in
                 handleDeepLink(url, viewStore: viewStore)
             }
+            #if DEBUG
+            // 로컬↔운영 혼동 방지용 서버 배지 — DEBUG 빌드에서만 컴파일된다
+            .overlay(alignment: .topTrailing) {
+                DebugServerBadge()
+            }
+            #endif
         }
     }
 
@@ -147,6 +154,26 @@ struct AppView: View {
             .padding(.horizontal, Spacing.lg)
         }
     }
+
+    // MARK: - Debug Server Badge
+
+    #if DEBUG
+    /// 현재 API 호스트를 우상단에 작게 표시 — 로컬(localhost/.local)인지 운영인지 즉시 구분.
+    /// 릴리즈 빌드에는 포함되지 않는다.
+    private struct DebugServerBadge: View {
+        var body: some View {
+            Text(NetworkingLive.debugServerLabel)
+                .font(.system(size: 9, weight: .medium))
+                .foregroundColor(MomentColor.ink.opacity(0.5))
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .background(MomentColor.glassFill)
+                .clipShape(Capsule())
+                .padding(.trailing, 6)
+                .allowsHitTesting(false)
+        }
+    }
+    #endif
 
     // MARK: - Settings Tab
     private func settingsTabView(_ viewStore: ViewStoreOf<AppFeature>, _ mainTabState: AppFeature.MainTabState) -> some View {

@@ -35,10 +35,25 @@ public enum ModuleDependency {
 
 // MARK: - 프로젝트 표준형
 
+// MARK: - 빌드 컨피규레이션 단일 선언
+// Debug(운영 서버) / Debug-Local(로컬 서버, LOCAL_SERVER 조건) / Release(운영 서버).
+// 워크스페이스의 모든 프로젝트가 같은 컨피규레이션 셋을 가져야 스킴 빌드 시 불일치가 없다.
+
+public enum MomentConfiguration {
+    public static let all: [Configuration] = [
+        .debug(name: "Debug"),
+        .debug(
+            name: "Debug-Local",
+            settings: ["SWIFT_ACTIVE_COMPILATION_CONDITIONS": "$(inherited) LOCAL_SERVER"]),
+        .release(name: "Release"),
+    ]
+}
+
 public extension Project {
     private static let deploymentTarget: DeploymentTargets = .iOS("17.0")
     private static let baseSettings: Settings = .settings(
-        base: ["SWIFT_ALLOW_MACRO_ATTESTATIONS": "YES"])
+        base: ["SWIFT_ALLOW_MACRO_ATTESTATIONS": "YES"],
+        configurations: MomentConfiguration.all)
 
     /// 프레임워크 모듈 표준형: Sources/** (+ 선택적으로 Tests/**)
     static func module(
