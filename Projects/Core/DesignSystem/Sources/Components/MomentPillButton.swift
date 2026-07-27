@@ -88,10 +88,8 @@ public struct MomentGlassPillButton: View {
                 .frame(maxWidth: .infinity)
                 .frame(minHeight: 44)
                 .foregroundColor(MomentColor.ink)
-                .background(.ultraThinMaterial)
-                .background(Color.white.opacity(0.35))
-                .clipShape(Capsule())
-                .overlay(Capsule().stroke(Color.white.opacity(0.75), lineWidth: 1))
+                // 프레스 피드백은 MomentPressStyle이 전 버전 일관 담당 — 네이티브 interactive와 이중 스케일 방지
+                .glassCapsule(isInteractive: false)
         }
         .buttonStyle(MomentPressStyle())
     }

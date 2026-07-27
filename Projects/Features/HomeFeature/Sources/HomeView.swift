@@ -111,8 +111,8 @@ public struct HomeView: View {
                         .padding(.bottom, 20)
                 }
             }
-            .shadow(color: MomentColor.ink.opacity(0.16), radius: 24, x: 0, y: 14)
-            .shadow(color: MomentColor.ink.opacity(0.05), radius: 4, x: 0, y: 2)
+            .shadow(color: MomentColor.shadowTint.opacity(0.16), radius: 24, x: 0, y: 14)
+            .shadow(color: MomentColor.shadowTint.opacity(0.05), radius: 4, x: 0, y: 2)
         }
         .buttonStyle(MomentPressStyle(scale: 0.98))
     }
@@ -137,7 +137,7 @@ public struct HomeView: View {
 
                         Text(moment.createdAt.homeRelativeTimeString)
                             .font(.system(size: 11))
-                            .foregroundColor(MomentColor.ink.opacity(0.5))
+                            .foregroundColor(MomentColor.ink.opacity(0.72))
                     }
 
                     if let text = moment.text, !text.isEmpty {
@@ -159,15 +159,9 @@ public struct HomeView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 28)
             .padding(.horizontal, Spacing.lg)
-            .background(.ultraThinMaterial)
-            .background(Color.white.opacity(0.35))
-            .clipShape(RoundedRectangle(cornerRadius: 24))
-            .overlay(
-                RoundedRectangle(cornerRadius: 24)
-                    .stroke(Color.white.opacity(0.75), lineWidth: 1)
-            )
-            .shadow(color: MomentColor.ink.opacity(0.13), radius: 20, x: 0, y: 10)
-            .shadow(color: MomentColor.ink.opacity(0.05), radius: 4, x: 0, y: 2)
+            .glassSurface(cornerRadius: 24)
+            .shadow(color: MomentColor.shadowTint.opacity(0.13), radius: 20, x: 0, y: 10)
+            .shadow(color: MomentColor.shadowTint.opacity(0.05), radius: 4, x: 0, y: 2)
     }
 
     // MARK: - 히스토리 진입 힌트

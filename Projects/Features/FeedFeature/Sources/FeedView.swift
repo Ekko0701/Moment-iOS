@@ -163,9 +163,9 @@ public struct FeedView: View {
         .padding(Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.ultraThinMaterial)
-        .background(Color.white.opacity(0.35))
+        .background(MomentColor.glassFill)
         .bubbleCorners(isMine: isMine)
-        .shadow(color: MomentColor.ink.opacity(0.08), radius: 10, x: 0, y: 6)
+        .shadow(color: MomentColor.shadowTint.opacity(0.08), radius: 10, x: 0, y: 6)
     }
 
     // MARK: - 빈 상태

@@ -30,11 +30,8 @@ public struct SpacePill: View {
         .padding(.leading, Spacing.sm)
         .padding(.trailing, Spacing.md)
         .padding(.vertical, Spacing.xs)
-        .background(.ultraThinMaterial)
-        .background(Color.white.opacity(0.35))
-        .clipShape(Capsule())
-        .overlay(Capsule().stroke(Color.white.opacity(0.75), lineWidth: 1))
-        .shadow(color: MomentColor.ink.opacity(0.08), radius: 12, x: 0, y: 4)
+        .glassCapsule()
+        .shadow(color: MomentColor.shadowTint.opacity(0.08), radius: 12, x: 0, y: 4)
     }
 }
 
@@ -52,22 +49,24 @@ public struct SenderChip: View {
     public var body: some View {
         HStack(spacing: Spacing.xs) {
             Circle()
-                .fill(Color.white.opacity(0.9))
+                .fill(MomentColor.orbLavender)
                 .frame(width: 22, height: 22)
 
             Text(name)
                 .font(.system(size: 13, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(MomentColor.ink)
 
             Text(timeText)
                 .font(.system(size: 11, design: .default))
-                .foregroundColor(.white.opacity(0.75))
+                .foregroundColor(MomentColor.ink.opacity(0.72))
         }
         .padding(.leading, Spacing.xs)
         .padding(.trailing, 14)
         .padding(.vertical, 6)
-        .background(MomentColor.ink.opacity(0.32))
+        .background(.ultraThinMaterial)
+        .background(MomentColor.overlayGlassFill)
         .clipShape(Capsule())
+        .overlay(Capsule().stroke(MomentColor.overlayGlassStroke, lineWidth: 1))
     }
 }
 
@@ -87,9 +86,11 @@ public struct CaptionPill: View {
             .lineLimit(1)
             .padding(.horizontal, 18)
             .padding(.vertical, 10)
-            .background(Color.white.opacity(0.85))
+            .background(.ultraThinMaterial)
+            .background(MomentColor.overlayGlassFill)
             .clipShape(Capsule())
-            .shadow(color: MomentColor.ink.opacity(0.10), radius: 8, x: 0, y: 4)
+            .overlay(Capsule().stroke(MomentColor.overlayGlassStroke, lineWidth: 1))
+            .shadow(color: MomentColor.shadowTint.opacity(0.10), radius: 8, x: 0, y: 4)
     }
 }
 
