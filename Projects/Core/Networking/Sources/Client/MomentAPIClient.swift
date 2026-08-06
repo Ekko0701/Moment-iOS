@@ -33,7 +33,12 @@ public final class MomentAPIClient: APIClientProtocol {
         self.decoder = decoder
 
         let interceptor = AuthRequestInterceptor(tokenStore: tokenStore, baseURL: baseURL)
+        #if DEBUG
+        // Debug 빌드에서만 요청/응답 전문 로깅 — Release 아카이브에는 컴파일되지 않는다
+        self.session = Session(interceptor: interceptor, eventMonitors: [NetworkDebugLogger()])
+        #else
         self.session = Session(interceptor: interceptor)
+        #endif
     }
 
     public func request<T: Decodable & Sendable>(_ endpoint: Endpoint) async throws -> T {

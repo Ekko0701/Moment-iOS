@@ -1,5 +1,8 @@
 import Foundation
 import Alamofire
+#if DEBUG
+import os
+#endif
 
 /// 모든 요청에 Bearer 액세스 토큰을 부착하고, 401 응답 시 리프레시 토큰으로
 /// 토큰을 1회 갱신한 뒤 원 요청을 재시도한다.
@@ -7,6 +10,12 @@ import Alamofire
 final class AuthRequestInterceptor: RequestInterceptor, @unchecked Sendable {
     private let tokenStore: TokenStoreProtocol
     private let baseURL: URL
+
+    #if DEBUG
+    // 리프레시 호출은 URLSession 직행이라 NetworkDebugLogger(EventMonitor)에 잡히지 않는다.
+    // 토큰 값은 절대 출력하지 않고 성공/실패만 남긴다.
+    private static let logger = Logger(subsystem: "com.ekko.moment", category: "Network")
+    #endif
 
     init(tokenStore: TokenStoreProtocol, baseURL: URL) {
         self.tokenStore = tokenStore
@@ -44,9 +53,15 @@ final class AuthRequestInterceptor: RequestInterceptor, @unchecked Sendable {
                 let pair = try await Self.requestRefresh(refreshToken: refreshToken, baseURL: baseURL)
                 try await tokenStore.setAccessToken(pair.accessToken)
                 try await tokenStore.setRefreshToken(pair.refreshToken)
+                #if DEBUG
+                Self.logger.debug("[Auth] 401 → 토큰 갱신 성공, 원 요청 재시도")
+                #endif
                 completion(.retry)
             } catch {
                 // 리프레시 실패 = 세션 만료. 토큰을 비워 다음 시작 시 로그인 화면으로 가게 한다.
+                #if DEBUG
+                Self.logger.debug("[Auth] 401 → 토큰 갱신 실패, 세션 만료 처리")
+                #endif
                 try? await tokenStore.deleteTokens()
                 completion(.doNotRetry)
             }
