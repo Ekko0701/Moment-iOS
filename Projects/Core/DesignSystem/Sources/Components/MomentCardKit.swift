@@ -30,8 +30,8 @@ public struct SpacePill: View {
         .padding(.leading, Spacing.sm)
         .padding(.trailing, Spacing.md)
         .padding(.vertical, Spacing.xs)
+        // 글래스는 자체 깊이 표현을 가지므로 수동 그림자를 얹지 않는다 (Liquid Glass 점검)
         .glassCapsule()
-        .shadow(color: MomentColor.shadowTint.opacity(0.08), radius: 12, x: 0, y: 4)
     }
 }
 
@@ -90,7 +90,6 @@ public struct CaptionPill: View {
             .background(MomentColor.overlayGlassFill)
             .clipShape(Capsule())
             .overlay(Capsule().stroke(MomentColor.overlayGlassStroke, lineWidth: 1))
-            .shadow(color: MomentColor.shadowTint.opacity(0.10), radius: 8, x: 0, y: 4)
     }
 }
 

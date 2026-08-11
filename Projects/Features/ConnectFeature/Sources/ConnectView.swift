@@ -23,7 +23,6 @@ public struct ConnectView: View {
     public var body: some View {
         ZStack {
             MomentColor.canvas.ignoresSafeArea()
-            OrbBackground.connect().ignoresSafeArea()
 
             ScrollView {
                 VStack(spacing: Spacing.lg) {

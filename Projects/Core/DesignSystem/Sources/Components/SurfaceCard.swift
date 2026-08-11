@@ -8,9 +8,15 @@ public struct SurfaceCard<Content: View>: View {
     }
 
     public var body: some View {
+        // 콘텐츠 카드는 글래스가 아닌 불투명 미니멀 서피스 (글래스는 크롬·인터랙티브 전용).
+        // 그림자 대신 서피스 대비(light)와 헤어라인(dark)으로 구분 — GlassMinimal 시안.
         content
-            .glassSurface(cornerRadius: 22)
-            .shadow(color: MomentColor.shadowTint.opacity(0.10), radius: 14, x: 0, y: 8)
+            .background(MomentColor.surfaceSoft)
+            .clipShape(RoundedRectangle(cornerRadius: 22))
+            .overlay(
+                RoundedRectangle(cornerRadius: 22)
+                    .stroke(MomentColor.surfaceStroke, lineWidth: 1)
+            )
     }
 }
 

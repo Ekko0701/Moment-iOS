@@ -24,7 +24,6 @@ public struct FeedView: View {
     public var body: some View {
         ZStack {
             MomentColor.canvas.ignoresSafeArea()
-            OrbBackground.feed().ignoresSafeArea()
 
             if state.moments.isEmpty {
                 emptyState
@@ -162,10 +161,18 @@ public struct FeedView: View {
         }
         .padding(Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.ultraThinMaterial)
-        .background(MomentColor.glassFill)
+        // 콘텐츠 말풍선은 불투명 미니멀 서피스 — 글래스·그림자는 크롬 전용 (GlassMinimal 시안)
+        .background(MomentColor.surfaceSoft)
         .bubbleCorners(isMine: isMine)
-        .shadow(color: MomentColor.shadowTint.opacity(0.08), radius: 10, x: 0, y: 6)
+        .overlay(
+            UnevenRoundedRectangle(
+                topLeadingRadius: 24,
+                bottomLeadingRadius: isMine ? 24 : 6,
+                bottomTrailingRadius: isMine ? 6 : 24,
+                topTrailingRadius: 24
+            )
+            .stroke(MomentColor.surfaceStroke, lineWidth: 1)
+        )
     }
 
     // MARK: - 빈 상태

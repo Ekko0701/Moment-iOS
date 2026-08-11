@@ -20,52 +20,59 @@ extension Color {
 }
 
 public struct MomentColor {
-    // MARK: - Core (LightLux 크림/잉크 ↔ DarkLux 니어블랙/오프화이트)
+    // MARK: - Core (GlassMinimal 시안: 순백/뉴트럴 잉크 ↔ 니어블랙/오프화이트)
+    // 사진이 주인공인 앱이라 배경을 중립화해 사진 색이 왜곡 없이 살도록 한다.
 
-    /// 화면 바탕 — light: 웜 크림, dark: 니어블랙
+    /// 화면 바탕 — light: 순백, dark: 니어블랙
     public static let canvas = Color(
-        light: Color(red: 0.972, green: 0.952, blue: 0.925),
+        light: .white,
         dark: Color(red: 0.055, green: 0.05, blue: 0.055)
     )
 
-    /// 본문 텍스트/프라이머리 — light: 웜 잉크, dark: 오프화이트
+    /// 본문 텍스트/프라이머리 — light: 뉴트럴 잉크(#1C1C1E), dark: 오프화이트
     public static let ink = Color(
-        light: Color(red: 0.16, green: 0.14, blue: 0.12),
+        light: Color(red: 0.11, green: 0.11, blue: 0.118),
         dark: Color(red: 0.97, green: 0.96, blue: 0.95)
     )
 
     /// canvas의 반전 (프라이머리 버튼 배경 등)
     public static let inverseCanvas = Color(
-        light: Color(red: 0.11, green: 0.10, blue: 0.09),
+        light: Color(red: 0.11, green: 0.11, blue: 0.118),
         dark: Color(red: 0.97, green: 0.96, blue: 0.95)
     )
 
     /// ink의 반전 (프라이머리 버튼 텍스트 등)
     public static let inverseInk = Color(
-        light: Color(red: 0.98, green: 0.97, blue: 0.96),
+        light: Color(red: 0.98, green: 0.98, blue: 0.985),
         dark: Color(red: 0.08, green: 0.07, blue: 0.08)
     )
 
     // MARK: - Hairline & Surface
 
     public static let hairline = Color(
-        light: Color(red: 0.90, green: 0.88, blue: 0.84),
+        light: Color(red: 0.898, green: 0.898, blue: 0.918),
         dark: Color(red: 0.22, green: 0.21, blue: 0.21)
     )
     public static let hairlineSoft = Color(
-        light: Color(red: 0.93, green: 0.915, blue: 0.88),
+        light: Color(red: 0.937, green: 0.937, blue: 0.957),
         dark: Color(red: 0.17, green: 0.16, blue: 0.16)
     )
+    /// 카드·칩 서피스 — light: App Store식 연한 그레이(#F5F5F7), dark: 다크 서피스
     public static let surfaceSoft = Color(
-        light: Color(red: 0.93, green: 0.905, blue: 0.855),
+        light: Color(red: 0.961, green: 0.961, blue: 0.969),
         dark: Color(red: 0.14, green: 0.13, blue: 0.13)
     )
     public static let surface = Color(
         light: .white,
         dark: Color(red: 0.13, green: 0.12, blue: 0.125)
     )
+    /// 카드 보더 — light: 없음(그레이 서피스 대비로 충분), dark: 화이트 헤어라인 8%
+    public static let surfaceStroke = Color(
+        light: .clear,
+        dark: Color.white.opacity(0.08)
+    )
     public static let muted = Color(
-        light: Color(red: 0.54, green: 0.52, blue: 0.47),
+        light: Color(red: 0.557, green: 0.557, blue: 0.577),
         dark: Color(red: 0.62, green: 0.60, blue: 0.58)
     )
 
@@ -78,7 +85,7 @@ public struct MomentColor {
     )
     /// 글래스 보더 — light: 잉크 8%, dark: white 14%
     public static let glassStroke = Color(
-        light: Color(red: 0.16, green: 0.14, blue: 0.12).opacity(0.08),
+        light: Color(red: 0.11, green: 0.11, blue: 0.118).opacity(0.08),
         dark: Color.white.opacity(0.14)
     )
     /// 사진(석양 카드) 위 오버레이 칩 — light: 화이트 프로스티드, dark: 다크 글래스
@@ -90,9 +97,9 @@ public struct MomentColor {
         light: Color.white.opacity(0.6),
         dark: Color.white.opacity(0.16)
     )
-    /// 그림자 틴트 — light: 웜 브라운, dark: 블랙 (ink 기반이면 다크에서 흰 그림자가 되므로 분리)
+    /// 그림자 틴트 — 화이트 톤 전환으로 양 테마 모두 뉴트럴 블랙 (웜 브라운 폐기)
     public static let shadowTint = Color(
-        light: Color(red: 0.35, green: 0.22, blue: 0.12),
+        light: Color.black,
         dark: Color.black
     )
 

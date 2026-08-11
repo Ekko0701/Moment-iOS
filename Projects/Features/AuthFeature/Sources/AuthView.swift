@@ -21,22 +21,23 @@ public struct AuthView: View {
     }
 
     public var body: some View {
-        ZStack {
-            MomentColor.canvas.ignoresSafeArea()
-            OrbBackground.login().ignoresSafeArea()
-
-            VStack(spacing: 0) {
-                switch state.mode {
-                case .apple:
-                    welcomeSection
-                case .emailLogin:
-                    loginSection
-                case .emailSignup:
-                    signupSection
+        // GlassMinimal 시안: 웰컴을 루트로 두고 로그인/회원가입을 내비게이션 푸시로 전환 —
+        // 시스템 Back 버튼과 엣지 스와이프 백을 그대로 얻는다 (웨이파인딩: 돌아갈 길 보장).
+        NavigationStack {
+            authBackground { welcomeSection }
+                .navigationDestination(isPresented: Binding(
+                    get: { state.mode != .apple },
+                    set: { if !$0 { send(.modeChanged(.apple)) } }
+                )) {
+                    authBackground {
+                        // 푸시된 화면 안에서 로그인↔가입 전환은 콘텐츠 스왑 (Back은 웰컴으로)
+                        if state.mode == .emailLogin {
+                            loginSection
+                        } else {
+                            signupSection
+                        }
+                    }
                 }
-            }
-            // 웰컴↔로그인↔회원가입 전환이 스냅되지 않고 부드럽게 크로스페이드 (간헐적 액션)
-            .animation(.easeOut(duration: 0.22), value: state.mode)
         }
         .alert("비밀번호 재설정은 준비 중이에요", isPresented: $showsResetNotice) {
             Button("확인", role: .cancel) {}
@@ -55,6 +56,18 @@ public struct AuthView: View {
     }
 
     private var isLoading: Bool { state.isLoading }
+
+    /// 인증 화면 CTA 공통 높이 — Apple 버튼과 이메일 버튼이 같은 스택에서 같은 크기로 보이도록 통일.
+    private static let ctaHeight: CGFloat = 54
+
+    /// 캔버스 + 오브 배경 공통 래퍼 (웰컴·푸시 화면 동일 배경)
+    private func authBackground<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        ZStack {
+            MomentColor.canvas.ignoresSafeArea()
+            OrbBackground.login().ignoresSafeArea()
+            content()
+        }
+    }
 
     // MARK: - 웰컴 (브랜드 + 버튼 스택)
 
@@ -79,7 +92,7 @@ public struct AuthView: View {
             VStack(spacing: Spacing.sm) {
                 appleLoginButton(isGlass: false)
 
-                MomentGlassPillButton("✉ 이메일로 시작하기") {
+                MomentGlassPillButton("이메일로 계속하기", minHeight: Self.ctaHeight) {
                     send(.modeChanged(.emailSignup))
                 }
                 .disabled(isLoading)
@@ -120,7 +133,8 @@ public struct AuthView: View {
                 .foregroundColor(MomentColor.ink.opacity(0.6))
                 .padding(.top, Spacing.xs)
 
-                MomentPillButton(isLoading ? "처리 중…" : "로그인", style: .primary) {
+                MomentPillButton(isLoading ? "처리 중…" : "로그인", style: .primary,
+                        minHeight: Self.ctaHeight) {
                     send(.emailSubmitTapped)
                 }
                 .disabled(!state.canSubmitEmail || isLoading)
@@ -167,12 +181,13 @@ public struct AuthView: View {
                     set: { send(.nicknameChanged($0)) }
                 ))
 
-                MomentPillButton(isLoading ? "처리 중…" : "가입하기", style: .primary) {
+                MomentPillButton(isLoading ? "처리 중…" : "가입하기", style: .primary,
+                        minHeight: Self.ctaHeight) {
                     send(.emailSubmitTapped)
                 }
                 .disabled(!state.canSubmitEmail || isLoading)
                 .opacity((!state.canSubmitEmail || isLoading) ? 0.6 : 1.0)
-                .padding(.top, Spacing.sm)
+                .padding(.top, Spacing.xl) // 시안: 필드 묶음과 CTA 사이 32pt
             }
             .padding(.horizontal, Spacing.lg)
 
@@ -186,7 +201,12 @@ public struct AuthView: View {
     // MARK: - 공용 컴포넌트
 
     private func appleLoginButton(isGlass: Bool) -> some View {
-        SignInWithAppleButton(.continue) { request in
+        // 캡슐은 clipShape가 아니라 버튼 자체의 cornerRadius로 만든다 —
+        // 네이티브 버튼을 밖에서 잘라내면 로고·테두리가 깨져 보일 수 있다 (AppleSignInButton 참고)
+        AppleSignInButton(
+            style: isGlass ? .whiteOutline : .black,
+            cornerRadius: Self.ctaHeight / 2
+        ) { request in
             let nonce = Self.makeNonce()
             currentAppleNonce = nonce
             request.nonce = Self.sha256(nonce)
@@ -194,9 +214,7 @@ public struct AuthView: View {
         } onCompletion: { result in
             handleAppleAuthorization(result)
         }
-        .signInWithAppleButtonStyle(isGlass ? .whiteOutline : .black)
-        .frame(height: 54)
-        .clipShape(Capsule())
+        .frame(height: Self.ctaHeight)
         .disabled(isLoading)
         .opacity(isLoading ? 0.6 : 1.0)
     }
@@ -251,10 +269,10 @@ public struct AuthView: View {
         } label: {
             HStack(spacing: 4) {
                 Text(prompt)
-                    .foregroundColor(MomentColor.ink.opacity(0.65))
+                    .foregroundColor(MomentColor.ink.opacity(0.55))
                 Text(action)
                     .fontWeight(.bold)
-                    .foregroundColor(MomentColor.ink)
+                    .foregroundColor(MomentColor.ink.opacity(0.95))
             }
             .font(.system(size: 13))
         }

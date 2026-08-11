@@ -17,8 +17,8 @@ public struct HomeView: View {
 
     public var body: some View {
         ZStack {
+            // GlassMinimal 시안: 홈은 순백 캔버스 — 사진(히어로)이 유일한 색이 되도록 오브 제거
             MomentColor.canvas.ignoresSafeArea()
-            OrbBackground.home().ignoresSafeArea()
 
             VStack(spacing: 0) {
                 SpacePill(title: spaceTitle, days: state.daysTogether)
@@ -95,8 +95,9 @@ public struct HomeView: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .aspectRatio(345.0 / 430.0, contentMode: .fit)
-            .clipShape(RoundedRectangle(cornerRadius: 32))
+            // 시안: 상대의 순간이 화면을 지배하는 히어로 비율 (345×520)
+            .aspectRatio(345.0 / 520.0, contentMode: .fit)
+            .clipShape(RoundedRectangle(cornerRadius: 26))
             .overlay(alignment: .topLeading) {
                 SenderChip(
                     name: moment.author.nickname,
@@ -111,8 +112,6 @@ public struct HomeView: View {
                         .padding(.bottom, 20)
                 }
             }
-            .shadow(color: MomentColor.shadowTint.opacity(0.16), radius: 24, x: 0, y: 14)
-            .shadow(color: MomentColor.shadowTint.opacity(0.05), radius: 4, x: 0, y: 2)
         }
         .buttonStyle(MomentPressStyle(scale: 0.98))
     }
@@ -153,15 +152,19 @@ public struct HomeView: View {
         .buttonStyle(MomentPressStyle(scale: 0.98))
     }
 
-    // 글래스 카드 공통 래퍼 — 높이는 콘텐츠에 맞게 동적으로 결정된다
+    // 서피스 카드 공통 래퍼 — 높이는 콘텐츠에 맞게 동적으로 결정된다.
+    // 텍스트 모먼트는 "여백 위의 문장" — 화이트(다크: 서피스) + 헤어라인, 그림자 없음 (시안 02b)
     private func glassCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         content()
             .frame(maxWidth: .infinity)
             .padding(.vertical, 28)
             .padding(.horizontal, Spacing.lg)
-            .glassSurface(cornerRadius: 24)
-            .shadow(color: MomentColor.shadowTint.opacity(0.13), radius: 20, x: 0, y: 10)
-            .shadow(color: MomentColor.shadowTint.opacity(0.05), radius: 4, x: 0, y: 2)
+            .background(MomentColor.surface)
+            .clipShape(RoundedRectangle(cornerRadius: 26))
+            .overlay(
+                RoundedRectangle(cornerRadius: 26)
+                    .stroke(MomentColor.hairline, lineWidth: 1)
+            )
     }
 
     // MARK: - 히스토리 진입 힌트
@@ -170,12 +173,16 @@ public struct HomeView: View {
         Button {
             send(.spaceCardTapped)
         } label: {
-            Text("↑ 지난 순간 모아보기")
-                .font(.system(size: 12))
-                .tracking(0.8)
-                .foregroundColor(MomentColor.ink.opacity(0.45))
+            Text("지난 순간 모아보기")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(MomentColor.ink)
+                .padding(.horizontal, Spacing.md)
+                .padding(.vertical, 10)
+                .background(MomentColor.surfaceSoft)
+                .clipShape(Capsule())
+                .overlay(Capsule().stroke(MomentColor.surfaceStroke, lineWidth: 1))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MomentPressStyle())
     }
 }
 

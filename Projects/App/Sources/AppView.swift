@@ -75,7 +75,9 @@ struct AppView: View {
             composeTabView(viewStore, mainTabState)
             settingsTabView(viewStore, mainTabState)
         }
-        .tint(MomentColor.accent)
+        // GlassMinimal 시안: 탭 틴트는 잉크(Instagram식 블랙/화이트) — 코럴은 콘텐츠 포인트 전용.
+        // 심볼은 아웃라인으로 지정하면 선택 시 시스템이 자동으로 filled 변형을 적용한다.
+        .tint(MomentColor.ink)
     }
 
     // MARK: - Home Tab
@@ -104,13 +106,11 @@ struct AppView: View {
                     send: { viewStore.send(.feed($0)) },
                     currentUserId: mainTabState.currentUser?.id
                 )
-                    .navigationTitle(
-                        "\(mainTabState.homeState.partner?.nickname ?? "우리")님과의 스페이스"
-                    )
+                    .navigationTitle("지난 순간") // 시안: 히스토리 타이틀 고정, 공간 정보는 홈 서브타이틀 담당
             }
         }
         .tabItem {
-            Label("Home", systemImage: "house")
+            Label("홈", systemImage: "house")
         }
         .tag(AppFeature.MainTabState.Tab.home)
     }
@@ -125,7 +125,7 @@ struct AppView: View {
             }
         }
         .tabItem {
-            Label("Compose", systemImage: "plus")
+            Label("보내기", systemImage: "plus.circle")
         }
         .tag(AppFeature.MainTabState.Tab.compose)
     }
@@ -134,7 +134,6 @@ struct AppView: View {
     private func connectRequiredView(_ viewStore: ViewStoreOf<AppFeature>) -> some View {
         ZStack {
             MomentColor.canvas.ignoresSafeArea()
-            OrbBackground.compose().ignoresSafeArea()
 
             VStack(spacing: Spacing.md) {
                 Image(systemName: "person.2")
@@ -186,7 +185,7 @@ struct AppView: View {
             )
         }
         .tabItem {
-            Label("Settings", systemImage: "gear")
+            Label("설정", systemImage: "gearshape")
         }
         .tag(AppFeature.MainTabState.Tab.settings)
     }

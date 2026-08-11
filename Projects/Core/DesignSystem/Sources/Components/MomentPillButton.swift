@@ -29,11 +29,14 @@ public enum MomentPillButtonStyle {
 public struct MomentPillButton: View {
     let title: String
     let style: MomentPillButtonStyle
+    let minHeight: CGFloat
     let action: () -> Void
 
-    public init(_ title: String, style: MomentPillButtonStyle = .primary, action: @escaping () -> Void) {
+    public init(_ title: String, style: MomentPillButtonStyle = .primary,
+            minHeight: CGFloat = 44, action: @escaping () -> Void) {
         self.title = title
         self.style = style
+        self.minHeight = minHeight
         self.action = action
     }
 
@@ -42,7 +45,7 @@ public struct MomentPillButton: View {
             Text(title)
                 .font(MomentTypography.button)
                 .frame(maxWidth: .infinity)
-                .frame(minHeight: 44)
+                .frame(minHeight: minHeight)
                 .foregroundColor(textColor)
                 .background(backgroundColor)
                 .cornerRadius(Spacing.Radius.pill)
@@ -74,10 +77,12 @@ public struct MomentPillButton: View {
 // MARK: - Glass Pill Button (Final-MVP — 오브 배경 위 보조 CTA)
 public struct MomentGlassPillButton: View {
     let title: String
+    let minHeight: CGFloat
     let action: () -> Void
 
-    public init(_ title: String, action: @escaping () -> Void) {
+    public init(_ title: String, minHeight: CGFloat = 44, action: @escaping () -> Void) {
         self.title = title
+        self.minHeight = minHeight
         self.action = action
     }
 
@@ -86,7 +91,7 @@ public struct MomentGlassPillButton: View {
             Text(title)
                 .font(MomentTypography.button)
                 .frame(maxWidth: .infinity)
-                .frame(minHeight: 44)
+                .frame(minHeight: minHeight)
                 .foregroundColor(MomentColor.ink)
                 // 프레스 피드백은 MomentPressStyle이 전 버전 일관 담당 — 네이티브 interactive와 이중 스케일 방지
                 .glassCapsule(isInteractive: false)

@@ -27,7 +27,6 @@ public struct SettingsView: View {
     public var body: some View {
         ZStack {
             MomentColor.canvas.ignoresSafeArea()
-            OrbBackground.settings().ignoresSafeArea()
 
             ScrollView {
                 VStack(spacing: Spacing.md) {

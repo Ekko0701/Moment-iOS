@@ -15,7 +15,6 @@ public struct ComposeView: View {
     public var body: some View {
         ZStack {
             MomentColor.canvas.ignoresSafeArea()
-            OrbBackground.compose().ignoresSafeArea()
 
             VStack(spacing: Spacing.lg) {
                 editorCard
