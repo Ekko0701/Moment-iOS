@@ -21,9 +21,6 @@ public struct HomeView: View {
             MomentColor.canvas.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                SpacePill(title: spaceTitle, days: state.daysTogether)
-                    .padding(.top, Spacing.md)
-
                 Spacer(minLength: Spacing.lg)
 
                 if state.space != nil {
@@ -45,6 +42,19 @@ public struct HomeView: View {
             }
         }
         .onAppear { send(.onAppear) }
+        // 시안: 공간 정보는 플로팅 필 대신 내비게이션 타이틀+서브타이틀로 (Moment / 스페이스 · D+n)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                VStack(spacing: 1) {
+                    Text("Moment")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundColor(MomentColor.ink)
+                    Text(navSubtitle)
+                        .font(.system(size: 11))
+                        .foregroundColor(MomentColor.ink.opacity(0.6))
+                }
+            }
+        }
     }
 
     private var spaceTitle: String {
@@ -52,6 +62,13 @@ public struct HomeView: View {
             return "\(partner.nickname)님과의 스페이스"
         }
         return "우리 둘의 스페이스"
+    }
+
+    private var navSubtitle: String {
+        if let days = state.daysTogether {
+            return "\(spaceTitle) · D+\(days)"
+        }
+        return spaceTitle
     }
 
     // MARK: - 모먼트 콘텐츠 (사진 / 텍스트 / 빈 상태 분기)
@@ -123,42 +140,52 @@ public struct HomeView: View {
             send(.spaceCardTapped)
         } label: {
             glassCard {
-                VStack(spacing: 18) {
-                    // 발신자 행 — 밝은 카드 위이므로 잉크 컬러
-                    HStack(spacing: Spacing.xs) {
-                        Circle()
-                            .fill(MomentColor.orbCoral.opacity(0.75))
-                            .frame(width: 28, height: 28)
-
-                        Text(moment.author.nickname)
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(MomentColor.ink)
-
-                        Text(moment.createdAt.homeRelativeTimeString)
-                            .font(.system(size: 11))
-                            .foregroundColor(MomentColor.ink.opacity(0.72))
-                    }
-
-                    if let text = moment.text, !text.isEmpty {
-                        Text(text)
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundColor(MomentColor.ink)
-                            .multilineTextAlignment(.center)
-                            .lineSpacing(10)
-                    }
-                }
+                // 시안 02b: 문장이 정중앙의 주인공 — 큰 타이포, 여유로운 행간
+                Text(moment.text ?? "")
+                    .font(.system(size: 24, weight: .medium))
+                    .foregroundColor(MomentColor.ink)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(12)
+            }
+            // 발신자 칩은 좌상단 코너 오버레이 (사진 히어로의 SenderChip과 같은 위치 문법)
+            .overlay(alignment: .topLeading) {
+                senderBadge(moment)
+                    .padding(Spacing.md)
             }
         }
         .buttonStyle(MomentPressStyle(scale: 0.98))
     }
 
-    // 서피스 카드 공통 래퍼 — 높이는 콘텐츠에 맞게 동적으로 결정된다.
-    // 텍스트 모먼트는 "여백 위의 문장" — 화이트(다크: 서피스) + 헤어라인, 그림자 없음 (시안 02b)
+    // 밝은 서피스 위 발신자 칩 — 그레이 캡슐 (시안 02b)
+    private func senderBadge(_ moment: Moment) -> some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(MomentColor.orbCoral.opacity(0.75))
+                .frame(width: 20, height: 20)
+
+            Text(moment.author.nickname)
+                .font(.system(size: 13, weight: .bold))
+                .foregroundColor(MomentColor.ink)
+
+            Text(moment.createdAt.homeRelativeTimeString)
+                .font(.system(size: 10))
+                .foregroundColor(MomentColor.muted)
+        }
+        .padding(.leading, 8)
+        .padding(.trailing, 12)
+        .padding(.vertical, 6)
+        .background(MomentColor.surfaceSoft)
+        .clipShape(Capsule())
+    }
+
+    // 정사각형 서피스 카드 공통 래퍼 — 시안: 텍스트 모먼트·로딩·빈 상태가 히어로 자리에서
+    // 1:1 형태 언어를 공유한다 (사진 = 세로 히어로 ↔ 글·안내 = 정사각형). 콘텐츠는 중앙 배치.
     private func glassCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         content()
-            .frame(maxWidth: .infinity)
             .padding(.vertical, 28)
             .padding(.horizontal, Spacing.lg)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .aspectRatio(1, contentMode: .fit)
             .background(MomentColor.surface)
             .clipShape(RoundedRectangle(cornerRadius: 26))
             .overlay(

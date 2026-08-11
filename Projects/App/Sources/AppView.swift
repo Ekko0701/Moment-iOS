@@ -135,6 +135,7 @@ struct AppView: View {
         ZStack {
             MomentColor.canvas.ignoresSafeArea()
 
+            // 시안 02c: 연결 전 안내도 홈 히어로 자리와 같은 정사각형 서피스 카드로
             VStack(spacing: Spacing.md) {
                 Image(systemName: "person.2")
                     .font(.system(size: 32, weight: .semibold))
@@ -150,6 +151,15 @@ struct AppView: View {
                 .padding(.horizontal, Spacing.xxl)
                 .padding(.top, Spacing.sm)
             }
+            .padding(Spacing.lg)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .aspectRatio(1, contentMode: .fit)
+            .background(MomentColor.surfaceSoft)
+            .clipShape(RoundedRectangle(cornerRadius: 26))
+            .overlay(
+                RoundedRectangle(cornerRadius: 26)
+                    .stroke(MomentColor.surfaceStroke, lineWidth: 1)
+            )
             .padding(.horizontal, Spacing.lg)
         }
     }
