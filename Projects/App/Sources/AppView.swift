@@ -30,6 +30,12 @@ struct AppView: View {
                     mainTabView(viewStore, mainTabState)
                 }
             }
+            // 키보드가 올라온 상태에서 빈 영역 터치 시 포커스 해제 —
+            // simultaneousGesture라 버튼·필드 등 기존 터치 동작을 가로채지 않는다
+            .simultaneousGesture(TapGesture().onEnded {
+                UIApplication.shared.sendAction(
+                    #selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            })
             .onOpenURL { url in
                 handleDeepLink(url, viewStore: viewStore)
             }
