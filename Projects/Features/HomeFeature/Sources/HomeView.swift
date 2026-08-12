@@ -45,12 +45,13 @@ public struct HomeView: View {
         // 시안: 공간 정보는 플로팅 필 대신 내비게이션 타이틀+서브타이틀로 (Moment / 스페이스 · D+n)
         .toolbar {
             ToolbarItem(placement: .principal) {
+                // 시맨틱 텍스트 스타일 — 사용자의 글자 크기 설정(Dynamic Type)을 따라 스케일
                 VStack(spacing: 1) {
                     Text("Moment")
-                        .font(.system(size: 15, weight: .bold))
+                        .font(.subheadline.weight(.bold))
                         .foregroundColor(MomentColor.ink)
                     Text(navSubtitle)
-                        .font(.system(size: 11))
+                        .font(.caption2)
                         .foregroundColor(MomentColor.ink.opacity(0.6))
                 }
             }
@@ -140,12 +141,12 @@ public struct HomeView: View {
             send(.spaceCardTapped)
         } label: {
             glassCard {
-                // 시안 02b: 문장이 정중앙의 주인공 — 큰 타이포, 여유로운 행간
+                // 시안 02b: 문장이 정중앙의 주인공 — 큰 타이포(Dynamic Type 대응), 여유로운 행간
                 Text(moment.text ?? "")
-                    .font(.system(size: 24, weight: .medium))
+                    .font(.title2.weight(.medium))
                     .foregroundColor(MomentColor.ink)
                     .multilineTextAlignment(.center)
-                    .lineSpacing(12)
+                    .lineSpacing(8)
             }
             // 발신자 칩은 좌상단 코너 오버레이 (사진 히어로의 SenderChip과 같은 위치 문법)
             .overlay(alignment: .topLeading) {
@@ -164,12 +165,12 @@ public struct HomeView: View {
                 .frame(width: 20, height: 20)
 
             Text(moment.author.nickname)
-                .font(.system(size: 13, weight: .bold))
+                .font(.footnote.weight(.bold))
                 .foregroundColor(MomentColor.ink)
 
             Text(moment.createdAt.homeRelativeTimeString)
-                .font(.system(size: 10))
-                .foregroundColor(MomentColor.muted)
+                .font(.caption2)
+                .foregroundColor(MomentColor.ink.opacity(0.6)) // 그레이 칩 위 AA 대비 확보
         }
         .padding(.leading, 8)
         .padding(.trailing, 12)
@@ -201,7 +202,7 @@ public struct HomeView: View {
             send(.spaceCardTapped)
         } label: {
             Text("지난 순간 모아보기")
-                .font(.system(size: 13, weight: .medium))
+                .font(.footnote.weight(.medium))
                 .foregroundColor(MomentColor.ink)
                 .padding(.horizontal, Spacing.md)
                 .padding(.vertical, 10)
