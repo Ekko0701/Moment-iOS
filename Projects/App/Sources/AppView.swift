@@ -91,8 +91,11 @@ struct AppView: View {
                         send: { viewStore.send(.connect($0)) },
                         onRefresh: { viewStore.send(.refreshConnection) }
                     )
+                    .navigationTitle("연결하기") // 시안 04
+                    .navigationBarTitleDisplayMode(.inline)
                 } else {
                     HomeView(state: mainTabState.homeState, send: { viewStore.send(.home($0)) })
+                        .navigationBarTitleDisplayMode(.inline) // 시안: 중앙 인라인 (2줄 타이틀은 HomeView가 공급)
                 }
             }
             .navigationDestination(
@@ -120,11 +123,15 @@ struct AppView: View {
     // MARK: - Compose Tab
     private func composeTabView(_ viewStore: ViewStoreOf<AppFeature>, _ mainTabState: AppFeature.MainTabState) -> some View {
         NavigationStack {
-            if mainTabState.currentSpace == nil {
-                connectRequiredView(viewStore)
-            } else {
-                ComposeView(state: mainTabState.composeState, send: { viewStore.send(.compose($0)) })
+            Group {
+                if mainTabState.currentSpace == nil {
+                    connectRequiredView(viewStore)
+                } else {
+                    ComposeView(state: mainTabState.composeState, send: { viewStore.send(.compose($0)) })
+                }
             }
+            .navigationTitle("보내기") // 시안 05: 중앙 인라인 타이틀
+            .navigationBarTitleDisplayMode(.inline)
         }
         .tabItem {
             Label("보내기", systemImage: mainTabState.selectedTab == .compose ? "plus.circle.fill" : "plus.circle")
@@ -196,6 +203,8 @@ struct AppView: View {
                 currentUser: mainTabState.currentUser,
                 currentSpace: mainTabState.currentSpace
             )
+            .navigationTitle("설정") // 시안 06: 중앙 인라인 타이틀
+            .navigationBarTitleDisplayMode(.inline)
         }
         .tabItem {
             Label("설정", systemImage: mainTabState.selectedTab == .settings ? "gearshape.fill" : "gearshape")
