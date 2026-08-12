@@ -35,10 +35,11 @@ public struct HomeView: View {
                         .foregroundColor(MomentColor.ink.opacity(0.6))
                 }
 
-                Spacer(minLength: Spacing.lg)
-
+                // 시안 02b: 히스토리 진입은 카드 바로 아래 — 카드와 한 묶음으로 읽히도록
                 historyHint
-                    .padding(.bottom, Spacing.md)
+                    .padding(.top, Spacing.sm)
+
+                Spacer(minLength: Spacing.lg)
             }
         }
         .onAppear { send(.onAppear) }
