@@ -20,10 +20,13 @@ public struct ComposeView: View {
                 editorCard
                     .padding(.top, Spacing.lg)
 
-                MomentPillButton("공유하기", style: state.canSubmit ? .primary : .secondary) {
+                // 시안 05: CTA는 항상 잉크 캡슐(54pt) — 비활성은 스타일 교체가 아닌 투명도로.
+                // (secondary는 캔버스색이라 화이트 톤에서 배경이 사라져 보임)
+                MomentPillButton("공유하기", style: .primary, minHeight: 54) {
                     send(.submitTapped)
                 }
                 .disabled(!state.canSubmit)
+                .opacity(state.canSubmit ? 1.0 : 0.6)
                 // 임계(글자 입력)를 넘어 버튼이 "켜지는" 순간을 부드럽게
                 .animation(.easeOut(duration: 0.15), value: state.canSubmit)
 
