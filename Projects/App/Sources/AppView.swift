@@ -84,6 +84,26 @@ struct AppView: View {
         // GlassMinimal 시안: 탭 틴트는 잉크(Instagram식 블랙/화이트) — 코럴은 콘텐츠 포인트 전용.
         // 심볼은 아웃라인으로 지정하면 선택 시 시스템이 자동으로 filled 변형을 적용한다.
         .tint(MomentColor.ink)
+        // 보내기 완료 토스트 — 탭바 바로 위에서 잠시 나타나는 가벼운 완료 피드백.
+        // 탭바는 TabView 자신의 safe area에 포함되지 않아 overlay가 겹치므로,
+        // 플로팅 탭바 높이만큼 하단 여백을 줘서 그 위에 띄운다.
+        .overlay(alignment: .bottom) {
+            if mainTabState.showsShareConfirmation {
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(MomentColor.ink)
+                    Text("순간을 보냈어요")
+                        .font(.footnote.weight(.medium))
+                        .foregroundColor(MomentColor.ink)
+                }
+                .padding(.horizontal, Spacing.md)
+                .padding(.vertical, 10)
+                .glassCapsule()
+                .padding(.bottom, 68) // 플로팅 탭바(≈49pt) + 간격
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.easeOut(duration: 0.25), value: mainTabState.showsShareConfirmation)
     }
 
     // MARK: - Home Tab

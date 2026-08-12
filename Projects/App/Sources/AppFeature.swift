@@ -37,6 +37,8 @@ public struct AppFeature {
         public var currentUser: UserProfile? = nil
         // 히스토리(Feed)를 네비게이션 스택으로 표시할지 여부
         public var isHistoryPresented = false
+        // 보내기 완료 토스트 표시 여부 (잠시 표시 후 자동 해제)
+        public var showsShareConfirmation = false
 
         public enum Tab: Equatable {
             case home
@@ -64,6 +66,7 @@ public struct AppFeature {
         case refreshConnection
         case selectTab(MainTabState.Tab)
         case setHistoryPresented(Bool)
+        case setShareConfirmationVisible(Bool)
 
         case auth(AuthFeatureReducer.Action)
         case connect(ConnectFeatureReducer.Action)
@@ -191,6 +194,14 @@ public struct AppFeature {
                 state = .main(mainState)
                 return .none
 
+            case .setShareConfirmationVisible(let visible):
+                guard case .main(var mainState) = state else {
+                    return .none
+                }
+                mainState.showsShareConfirmation = visible
+                state = .main(mainState)
+                return .none
+
             case .setHistoryPresented(let isPresented):
                 guard case .main(var mainState) = state else {
                     return .none
@@ -294,12 +305,18 @@ public struct AppFeature {
                     var newMainState = mainState
                     newMainState.composeState = ComposeFeatureReducer.State()
                     newMainState.selectedTab = .home
-                    newMainState.isHistoryPresented = true
+                    // 지난 순간으로 점프하지 않고 홈에 머문다 — 내 모먼트는 홈 히어로(상대 전용)에
+                    // 보이지 않으므로, 완료 확인은 화면 이동 대신 가벼운 토스트가 담당
+                    newMainState.showsShareConfirmation = true
                     newMainState.feedState = FeedFeatureReducer.State()
                     newMainState.feedState.selectedSpaceId = newMainState.currentSpace?.id
                     state = .main(newMainState)
                     return effect.map { .compose($0) }
-                        .merge(with: .send(.feed(.onAppear)))
+                        .merge(with: .send(.feed(.onAppear))) // 타임라인 선로드·위젯 동기화 유지
+                        .merge(with: .run { send in
+                            try? await Task.sleep(for: .seconds(2))
+                            await send(.setShareConfirmationVisible(false))
+                        })
                 }
 
                 if case .delegate(.dismissed) = action {
