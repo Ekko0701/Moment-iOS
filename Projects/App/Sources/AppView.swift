@@ -110,7 +110,9 @@ struct AppView: View {
             }
         }
         .tabItem {
-            Label("홈", systemImage: "house")
+            // 탭바의 자동 .fill 변형을 끄고 선택 상태로 채움/아웃라인을 직접 제어 (시안: Instagram식)
+            Label("홈", systemImage: mainTabState.selectedTab == .home ? "house.fill" : "house")
+                .environment(\.symbolVariants, .none)
         }
         .tag(AppFeature.MainTabState.Tab.home)
     }
@@ -125,7 +127,8 @@ struct AppView: View {
             }
         }
         .tabItem {
-            Label("보내기", systemImage: "plus.circle")
+            Label("보내기", systemImage: mainTabState.selectedTab == .compose ? "plus.circle.fill" : "plus.circle")
+                .environment(\.symbolVariants, .none)
         }
         .tag(AppFeature.MainTabState.Tab.compose)
     }
@@ -195,7 +198,8 @@ struct AppView: View {
             )
         }
         .tabItem {
-            Label("설정", systemImage: "gearshape")
+            Label("설정", systemImage: mainTabState.selectedTab == .settings ? "gearshape.fill" : "gearshape")
+                .environment(\.symbolVariants, .none)
         }
         .tag(AppFeature.MainTabState.Tab.settings)
     }
