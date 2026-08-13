@@ -30,12 +30,10 @@ struct AppView: View {
                     mainTabView(viewStore, mainTabState)
                 }
             }
-            // 키보드가 올라온 상태에서 빈 영역 터치 시 포커스 해제 —
-            // simultaneousGesture라 버튼·필드 등 기존 터치 동작을 가로채지 않는다
-            .simultaneousGesture(TapGesture().onEnded {
-                UIApplication.shared.sendAction(
-                    #selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-            })
+            // 키보드가 올라온 상태에서 빈 영역 터치 시 포커스 해제.
+            // SwiftUI TapGesture는 UIKit 컨트롤(Apple 로그인 버튼)의 터치를 취소시켜 무반응을 만들므로,
+            // 터치를 절대 가로채지 않는(cancelsTouchesInView=false) 윈도우 레벨 UIKit 제스처로 설치한다.
+            .background(KeyboardDismissGestureInstaller())
             .onOpenURL { url in
                 handleDeepLink(url, viewStore: viewStore)
             }
@@ -197,6 +195,49 @@ struct AppView: View {
                     .stroke(MomentColor.surfaceStroke, lineWidth: 1)
             )
             .padding(.horizontal, Spacing.lg)
+        }
+    }
+
+    // MARK: - Keyboard Dismiss (윈도우 레벨 UIKit 제스처)
+
+    /// 윈도우에 UITapGestureRecognizer를 한 번 설치해, 화면 어디를 탭하든 first responder를 해제한다.
+    /// SwiftUI TapGesture와 달리 cancelsTouchesInView = false라 UIKit 컨트롤
+    /// (ASAuthorizationAppleIDButton 등)의 터치를 절대 가로채지 않는다.
+    private struct KeyboardDismissGestureInstaller: UIViewRepresentable {
+        static let recognizerName = "moment.keyboardDismissTap"
+
+        func makeUIView(context: Context) -> UIView {
+            let view = UIView(frame: .zero)
+            view.isUserInteractionEnabled = false
+            DispatchQueue.main.async {
+                guard let window = view.window,
+                      !(window.gestureRecognizers ?? []).contains(where: { $0.name == Self.recognizerName })
+                else { return }
+                let tap = UITapGestureRecognizer(
+                    target: context.coordinator, action: #selector(Coordinator.handleTap))
+                tap.name = Self.recognizerName
+                tap.cancelsTouchesInView = false
+                tap.delegate = context.coordinator
+                window.addGestureRecognizer(tap)
+            }
+            return view
+        }
+
+        func updateUIView(_ uiView: UIView, context: Context) {}
+
+        func makeCoordinator() -> Coordinator { Coordinator() }
+
+        final class Coordinator: NSObject, UIGestureRecognizerDelegate {
+            @objc func handleTap() {
+                UIApplication.shared.sendAction(
+                    #selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            }
+
+            // 다른 제스처(스크롤·버튼 하이라이트 등)와 항상 동시 인식 — 누구의 동작도 막지 않는다
+            func gestureRecognizer(
+                _ gestureRecognizer: UIGestureRecognizer,
+                shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
+            ) -> Bool { true }
         }
     }
 
