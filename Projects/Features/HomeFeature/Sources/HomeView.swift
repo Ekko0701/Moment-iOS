@@ -24,6 +24,10 @@ public struct HomeView: View {
                 Spacer(minLength: Spacing.lg)
 
                 if state.space != nil {
+                    // 관계 정보는 내비 상단이 아니라 카드 바로 위 — 콘텐츠와 한 덩어리로 읽히도록
+                    spaceLabel
+                        .padding(.bottom, Spacing.sm)
+
                     momentContent
                         .padding(.horizontal, Spacing.lg)
                         // 비동기 모먼트가 도착할 때 스냅 교체 대신 부드럽게 안착
@@ -43,18 +47,32 @@ public struct HomeView: View {
             }
         }
         .onAppear { send(.onAppear) }
-        // 시안: 공간 정보는 플로팅 필 대신 내비게이션 타이틀+서브타이틀로 (Moment / 스페이스 · D+n)
+        // 내비는 앱 정체성만 — 관계 정보(스페이스 · D+n)는 카드 위 spaceLabel이 담당한다
         .toolbar {
             ToolbarItem(placement: .principal) {
-                // 시맨틱 텍스트 스타일 — 사용자의 글자 크기 설정(Dynamic Type)을 따라 스케일
-                VStack(spacing: 1) {
-                    Text("Moment")
-                        .font(.subheadline.weight(.bold))
-                        .foregroundColor(MomentColor.ink)
-                    Text(navSubtitle)
-                        .font(.caption2)
-                        .foregroundColor(MomentColor.ink.opacity(0.6))
-                }
+                Text("Moment")
+                    .font(.subheadline.weight(.bold))
+                    .foregroundColor(MomentColor.ink)
+            }
+        }
+    }
+
+    // MARK: - 스페이스 라벨 (카드 바로 위)
+
+    private var spaceLabel: some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(MomentColor.orbCoral.opacity(0.75))
+                .frame(width: 18, height: 18)
+
+            Text(spaceTitle)
+                .font(.footnote.weight(.medium))
+                .foregroundColor(MomentColor.ink)
+
+            if let days = state.daysTogether {
+                Text("D+\(days)")
+                    .font(.caption.weight(.medium))
+                    .foregroundColor(MomentColor.accent)
             }
         }
     }
@@ -64,13 +82,6 @@ public struct HomeView: View {
             return "\(partner.nickname)님과의 스페이스"
         }
         return "우리 둘의 스페이스"
-    }
-
-    private var navSubtitle: String {
-        if let days = state.daysTogether {
-            return "\(spaceTitle) · D+\(days)"
-        }
-        return spaceTitle
     }
 
     // MARK: - 모먼트 콘텐츠 (사진 / 텍스트 / 빈 상태 분기)
