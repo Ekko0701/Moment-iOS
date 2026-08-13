@@ -63,28 +63,29 @@ public struct SettingsView: View {
             Button("확인", role: .cancel) {}
         }
         // 연결 해제 2단계 확인 (F-02-07) — Feature의 showDisconnectConfirm을 소비해야
-        // confirmDisconnect가 발행되어 실제 해제가 실행된다
-        .confirmationDialog(
+        // confirmDisconnect가 발행되어 실제 해제가 실행된다.
+        // alert를 쓰는 이유: iOS 26의 confirmationDialog는 출처에 앵커된 팝오버로 렌더되면서
+        // 취소 버튼을 그리지 않는다(바깥 탭으로 대체). 파괴적이고 되돌리기 어려운 액션에는
+        // 탈출구가 화면에 보여야 하므로 alert로 승격한다. 가벼운 액션(로그아웃)에는 쓰지 않는다.
+        .alert(
             "연결을 해제할까요?",
             isPresented: Binding(
                 get: { state.showDisconnectConfirm },
                 set: { if !$0 { send(.cancelDisconnect) } }
-            ),
-            titleVisibility: .visible
+            )
         ) {
             Button("연결 해제", role: .destructive) { send(.confirmDisconnect) }
             Button("취소", role: .cancel) { send(.cancelDisconnect) }
         } message: {
-            Text("스페이스가 종료되고 상대방에게 알림이 가요.\n지금까지의 모먼트는 각자 본인이 쓴 것만 보관돼요.")
+            Text("스페이스가 종료되고 상대방에게 알림이 가요. 모먼트는 각자 본인이 쓴 것만 남아요.")
         }
         // 계정 삭제 2단계 확인 (F-10)
-        .confirmationDialog(
+        .alert(
             "정말 계정을 삭제할까요?",
             isPresented: Binding(
                 get: { state.showDeleteAccountConfirm },
                 set: { if !$0 { send(.cancelDeleteAccount) } }
-            ),
-            titleVisibility: .visible
+            )
         ) {
             Button("계정 삭제", role: .destructive) { send(.confirmDeleteAccount) }
             Button("취소", role: .cancel) { send(.cancelDeleteAccount) }
