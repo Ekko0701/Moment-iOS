@@ -30,11 +30,12 @@ public struct OrbBackground: View {
 
     // MARK: - Presets (Final-MVP — 화면별 3색 조합, 투명도 22~40%)
 
+    /// 시안 01(Welcome): 순백 캔버스 위에서 겨우 감지되는 수준의 오브 2개.
+    /// 크림 톤 시절 농도(0.35/0.30/0.22)를 그대로 쓰면 화이트 배경에서 색이 강하게 배어 나온다.
     public static func login() -> OrbBackground {
         OrbBackground([
-            Orb(color: MomentColor.orbCoral, size: 220, x: -60, y: 60, opacity: 0.35),
-            Orb(color: MomentColor.orbLavender, size: 200, x: 100, y: 500, opacity: 0.30),
-            Orb(color: MomentColor.orbYellow, size: 140, x: 250, y: 300, opacity: 0.22),
+            Orb(color: MomentColor.orbCoral, size: 240, x: -70, y: 80, opacity: 0.14),
+            Orb(color: MomentColor.orbLavender, size: 190, x: 260, y: 480, opacity: 0.12),
         ])
     }
 

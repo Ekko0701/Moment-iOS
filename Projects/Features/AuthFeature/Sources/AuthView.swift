@@ -75,9 +75,11 @@ public struct AuthView: View {
         VStack(spacing: 0) {
             Spacer()
 
+            // 시안 01: 워드마크는 40pt Bold + tracking -1.2.
+            // (displayXL 토큰의 Thin은 크림 톤 시절 값 — 순백 위에서는 획이 흐려진다)
             Text("Moment")
-                .font(MomentTypography.displayXL)
-                .tracking(-1.6)
+                .font(.system(size: 40, weight: .bold))
+                .tracking(-1.2)
                 .foregroundColor(MomentColor.ink)
 
             Text("두 사람만의 소중한 순간을\n함께 기록해보세요")
@@ -92,7 +94,8 @@ public struct AuthView: View {
             VStack(spacing: Spacing.sm) {
                 appleLoginButton(isGlass: false)
 
-                MomentGlassPillButton("이메일로 계속하기", minHeight: Self.ctaHeight) {
+                // 시안 01: 보조 CTA는 그레이 서피스 캡슐 (글래스는 순백 위에서 흐릿하게 뜬다)
+                MomentSecondaryPillButton("이메일로 계속하기", minHeight: Self.ctaHeight) {
                     send(.modeChanged(.emailSignup))
                 }
                 .disabled(isLoading)
@@ -100,8 +103,8 @@ public struct AuthView: View {
             .padding(.horizontal, Spacing.lg)
 
             modeSwitchLink(prompt: "이미 계정이 있어요?", action: "로그인", target: .emailLogin)
-                .padding(.top, Spacing.lg)
-                .padding(.bottom, Spacing.xl)
+                .padding(.top, Spacing.xl)   // 시안: CTA 스택과 링크 사이 약 50pt
+                .padding(.bottom, Spacing.lg)
         }
     }
 

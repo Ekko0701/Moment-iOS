@@ -103,24 +103,27 @@ public struct MomentGlassPillButton: View {
 // MARK: - Secondary Button with hairline border (mobile legibility adjustment)
 public struct MomentSecondaryPillButton: View {
     let title: String
+    let minHeight: CGFloat
     let action: () -> Void
 
-    public init(_ title: String, action: @escaping () -> Void) {
+    public init(_ title: String, minHeight: CGFloat = 44, action: @escaping () -> Void) {
         self.title = title
+        self.minHeight = minHeight
         self.action = action
     }
 
     public var body: some View {
+        // 시안: 보조 CTA는 그레이 서피스 캡슐 — 순백 캔버스 위에서 canvas 배경은 사라져 보인다
         Button(action: action) {
             Text(title)
                 .font(MomentTypography.button)
                 .frame(maxWidth: .infinity)
-                .frame(minHeight: 44)
+                .frame(minHeight: minHeight)
                 .foregroundColor(MomentColor.ink)
-                .background(MomentColor.canvas)
+                .background(MomentColor.surfaceSoft)
                 .overlay(
                     RoundedRectangle(cornerRadius: Spacing.Radius.pill)
-                        .stroke(MomentColor.hairline, lineWidth: 1)
+                        .stroke(MomentColor.surfaceStroke, lineWidth: 1)
                 )
                 .cornerRadius(Spacing.Radius.pill)
         }

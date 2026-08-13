@@ -114,8 +114,9 @@ public struct HomeView: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            // 시안: 상대의 순간이 화면을 지배하는 히어로 비율 (345×520)
-            .aspectRatio(345.0 / 520.0, contentMode: .fit)
+            // 시안: 모든 모먼트가 같은 자리·같은 크기 — 사진도 텍스트·빈 상태와 동일한 정사각형.
+            // scaledToFill과 결합해 중앙 크롭되며, 사진↔글 전환 시 레이아웃이 출렁이지 않는다.
+            .aspectRatio(1, contentMode: .fit)
             .clipShape(RoundedRectangle(cornerRadius: 26))
             .overlay(alignment: .topLeading) {
                 SenderChip(
