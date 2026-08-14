@@ -130,6 +130,17 @@ public enum SpaceEndpoints {
         )
     }
 
+    /// 공간 이름 변경 — 서버 계약: PATCH /v1/spaces/{spaceId}
+    /// name에 nil/공백을 보내면 서버가 null로 정규화해 "이름 없음" 상태로 되돌린다
+    static func rename(spaceId: UUID, name: String?) -> Endpoint {
+        return Endpoint(
+            path: "/v1/spaces/\(spaceId.uuidString)",
+            method: .patch,
+            body: SpaceRenameRequest(name: name),
+            requiresAuth: true
+        )
+    }
+
     static func leave(spaceId: UUID) -> Endpoint {
         return Endpoint(
             path: "/v1/spaces/\(spaceId.uuidString)/members/me",
@@ -290,6 +301,12 @@ struct EmailSignupRequest: Encodable, Sendable {
 struct EmailLoginRequest: Encodable, Sendable {
     let email: String
     let password: String
+}
+
+struct SpaceRenameRequest: Encodable, Sendable {
+    /// 빈 이름으로 되돌리는 것도 유효한 동작이라, nil도 그대로 직렬화해 서버에 보낸다
+    /// (UserUpdateRequest와 달리 키를 생략하지 않는다)
+    let name: String?
 }
 
 struct UserUpdateRequest: Encodable, Sendable {

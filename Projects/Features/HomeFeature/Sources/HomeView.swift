@@ -78,6 +78,10 @@ public struct HomeView: View {
     }
 
     private var spaceTitle: String {
+        // 사용자가 붙인 이름이 우선 — 없으면 상대 이름 기반 폴백 (개인화는 원하는 사람만)
+        if let name = state.space?.name, !name.isEmpty {
+            return name
+        }
         if let partner = state.partner {
             return "\(partner.nickname)님과의 스페이스"
         }

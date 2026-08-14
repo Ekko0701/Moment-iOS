@@ -99,6 +99,13 @@ public struct SettingsView: View {
         )) {
             nicknameSheet
         }
+        // 스페이스 이름 변경 시트
+        .sheet(isPresented: Binding(
+            get: { state.showSpaceNameSheet },
+            set: { if !$0 { send(.hideSpaceNameEditSheet) } }
+        )) {
+            spaceNameSheet
+        }
     }
 
     // MARK: - 닉네임 변경 시트
@@ -186,15 +193,10 @@ public struct SettingsView: View {
                     .foregroundColor(MomentColor.ink.opacity(0.5))
 
                 HStack {
-                    if let partner = space.members.first(where: { $0.id != currentUser?.id }) {
-                        Text("\(partner.nickname)님과의 스페이스")
-                            .font(.system(size: 15, weight: .bold))
-                            .foregroundColor(MomentColor.ink)
-                    } else {
-                        Text("우리 둘의 스페이스")
-                            .font(.system(size: 15, weight: .bold))
-                            .foregroundColor(MomentColor.ink)
-                    }
+                    // 사용자가 붙인 이름이 있으면 그것을, 없으면 상대 이름 기반 폴백
+                    Text(spaceTitle(space))
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundColor(MomentColor.ink)
 
                     Spacer()
 
@@ -204,18 +206,71 @@ public struct SettingsView: View {
                         .foregroundColor(MomentColor.ink.opacity(0.55))
                 }
 
-                Button {
-                    send(.disconnectTapped)
-                } label: {
-                    Text("연결 해제")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(MomentColor.destructive)
+                HStack(spacing: Spacing.md) {
+                    Button {
+                        send(.showSpaceNameEditSheet)
+                    } label: {
+                        Text("이름 변경")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(MomentColor.ink.opacity(0.7))
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        send(.disconnectTapped)
+                    } label: {
+                        Text("연결 해제")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(MomentColor.destructive)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
                 .padding(.top, Spacing.xxs)
             }
             .padding(Spacing.md)
         }
+    }
+
+    /// 공간 이름 표시 규칙 — 홈(HomeView.spaceTitle)과 동일하게 맞춘다
+    private func spaceTitle(_ space: Space) -> String {
+        if let name = space.name, !name.isEmpty { return name }
+        if let partner = space.members.first(where: { $0.id != currentUser?.id }) {
+            return "\(partner.nickname)님과의 스페이스"
+        }
+        return "우리 둘의 스페이스"
+    }
+
+    // MARK: - 스페이스 이름 변경 시트
+
+    private var spaceNameSheet: some View {
+        ZStack {
+            MomentColor.canvas.ignoresSafeArea()
+
+            VStack(spacing: Spacing.md) {
+                Text("스페이스 이름")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundColor(MomentColor.ink)
+                    .padding(.top, Spacing.lg)
+
+                MomentTextField("예: 우리들의 공간 (최대 10자)", text: Binding(
+                    get: { state.spaceNameInput },
+                    set: { send(.spaceNameChanged($0)) }
+                ))
+
+                MomentPillButton(state.isLoading ? "저장 중…" : "저장", style: .primary) {
+                    send(.spaceNameSubmitTapped)
+                }
+                .disabled(state.isLoading)
+
+                Text("비워두면 “OO님과의 스페이스”로 표시돼요.")
+                    .font(.system(size: 12))
+                    .foregroundColor(MomentColor.ink.opacity(0.55))
+
+                Spacer()
+            }
+            .padding(.horizontal, Spacing.lg)
+        }
+        .presentationDetents([.height(280)])
     }
 
     // MARK: - ACCOUNT 카드

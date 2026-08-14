@@ -342,6 +342,27 @@ public struct AppFeature {
                     return effect.map { .settings($0) }
                 }
 
+                // 스페이스 이름 변경 → 홈·설정이 보는 currentSpace를 갱신한다
+                // (설정 모듈이 홈 상태를 직접 건드리지 않고 부모가 중계하는 구조)
+                if case .delegate(.spaceRenamed(let newName)) = action,
+                   let space = mainState.currentSpace {
+                    var newMainState = mainState
+                    let renamed = Space(
+                        id: space.id,
+                        type: space.type,
+                        name: newName,
+                        maxMembers: space.maxMembers,
+                        status: space.status,
+                        members: space.members,
+                        createdAt: space.createdAt
+                    )
+                    newMainState.currentSpace = renamed
+                    newMainState.homeState.space = renamed
+                    newMainState.settingsState.currentSpace = renamed
+                    state = .main(newMainState)
+                    return effect.map { .settings($0) }
+                }
+
                 if case .delegate(.disconnected) = action {
                     // 연결 해제 → 메인 탭 유지, 홈 탭이 연결 화면으로 돌아간다
                     var newMainState = mainState

@@ -17,6 +17,11 @@ public struct SettingsUseCase: Sendable {
         try await userRepository.updateMe(nickname: nickname, profileImageKey: nil)
     }
 
+    /// 공간 이름 변경. 공백만 넘기면 서버가 null로 정규화해 "이름 없음"으로 되돌린다
+    public func renameSpace(spaceId: UUID, name: String?) async throws {
+        try await spaceRepository.rename(spaceId: spaceId, name: name)
+    }
+
     public func leaveSpace(spaceId: UUID) async throws {
         try await spaceRepository.leave(spaceId: spaceId)
     }

@@ -14,6 +14,11 @@ public final class SpaceRepositoryImpl: SpaceRepositoryProtocol {
         return spaces.map { $0.toDomainModel() }
     }
 
+    public func rename(spaceId: UUID, name: String?) async throws {
+        let endpoint = SpaceEndpoints.rename(spaceId: spaceId, name: name)
+        try await apiClient.requestVoid(endpoint)
+    }
+
     public func leave(spaceId: UUID) async throws {
         let endpoint = SpaceEndpoints.leave(spaceId: spaceId)
         try await apiClient.requestVoid(endpoint)

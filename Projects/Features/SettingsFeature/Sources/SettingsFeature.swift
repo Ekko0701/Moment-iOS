@@ -15,6 +15,8 @@ public struct SettingsFeature {
         public var showDisconnectConfirm = false
         public var showDeleteAccountConfirm = false
         public var showNicknameSheet = false
+        public var spaceNameInput: String = ""
+        public var showSpaceNameSheet = false
 
         public init() {}
     }
@@ -25,6 +27,10 @@ public struct SettingsFeature {
         case nicknameSubmitTapped
         case showNicknameEditSheet
         case hideNicknameEditSheet
+        case spaceNameChanged(String)
+        case spaceNameSubmitTapped
+        case showSpaceNameEditSheet
+        case hideSpaceNameEditSheet
         case disconnectTapped
         case confirmDisconnect
         case cancelDisconnect
@@ -36,6 +42,8 @@ public struct SettingsFeature {
 
         case profileResponse(Result<UserProfile, DomainError>)
         case nicknameUpdateResponse(Result<UserProfile, DomainError>)
+        /// 성공 시 서버가 정규화한 최종 이름(공백만 입력했으면 nil)을 함께 전달한다
+        case spaceRenameResponse(Result<String?, DomainError>)
         case disconnectResponse(Result<Void, DomainError>)
         case deleteResponse(Result<Void, DomainError>)
         case delegate(Delegate)
@@ -43,6 +51,8 @@ public struct SettingsFeature {
         public enum Delegate: Equatable {
             case loggedOut
             case disconnected
+            /// 홈이 보는 currentSpace는 AppFeature가 들고 있으므로, 부모에게 알려 갱신하게 한다
+            case spaceRenamed(String?)
         }
     }
 
@@ -93,6 +103,52 @@ public struct SettingsFeature {
             case .hideNicknameEditSheet:
                 state.showNicknameSheet = false
                 state.nicknameInput = ""
+                return .none
+
+            case .spaceNameChanged(let newName):
+                state.spaceNameInput = newName
+                return .none
+
+            case .showSpaceNameEditSheet:
+                state.showSpaceNameSheet = true
+                state.spaceNameInput = state.currentSpace?.name ?? ""
+                return .none
+
+            case .hideSpaceNameEditSheet:
+                state.showSpaceNameSheet = false
+                state.spaceNameInput = ""
+                return .none
+
+            case .spaceNameSubmitTapped:
+                guard let spaceId = state.currentSpace?.id else { return .none }
+                // 공백만 입력하면 이름을 지우는 것으로 본다 (서버가 null로 정규화)
+                let trimmed = state.spaceNameInput.trimmingCharacters(in: .whitespaces)
+                let newName: String? = trimmed.isEmpty ? nil : trimmed
+
+                state.isLoading = true
+                return .run { [spaceId, newName] send in
+                    @Dependency(\.settingsUseCase) var settingsUseCase
+                    do {
+                        try await settingsUseCase.renameSpace(spaceId: spaceId, name: newName)
+                        await send(.spaceRenameResponse(.success(newName)))
+                    } catch {
+                        let domainError = error as? DomainError
+                            ?? .unknown(code: "ERROR", message: error.localizedDescription)
+                        await send(.spaceRenameResponse(.failure(domainError)))
+                    }
+                }
+
+            case .spaceRenameResponse(.success(let newName)):
+                state.showSpaceNameSheet = false
+                state.spaceNameInput = ""
+                state.isLoading = false
+                state.error = nil
+                // 홈도 새 이름을 보여야 하므로 부모(AppFeature)에게 알린다
+                return .send(.delegate(.spaceRenamed(newName)))
+
+            case .spaceRenameResponse(.failure(let error)):
+                state.isLoading = false
+                state.error = error
                 return .none
 
             case .disconnectTapped:
