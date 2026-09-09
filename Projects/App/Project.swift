@@ -3,7 +3,11 @@ import ProjectDescriptionHelpers
 
 let project = Project(
     name: "App",
-    packages: [MomentPackage.composableArchitecture, MomentPackage.dependencies],
+    packages: [
+        MomentPackage.composableArchitecture,
+        MomentPackage.dependencies,
+        MomentPackage.swiftNavigation,
+    ],
     settings: .settings(
         base: ["SWIFT_ALLOW_MACRO_ATTESTATIONS": "YES"],
         configurations: MomentConfiguration.all),

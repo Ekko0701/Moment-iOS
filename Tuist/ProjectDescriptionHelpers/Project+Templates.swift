@@ -4,9 +4,20 @@ import ProjectDescription
 // 모든 모듈 프로젝트가 같은 버전을 쓰도록 여기서만 버전을 관리한다.
 
 public enum MomentPackage {
+    // Package.resolved가 워크스페이스 생성물이라 추적되지 않으므로 여기서 마이너까지 고정한다.
+    // 최신(1.26 + swift-navigation 2.10)은 Xcode 26 테스트/앱 링크 단계에서
+    // SwiftNavigation 심볼 누락(ld: symbol not found)을 일으킨다.
     public static let composableArchitecture: Package = .remote(
         url: "https://github.com/pointfreeco/swift-composable-architecture.git",
-        requirement: .upToNextMajor(from: "1.16.0"))
+        requirement: .exact("1.26.0"))
+    // TCA의 전이 의존성이지만 최신(2.10.x)이 링크를 깨뜨려 직접 선언으로 해석 범위를 제한한다.
+    public static let swiftNavigation: Package = .remote(
+        url: "https://github.com/pointfreeco/swift-navigation",
+        requirement: .upToNextMinor(from: "2.11.1"))
+    // 매크로 도구용 swift-syntax — 600으로 내려가면 SwiftNavigationMacros에 중복 링크된다.
+    public static let swiftSyntax: Package = .remote(
+        url: "https://github.com/swiftlang/swift-syntax",
+        requirement: .upToNextMinor(from: "603.0.2"))
     public static let dependencies: Package = .remote(
         url: "https://github.com/pointfreeco/swift-dependencies.git",
         requirement: .upToNextMajor(from: "1.0.0"))
@@ -108,7 +119,12 @@ public extension Project {
         module(
             name: name,
             bundleId: "com.moment.features.\(bundleIdSuffix)",
-            packages: [MomentPackage.composableArchitecture, MomentPackage.dependencies],
+            packages: [
+                MomentPackage.composableArchitecture,
+                MomentPackage.dependencies,
+                MomentPackage.swiftNavigation,
+                MomentPackage.swiftSyntax,
+            ],
             dependencies: [
                 ModuleDependency.domain,
                 ModuleDependency.designSystem,
