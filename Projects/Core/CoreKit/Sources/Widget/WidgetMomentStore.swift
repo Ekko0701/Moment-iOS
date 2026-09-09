@@ -106,7 +106,9 @@ public final class WidgetMomentStore: Sendable {
         )
 
         let fileURL = cacheURL.appendingPathComponent(fileName)
-        try data.write(to: fileURL)
+        // 위젯 확장이 같은 파일을 읽는 동안 앱이 덮어쓸 수 있다.
+        // 원자적 쓰기로 잘린 데이터가 읽히는 경우를 막는다.
+        try data.write(to: fileURL, options: .atomic)
     }
 
     public func loadCachedImage(fileName: String) -> Data? {
@@ -134,5 +136,30 @@ public final class WidgetMomentStore: Sendable {
             .appendingPathComponent(Self.imageCacheDirectory, isDirectory: true)
 
         try? FileManager.default.removeItem(at: cacheURL)
+    }
+
+    /// 위젯이 표시할 파일 하나만 남기고 캐시를 비운다.
+    /// 위젯은 항상 상대의 최신 모먼트 1건만 보여주므로 지난 이미지를 보관할 이유가 없다.
+    /// fileName이 nil이면 전부 삭제 — 연결 해제·로그아웃 후 상대 사진을 컨테이너에 남기지 않는다.
+    public func pruneImageCache(keeping fileName: String?) {
+        guard let containerURL = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: Self.appGroupIdentifier
+        ) else {
+            return
+        }
+
+        let cacheURL = containerURL
+            .appendingPathComponent(Self.imageCacheDirectory, isDirectory: true)
+
+        guard let files = try? FileManager.default.contentsOfDirectory(
+            at: cacheURL,
+            includingPropertiesForKeys: nil
+        ) else {
+            return
+        }
+
+        for file in files where file.lastPathComponent != fileName {
+            try? FileManager.default.removeItem(at: file)
+        }
     }
 }

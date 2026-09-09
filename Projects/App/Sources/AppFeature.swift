@@ -9,6 +9,7 @@ import FeedFeature
 import ComposeFeature
 import SettingsFeature
 import CoreKit
+import UIKit
 import WidgetKit
 
 public struct AppFeature {
@@ -106,6 +107,7 @@ public struct AppFeature {
                     // Save widget state: need to connect
                     let store = WidgetMomentStore()
                     store.saveState(.needConnect)
+                    store.clearCache()
                     WidgetCenter.shared.reloadAllTimelines()
                 }
                 state = .main(mainState)
@@ -116,6 +118,7 @@ public struct AppFeature {
                 // Save widget state: need login
                 let store = WidgetMomentStore()
                 store.saveState(.needLogin)
+                store.clearCache()
                 WidgetCenter.shared.reloadAllTimelines()
                 return .none
 
@@ -138,6 +141,7 @@ public struct AppFeature {
                     // 아직 스페이스 없음 → 홈 탭이 연결 화면을 유지한다
                     let store = WidgetMomentStore()
                     store.saveState(.needConnect)
+                    store.clearCache()
                     WidgetCenter.shared.reloadAllTimelines()
                 }
                 state = .main(mainState)
@@ -287,7 +291,7 @@ public struct AppFeature {
                     return effect.map { .feed($0) }
                         .merge(with: .run { [feedState = mainState.feedState,
                                              myUserId = mainState.currentUser?.id] _ in
-                            syncWidgetMoment(from: feedState, excludingAuthorId: myUserId)
+                            await syncWidgetMoment(from: feedState, excludingAuthorId: myUserId)
                         })
                 }
 
@@ -378,6 +382,7 @@ public struct AppFeature {
                     state = .main(newMainState)
                     let store = WidgetMomentStore()
                     store.saveState(.needConnect)
+                    store.clearCache()
                     WidgetCenter.shared.reloadAllTimelines()
                     return effect.map { .settings($0) }
                 }
@@ -392,7 +397,15 @@ public struct AppFeature {
 extension AppFeature: Reducer {}
 
 // MARK: - Widget Sync Helper
-private func syncWidgetMoment(from feedState: FeedFeatureReducer.State, excludingAuthorId: UUID?) {
+/// 위젯 캐시 이미지의 최대 변 길이 — systemMedium(3x 기준 약 1080px)에 충분하고,
+/// 위젯 확장의 메모리 한도(약 30MB) 안에서 안전한 크기.
+private let widgetImageMaxDimension: CGFloat = 800
+private let widgetImageDownloadTimeout: TimeInterval = 10
+/// 우리 스토리지가 주는 이미지는 1MB 안쪽(2048px · JPEG 0.85)이다.
+/// 그보다 훨씬 큰 응답은 위젯에 싣지 않고 텍스트 폴백으로 떨어뜨린다.
+private let widgetImageMaxBytes = 10 * 1024 * 1024
+
+private func syncWidgetMoment(from feedState: FeedFeatureReducer.State, excludingAuthorId: UUID?) async {
     let store = WidgetMomentStore()
 
     // 위젯 계약(F-06): "내가 작성하지 않은" 최신 모먼트만 표시한다.
@@ -400,20 +413,62 @@ private func syncWidgetMoment(from feedState: FeedFeatureReducer.State, excludin
         guard let excludingAuthorId else { return true }
         return moment.author.id != excludingAuthorId
     }
-    if let latestMoment = candidates.first {
-        let snapshot = WidgetMomentSnapshot(
-            momentId: latestMoment.id,
-            spaceId: latestMoment.spaceId,
-            authorNickname: latestMoment.author.nickname,
-            text: latestMoment.text,
-            imageFileName: nil,
-            createdAt: latestMoment.createdAt,
-            hasImage: latestMoment.imageURL != nil
-        )
-        store.saveState(.hasMoment(snapshot))
-    } else {
+
+    guard let latestMoment = candidates.first else {
         store.saveState(.empty)
+        store.pruneImageCache(keeping: nil)
+        WidgetCenter.shared.reloadAllTimelines()
+        return
     }
 
+    // 사진은 App Group 컨테이너에 캐시해 둔다. 위젯 확장은 네트워크를 쓰지 않고
+    // 이 캐시만 읽는다(15분 타임라인마다 재다운로드하면 낭비이고 오프라인에서도 깨진다).
+    let imageFileName = await cacheWidgetImage(for: latestMoment, using: store)
+
+    let snapshot = WidgetMomentSnapshot(
+        momentId: latestMoment.id,
+        spaceId: latestMoment.spaceId,
+        authorNickname: latestMoment.author.nickname,
+        text: latestMoment.text,
+        imageFileName: imageFileName,
+        createdAt: latestMoment.createdAt,
+        hasImage: latestMoment.imageURL != nil
+    )
+    store.saveState(.hasMoment(snapshot))
+
+    // 방금 쓴 파일만 남긴다 — 지난 모먼트 이미지가 컨테이너에 쌓이지 않게.
+    store.pruneImageCache(keeping: imageFileName)
+
     WidgetCenter.shared.reloadAllTimelines()
+}
+
+/// 모먼트 사진을 내려받아 위젯 캐시에 저장하고 파일명을 돌려준다.
+/// 같은 모먼트가 이미 캐시돼 있으면 재다운로드하지 않는다(파일명이 momentId로 결정적).
+/// 실패 시 nil — 사진 때문에 위젯이 비지 않도록 텍스트 폴백으로 렌더된다.
+private func cacheWidgetImage(for moment: Moment, using store: WidgetMomentStore) async -> String? {
+    guard let imageURL = moment.imageURL else { return nil }
+
+    let fileName = "\(moment.id.uuidString).jpg"
+    if store.loadCachedImage(fileName: fileName) != nil {
+        return fileName
+    }
+
+    var request = URLRequest(url: imageURL)
+    request.timeoutInterval = widgetImageDownloadTimeout
+
+    do {
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse,
+              (200...299).contains(http.statusCode),
+              data.count <= widgetImageMaxBytes,
+              let downsampled = UIImage(data: data)?
+                  .resizedAndCompressed(maxDimension: widgetImageMaxDimension)
+        else {
+            return nil
+        }
+        try store.cacheImage(downsampled, fileName: fileName)
+        return fileName
+    } catch {
+        return nil
+    }
 }
