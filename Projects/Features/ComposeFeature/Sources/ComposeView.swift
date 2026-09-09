@@ -1,4 +1,6 @@
+import PhotosUI
 import SwiftUI
+import UIKit
 import MomentUIKit
 
 /// 작성 — Final-MVP: 타이틀 없이 글래스 에디터 카드 + 카운터 + 다크 필 공유 버튼.
@@ -6,6 +8,10 @@ import MomentUIKit
 public struct ComposeView: View {
     let state: ComposeFeature.State
     let send: (ComposeFeature.Action) -> Void
+
+    // PhotosPickerItem은 시스템 피커의 선택 핸들일 뿐이라 리듀서 상태로 올리지 않는다.
+    // Data 로드가 끝나는 즉시 photoPicked로 넘기고 nil로 되돌린다.
+    @State private var pickerItem: PhotosPickerItem?
 
     public init(state: ComposeFeature.State, send: @escaping (ComposeFeature.Action) -> Void) {
         self.state = state
@@ -56,6 +62,8 @@ public struct ComposeView: View {
     private var editorCard: some View {
         SurfaceCard {
             VStack(alignment: .leading, spacing: Spacing.xs) {
+                photoSection
+
                 ZStack(alignment: .topLeading) {
                     if state.text.isEmpty {
                         Text("오늘의 순간을 남겨보세요…")
@@ -76,6 +84,7 @@ public struct ComposeView: View {
                 }
 
                 HStack {
+                    photoPickerButton
                     Spacer()
                     Text("\(state.characterCount) / 500")
                         .font(.system(size: 11, design: .default))
@@ -84,6 +93,59 @@ public struct ComposeView: View {
                 }
             }
             .padding(Spacing.md)
+        }
+    }
+
+    // MARK: - 사진 첨부
+
+    @ViewBuilder
+    private var photoSection: some View {
+        if state.isProcessingPhoto {
+            RoundedRectangle(cornerRadius: 14)
+                .fill(MomentColor.surfaceSoft)
+                .frame(height: 160)
+                .overlay {
+                    ProgressView().tint(MomentColor.ink)
+                }
+        } else if let data = state.selectedImage, let image = UIImage(data: data) {
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFill()
+                .frame(maxWidth: .infinity)
+                .frame(height: 160)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+                .overlay(alignment: .topTrailing) {
+                    Button {
+                        send(.clearImage)
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 22))
+                            .foregroundStyle(.white, Color.black.opacity(0.45))
+                    }
+                    .padding(Spacing.xs)
+                    .accessibilityLabel("사진 제거")
+                }
+        }
+    }
+
+    private var photoPickerButton: some View {
+        PhotosPicker(selection: $pickerItem, matching: .images, photoLibrary: .shared()) {
+            HStack(spacing: 6) {
+                Image(systemName: "photo.on.rectangle")
+                Text(state.selectedImage == nil ? "사진" : "사진 바꾸기")
+            }
+            .font(MomentTypography.bodySM)
+            .foregroundColor(MomentColor.ink.opacity(0.7))
+        }
+        .disabled(state.isProcessingPhoto || state.isUploading)
+        .onChange(of: pickerItem) { _, newItem in
+            guard let newItem else { return }
+            Task {
+                // HEIC 등 원본 포맷 그대로 Data로 로드 — 변환·압축은 리듀서 이펙트가 수행
+                let data = try? await newItem.loadTransferable(type: Data.self)
+                send(.photoPicked(data))
+            }
+            pickerItem = nil
         }
     }
 }
@@ -101,4 +163,18 @@ public struct ComposeView: View {
 
 #Preview("작성 — 빈 상태") {
     ComposeView(state: ComposeFeature.State(), send: { _ in })
+}
+
+#Preview("작성 — 사진 첨부") {
+    let state: ComposeFeature.State = {
+        var s = ComposeFeature.State()
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 400, height: 300))
+        s.selectedImage = renderer.image { ctx in
+            UIColor.systemOrange.setFill()
+            ctx.fill(CGRect(x: 0, y: 0, width: 400, height: 300))
+        }.jpegData(compressionQuality: 0.8)
+        s.text = "노을이 예뻐서 한 장"
+        return s
+    }()
+    ComposeView(state: state, send: { _ in })
 }
