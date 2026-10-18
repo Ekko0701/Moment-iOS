@@ -13,7 +13,11 @@ extension UIImage {
             height: self.size.height * scale
         )
 
-        let renderer = UIGraphicsImageRenderer(size: newSize)
+        // scale을 1로 고정해야 newSize가 "픽셀"이 된다. 기본 포맷은 기기 스케일(3x)을 따라가서
+        // 2048pt → 6144px로 렌더링되고, 2026-10-18 운영 첫 업로드가 4100×6144(4.3MB)로 올라갔다.
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1
+        let renderer = UIGraphicsImageRenderer(size: newSize, format: format)
         let resized = renderer.image { _ in
             self.draw(in: CGRect(origin: .zero, size: newSize))
         }
