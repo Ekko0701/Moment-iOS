@@ -2,9 +2,8 @@ import Testing
 import UIKit
 @testable import CoreKit
 
-/// 2026-10-18 운영 첫 업로드가 4100×6144(4.3MB)로 올라간 회귀 가드.
-/// UIGraphicsImageRenderer 기본 포맷은 기기 스케일(3x)을 따라가므로 maxDimension이 "포인트"로 해석되어
-/// 픽셀 상한이 무의미해졌다. 결과 JPEG를 다시 디코드해 실제 픽셀 크기를 검사한다.
+/// resizedAndCompressed의 출력 크기 규약을 검증한다. maxDimension은 기기 스케일과 무관한 픽셀 상한이며,
+/// 긴 변 기준으로 축소만 하고 확대는 하지 않는다. 결과 JPEG를 다시 디코드해 실제 픽셀 크기로 판정한다.
 private func solidImage(width: Int, height: Int) -> UIImage {
     let format = UIGraphicsImageRendererFormat.default()
     format.scale = 1

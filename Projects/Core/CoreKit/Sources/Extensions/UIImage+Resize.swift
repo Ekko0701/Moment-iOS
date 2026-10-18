@@ -13,8 +13,8 @@ extension UIImage {
             height: self.size.height * scale
         )
 
-        // scale을 1로 고정해야 newSize가 "픽셀"이 된다. 기본 포맷은 기기 스케일(3x)을 따라가서
-        // 2048pt → 6144px로 렌더링되고, 2026-10-18 운영 첫 업로드가 4100×6144(4.3MB)로 올라갔다.
+        // scale 1: newSize를 포인트가 아닌 픽셀로 렌더링한다. 기본 포맷은 기기 스케일(2x/3x)을 따라
+        // 그만큼 큰 비트맵을 만들므로 maxDimension이 픽셀 상한으로 동작하지 않는다.
         let format = UIGraphicsImageRendererFormat.default()
         format.scale = 1
         let renderer = UIGraphicsImageRenderer(size: newSize, format: format)
