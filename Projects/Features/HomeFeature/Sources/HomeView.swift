@@ -9,10 +9,17 @@ import MomentUIKit
 public struct HomeView: View {
     let state: HomeFeature.State
     let send: (HomeFeature.Action) -> Void
+    /// 당겨서 새로고침. 앱 셸이 목록을 다 받을 때까지 기다려, 스피너가 로딩과 함께 사라지게 한다
+    let refresh: (() async -> Void)?
 
-    public init(state: HomeFeature.State, send: @escaping (HomeFeature.Action) -> Void) {
+    public init(
+        state: HomeFeature.State,
+        send: @escaping (HomeFeature.Action) -> Void,
+        refresh: (() async -> Void)? = nil
+    ) {
         self.state = state
         self.send = send
+        self.refresh = refresh
     }
 
     public var body: some View {
@@ -32,7 +39,13 @@ public struct HomeView: View {
                 }
                 .padding(.vertical, Spacing.lg)
             }
-            .refreshable { send(.refreshPulled) }
+            .refreshable {
+                if let refresh {
+                    await refresh()
+                } else {
+                    send(.refreshPulled)
+                }
+            }
         }
         .onAppear { send(.onAppear) }
         // 내비는 앱 정체성만 — 관계 정보는 카드 위 라벨이 담당한다

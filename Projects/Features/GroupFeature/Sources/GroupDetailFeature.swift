@@ -50,6 +50,7 @@ public struct GroupDetailFeature {
             switch action {
             case .onAppear:
                 state.isLoading = true
+                state.error = nil
                 return .run { [spaceId = state.space.id] send in
                     @Dependency(\.groupUseCase) var groupUseCase
                     do {

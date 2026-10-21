@@ -26,7 +26,7 @@ func spaceDTODecodesLegacyPayload() throws {
     {"id":"\(UUID().uuidString)","name":null,"type":"ONE_TO_ONE","status":"ACTIVE","connectedAt":1700000000000,
      "members":[{"userId":"\(UUID().uuidString)","handle":"a","nickname":"에이","profileImageUrl":null,"joinedAt":1}]}
     """
-    let space = try JSONDecoder().decode(SpaceDTO.self, from: Data(json.utf8)).toDomainModel()
+    let space = try #require(try JSONDecoder().decode(SpaceDTO.self, from: Data(json.utf8)).toDomainModel())
     #expect(space.type == .oneToOne)
     #expect(space.maxMembers == 2)
     #expect(space.myRole == .member)
@@ -45,7 +45,7 @@ func spaceDTODecodesGroupPayload() throws {
        "author":{"userId":"\(authorId.uuidString)","handle":"b","nickname":"비비","profileImageUrl":null},
        "imageUrl":null,"text":"산책 시작","createdAtMs":1700000000000,"reactions":[],"myReaction":null}}
     """
-    let space = try JSONDecoder().decode(SpaceDTO.self, from: Data(json.utf8)).toDomainModel()
+    let space = try #require(try JSONDecoder().decode(SpaceDTO.self, from: Data(json.utf8)).toDomainModel())
     #expect(space.isGroup)
     #expect(space.isOwner)
     #expect(space.maxMembers == 6)
@@ -99,4 +99,43 @@ func joinRequestDTOsDecode() throws {
      "profileImageUrl":null,"createdAt":1700000000000}
     """.utf8)).toDomainModel()
     #expect(pending.user.nickname == "씨씨")
+}
+
+@Test("앱이 다루지 않는 스페이스 유형은 1:1로 오인하지 않고 nil로 읽는다")
+func unknownSpaceTypeIsSkipped() throws {
+    for type in ["PUBLIC", "SOMETHING_NEW"] {
+        let json = """
+        {"id":"\(UUID().uuidString)","name":null,"type":"\(type)","status":"ACTIVE","connectedAt":1700000000000,
+         "members":[]}
+        """
+        #expect(try JSONDecoder().decode(SpaceDTO.self, from: Data(json.utf8)).toDomainModel() == nil)
+    }
+}
+
+@Test("ID가 UUID 형식이 아니면 임의 ID로 바꾸지 않고 디코딩 오류가 난다")
+func malformedIdFailsDecoding() {
+    let json = """
+    {"id":"not-a-uuid","spaceId":"\(UUID().uuidString)","spaceName":"가족","status":"PENDING","createdAt":1}
+    """
+    #expect(throws: DecodingError.self) {
+        try JSONDecoder().decode(JoinRequestDTO.self, from: Data(json.utf8))
+    }
+}
+
+@Test("사용자 응답은 userId와 id 키를 모두 받고, 둘 다 없으면 디코딩 오류가 난다")
+func userProfileAcceptsBothKeys() throws {
+    let id = UUID()
+    let byUserId = try JSONDecoder().decode(UserProfileDTO.self, from: Data("""
+    {"userId":"\(id.uuidString)","handle":"a","nickname":"에이","profileImageUrl":null}
+    """.utf8))
+    let byId = try JSONDecoder().decode(UserProfileDTO.self, from: Data("""
+    {"id":"\(id.uuidString)","handle":"a","nickname":"에이"}
+    """.utf8))
+    #expect(byUserId.toDomainModel().id == id)
+    #expect(byId.toDomainModel().id == id)
+    #expect(throws: DecodingError.self) {
+        try JSONDecoder().decode(UserProfileDTO.self, from: Data("""
+        {"handle":"a","nickname":"에이"}
+        """.utf8))
+    }
 }

@@ -160,7 +160,11 @@ struct AppView: View {
                         }
                     }
                 } else {
-                    HomeView(state: mainTabState.homeState, send: { viewStore.send(.home($0)) })
+                    HomeView(
+                        state: mainTabState.homeState,
+                        send: { viewStore.send(.home($0)) },
+                        refresh: { await viewStore.send(.home(.refreshPulled), while: \.isHomeRefreshing) }
+                    )
                         .navigationBarTitleDisplayMode(.inline) // 시안: 중앙 인라인 (2줄 타이틀은 HomeView가 공급)
                 }
             }

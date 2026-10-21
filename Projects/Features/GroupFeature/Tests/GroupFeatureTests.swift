@@ -224,3 +224,12 @@ func memberCannotDecideJoinRequest() {
     _ = GroupSettingsFeature().reduce(into: &state, action: .decideJoinRequestTapped(request, approve: true))
     #expect(state.decidingRequestIds.isEmpty)
 }
+
+@Test("멤버를 다시 불러오면 이전 실패 표시를 지운다")
+func detailRetryClearsError() {
+    var state = GroupDetailFeature.State(space: space())
+    state.error = .unknown(code: "E", message: "실패")
+    _ = GroupDetailFeature().reduce(into: &state, action: .onAppear)
+    #expect(state.error == nil)
+    #expect(state.isLoading)
+}

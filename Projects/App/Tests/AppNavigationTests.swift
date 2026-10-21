@@ -119,3 +119,17 @@ func sharingToGroupClosesOneToOneHistory() {
     state.closeScreens(notShowing: pair.id)
     #expect(state.isHistoryPresented)
 }
+
+@Test("상대가 1:1 연결을 끊어 목록에서 사라지면 열려 있던 지난 순간 화면을 닫는다")
+func historyClosesWhenOneToOneDisappears() {
+    let pair = oneToOne()
+    let groupA = group("A")
+    var state = mainState([pair, groupA])
+    state.open(pair)
+    #expect(state.isHistoryPresented)
+
+    state.apply(spaces: [groupA])
+
+    #expect(state.isHistoryPresented == false)
+    #expect(state.feedState.selectedSpaceId == nil)
+}

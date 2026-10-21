@@ -3,7 +3,7 @@ import Domain
 
 /// 서버 InvitationResponse 매핑: { id, fromUserId, toUserId, via, status, createdAt, respondedAt, counterpart }
 struct InvitationDTO: Decodable {
-    let id: String
+    let id: UUID
     let via: String
     let status: String
     let createdAt: Date
@@ -11,7 +11,7 @@ struct InvitationDTO: Decodable {
 
     func toDomainModel() -> Invitation {
         Invitation(
-            id: UUID(uuidString: id) ?? UUID(),
+            id: id,
             via: InvitationVia(rawValue: via.uppercased()) ?? .code,
             status: InvitationStatus(rawValue: status.lowercased()) ?? .pending,
             counterpart: counterpart.toDomainModel(),

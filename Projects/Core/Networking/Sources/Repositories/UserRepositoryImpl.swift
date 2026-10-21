@@ -36,16 +36,33 @@ public final class UserRepositoryImpl: UserRepositoryProtocol {
 /// 서버 사용자 응답 매핑 — /users/me는 `id`, /users/search는 `userId` 키를 쓰므로 둘 다 수용.
 /// 이미지 키는 서버 표기 그대로 `profileImageUrl`.
 struct UserProfileResponseDTO: Decodable {
-    let id: String?
-    let userId: String?
+    let id: UUID
     let handle: String
     let nickname: String
     let profileImageUrl: String?
     let isSearchable: Bool?
 
+    private enum CodingKeys: String, CodingKey {
+        case id, userId, handle, nickname, profileImageUrl, isSearchable
+    }
+
+    // 엔드포인트마다 id 또는 userId 키를 쓴다. 둘 다 없거나 UUID 형식이 아니면 디코딩 오류로 드러낸다
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if let userId = try container.decodeIfPresent(UUID.self, forKey: .userId) {
+            id = userId
+        } else {
+            id = try container.decode(UUID.self, forKey: .id)
+        }
+        handle = try container.decode(String.self, forKey: .handle)
+        nickname = try container.decode(String.self, forKey: .nickname)
+        profileImageUrl = try container.decodeIfPresent(String.self, forKey: .profileImageUrl)
+        isSearchable = try container.decodeIfPresent(Bool.self, forKey: .isSearchable)
+    }
+
     func toDomainModel() -> UserProfile {
         UserProfile(
-            id: UUID(uuidString: userId ?? id ?? "") ?? UUID(),
+            id: id,
             handle: handle,
             nickname: nickname,
             profileImageURL: profileImageUrl.flatMap { URL(string: $0) },

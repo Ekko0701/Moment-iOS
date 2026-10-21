@@ -56,8 +56,8 @@ public final class MomentRepositoryImpl: MomentRepositoryProtocol {
 /// { id, spaceId, author:{userId,handle,nickname,profileImageUrl}, imageUrl, text,
 ///   createdAtMs(epoch millis), reactions:[{emoji,count}], myReaction }
 struct MomentDTO: Decodable {
-    let id: String
-    let spaceId: String
+    let id: UUID
+    let spaceId: UUID
     let author: MomentAuthorDTO
     let imageUrl: String?
     let text: String?
@@ -67,8 +67,8 @@ struct MomentDTO: Decodable {
 
     func toDomainModel() -> Moment {
         Moment(
-            id: UUID(uuidString: id) ?? UUID(),
-            spaceId: UUID(uuidString: spaceId) ?? UUID(),
+            id: id,
+            spaceId: spaceId,
             author: author.toDomainModel(),
             imageURL: imageUrl.flatMap { URL(string: $0) },
             text: text,
@@ -80,14 +80,14 @@ struct MomentDTO: Decodable {
 }
 
 struct MomentAuthorDTO: Decodable {
-    let userId: String
+    let userId: UUID
     let handle: String
     let nickname: String
     let profileImageUrl: String?
 
     func toDomainModel() -> UserProfile {
         UserProfile(
-            id: UUID(uuidString: userId) ?? UUID(),
+            id: userId,
             handle: handle,
             nickname: nickname,
             profileImageURL: profileImageUrl.flatMap { URL(string: $0) }

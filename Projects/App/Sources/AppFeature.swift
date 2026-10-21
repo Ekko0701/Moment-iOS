@@ -29,6 +29,12 @@ public struct AppFeature {
             if case .main = self { return true }
             return false
         }
+
+        /// 홈 목록을 다시 받는 중인지. 당겨서 새로고침 스피너가 이 값이 꺼질 때까지 기다린다
+        var isHomeRefreshing: Bool {
+            if case .main(let main) = self { return main.homeState.isRefreshing }
+            return false
+        }
     }
 
     public struct MainTabState: Equatable {
@@ -97,6 +103,11 @@ public struct AppFeature {
                     groupDetail = nil
                     groupSettings = nil
                 }
+            }
+            // 상대가 연결을 끊는 등으로 1:1이 사라지면 그 지난 순간 화면도 닫는다
+            if isHistoryPresented, feedState.selectedSpaceId.map({ !ids.contains($0) }) ?? true {
+                isHistoryPresented = false
+                feedState = FeedFeatureReducer.State()
             }
             if !spaces.isEmpty {
                 connectState = oneToOneSpace == nil ? connectState : ConnectFeatureReducer.State()

@@ -182,11 +182,22 @@ public struct GroupMemberStripView: View {
                 }
                 .padding(.horizontal, Spacing.lg)
             }
+
+            // 실패는 알림 창 대신 이 자리에 보여준다. 위에 설정 화면이 열려 있어도 알림이 겹치지 않는다
+            if state.error != nil {
+                HStack(spacing: Spacing.xs) {
+                    Text("멤버를 불러오지 못했어요")
+                        .font(MomentTypography.bodySM)
+                        .foregroundColor(MomentColor.ink.opacity(0.6))
+                    Button("다시 시도") { send(.onAppear) }
+                        .font(MomentTypography.bodySM.weight(.semibold))
+                }
+                .padding(.horizontal, Spacing.lg)
+            }
         }
         .padding(.vertical, Spacing.sm)
         // 화면이 열려 있는 채로 다른 그룹으로 바뀌어도 그 그룹의 멤버를 다시 불러온다
         .task(id: state.space.id) { send(.onAppear) }
-        .errorAlert(state.error) { send(.dismissError) }
     }
 }
 

@@ -11,7 +11,7 @@ public final class SpaceRepositoryImpl: SpaceRepositoryProtocol {
     public func mySpaces() async throws -> [Space] {
         let endpoint = SpaceEndpoints.getActiveSpace()
         let spaces: [SpaceDTO] = try await apiClient.request(endpoint)
-        return spaces.map { $0.toDomainModel() }
+        return spaces.compactMap { $0.toDomainModel() }
     }
 
     public func rename(spaceId: UUID, name: String?) async throws {
@@ -66,7 +66,7 @@ public final class SpaceRepositoryImpl: SpaceRepositoryProtocol {
 
     public func createGroup(name: String) async throws -> CreatedGroup {
         let dto: CreateGroupDTO = try await apiClient.request(GroupEndpoints.create(name: name))
-        return dto.toDomainModel()
+        return try dto.toDomainModel()
     }
 
     public func requestJoinGroup(code: String) async throws -> GroupJoinRequest {
