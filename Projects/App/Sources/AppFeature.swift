@@ -168,7 +168,10 @@ public struct AppFeature {
                     WidgetCenter.shared.reloadAllTimelines()
                 }
                 state = .main(mainState)
-                return .none
+                if spaces.isEmpty { return .none }
+                return .run { [myUserId = user.id] _ in
+                    await syncWidget(spaces: spaces, myUserId: myUserId)
+                }
 
             case .appInitialized(.failure):
                 state = .auth(AuthFeatureReducer.State())
@@ -194,14 +197,17 @@ public struct AppFeature {
                     WidgetCenter.shared.reloadAllTimelines()
                 }
                 state = .main(mainState)
+                let widgetSync: Effect<Action> = spaces.isEmpty ? .none : .run { [myUserId = mainState.currentUser?.id] _ in
+                    await syncWidget(spaces: spaces, myUserId: myUserId)
+                }
                 if mainState.currentUser == nil {
-                    return .run { [sessionUseCase = self.sessionUseCase] send in
+                    return widgetSync.merge(with: .run { [sessionUseCase = self.sessionUseCase] send in
                         if let user = try? await sessionUseCase.myProfile() {
                             await send(.profileLoaded(user))
                         }
-                    }
+                    })
                 }
-                return .none
+                return widgetSync
 
             case .profileLoaded(let user):
                 guard case .main(var mainState) = state else {
@@ -381,16 +387,6 @@ public struct AppFeature {
                 let effect = FeedFeatureReducer().reduce(into: &mainState.feedState, action: action)
                 state = .main(mainState)
 
-                // 1:1 타임라인을 불러오면 위젯을 갱신한다
-                if case .timelineResponse(.success) = action,
-                   mainState.feedState.selectedSpaceId == mainState.oneToOneSpace?.id {
-                    return effect.map { .feed($0) }
-                        .merge(with: .run { [feedState = mainState.feedState,
-                                             myUserId = mainState.currentUser?.id] _ in
-                            await syncWidgetMoment(from: feedState, excludingAuthorId: myUserId)
-                        })
-                }
-
                 return effect.map { .feed($0) }
 
             case .compose(let action):
@@ -442,6 +438,8 @@ public struct AppFeature {
 
                 if case .delegate(.loggedOut) = action {
                     state = .auth(AuthFeatureReducer.State())
+                    WidgetMomentStore().resetForLogout()
+                    WidgetCenter.shared.reloadAllTimelines()
                     return effect.map { .settings($0) }
                 }
 
@@ -587,41 +585,44 @@ private let widgetImageDownloadTimeout: TimeInterval = 10
 /// 그보다 훨씬 큰 응답은 위젯에 싣지 않고 텍스트 폴백으로 떨어뜨린다.
 private let widgetImageMaxBytes = 10 * 1024 * 1024
 
-private func syncWidgetMoment(from feedState: FeedFeatureReducer.State, excludingAuthorId: UUID?) async {
+/// 스페이스 목록으로 위젯 데이터를 맞춘다. 스페이스마다 나 제외 최신 모먼트 1건과 그 사진을 저장하고,
+/// 위젯 설정에서 고를 수 있는 스페이스 목록을 갱신한다. 목록에서 빠진 스페이스의 데이터와 사진은 지운다.
+private func syncWidget(spaces: [Space], myUserId: UUID?) async {
     let store = WidgetMomentStore()
+    // 전체 상태를 비워 두면 위젯은 스페이스별 상태를 읽는다(로그인·연결 필요가 아님을 뜻함)
+    store.saveState(.empty)
+    store.saveSpaces(spaces.map { space in
+        WidgetSpaceInfo(id: space.id, name: widgetSpaceName(space, myUserId: myUserId), isGroup: space.isGroup)
+    })
 
-    // 위젯 계약(F-06): "내가 작성하지 않은" 최신 모먼트만 표시한다.
-    let candidates = feedState.moments.filter { moment in
-        guard let excludingAuthorId else { return true }
-        return moment.author.id != excludingAuthorId
+    var keptImages = Set<String>()
+    for space in spaces {
+        guard let moment = space.latestMoment, moment.author.id != myUserId else {
+            store.saveState(.empty, for: space.id)
+            continue
+        }
+        let imageFileName = await cacheWidgetImage(for: moment, using: store)
+        if let imageFileName { keptImages.insert(imageFileName) }
+        store.saveState(.hasMoment(WidgetMomentSnapshot(
+            momentId: moment.id,
+            spaceId: space.id,
+            authorNickname: moment.author.nickname,
+            text: moment.text,
+            imageFileName: imageFileName,
+            createdAt: moment.createdAt,
+            hasImage: moment.imageURL != nil
+        )), for: space.id)
     }
 
-    guard let latestMoment = candidates.first else {
-        store.saveState(.empty)
-        store.pruneImageCache(keeping: nil)
-        WidgetCenter.shared.reloadAllTimelines()
-        return
-    }
-
-    // 사진은 App Group 컨테이너에 캐시해 둔다. 위젯 확장은 네트워크를 쓰지 않고
-    // 이 캐시만 읽는다(15분 타임라인마다 재다운로드하면 낭비이고 오프라인에서도 깨진다).
-    let imageFileName = await cacheWidgetImage(for: latestMoment, using: store)
-
-    let snapshot = WidgetMomentSnapshot(
-        momentId: latestMoment.id,
-        spaceId: latestMoment.spaceId,
-        authorNickname: latestMoment.author.nickname,
-        text: latestMoment.text,
-        imageFileName: imageFileName,
-        createdAt: latestMoment.createdAt,
-        hasImage: latestMoment.imageURL != nil
-    )
-    store.saveState(.hasMoment(snapshot))
-
-    // 방금 쓴 파일만 남긴다 — 지난 모먼트 이미지가 컨테이너에 쌓이지 않게.
-    store.pruneImageCache(keeping: imageFileName)
-
+    store.removeSpaceStates(except: Set(spaces.map(\.id)))
+    store.pruneImageCache(keeping: keptImages)
     WidgetCenter.shared.reloadAllTimelines()
+}
+
+private func widgetSpaceName(_ space: Space, myUserId: UUID?) -> String {
+    if let name = space.name, !name.isEmpty { return name }
+    if let partner = space.partner(excluding: myUserId) { return "\(partner.nickname)님과의 스페이스" }
+    return space.isGroup ? "그룹" : "1:1 스페이스"
 }
 
 /// 모먼트 사진을 내려받아 위젯 캐시에 저장하고 파일명을 돌려준다.

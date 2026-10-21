@@ -90,7 +90,7 @@ struct MomentSmallWidgetView: View {
                 .padding(8)
             }
             .clipped()
-            .widgetURL(URL(string: "moment://moment/\(snapshot.momentId)"))
+            .widgetURL(URL(string: "moment://moment/\(snapshot.spaceId)/\(snapshot.momentId)"))
         } else {
             // Text-only with pastel color block background based on hash
             let blockColor = getBlockColor(for: snapshot.momentId)
@@ -119,7 +119,7 @@ struct MomentSmallWidgetView: View {
                 }
                 .padding(8)
             }
-            .widgetURL(URL(string: "moment://moment/\(snapshot.momentId)"))
+            .widgetURL(URL(string: "moment://moment/\(snapshot.spaceId)/\(snapshot.momentId)"))
         }
     }
 
@@ -239,7 +239,7 @@ struct MomentMediumWidgetView: View {
                 .padding(12)
             }
             .clipped()
-            .widgetURL(URL(string: "moment://moment/\(snapshot.momentId)"))
+            .widgetURL(URL(string: "moment://moment/\(snapshot.spaceId)/\(snapshot.momentId)"))
         } else {
             // Text-only with gradient background
             ZStack(alignment: .center) {
@@ -277,7 +277,7 @@ struct MomentMediumWidgetView: View {
                 .padding(12)
             }
             .containerBackground(.fill.tertiary, for: .widget)
-            .widgetURL(URL(string: "moment://moment/\(snapshot.momentId)"))
+            .widgetURL(URL(string: "moment://moment/\(snapshot.spaceId)/\(snapshot.momentId)"))
         }
     }
 }

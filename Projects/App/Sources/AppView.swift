@@ -64,6 +64,12 @@ struct AppView: View {
             }
         } else if url.host == "moment" {
             let pathComponents = url.pathComponents.filter { $0 != "/" }
+            // 위젯 링크: moment://moment/{spaceId}/{momentId} — 그 스페이스를 연다
+            if pathComponents.count >= 2, let spaceId = UUID(uuidString: pathComponents[0]) {
+                viewStore.send(.selectTab(.home))
+                viewStore.send(.home(.spaceTapped(spaceId)))
+                return
+            }
             if let momentIdString = pathComponents.last,
                UUID(uuidString: momentIdString) != nil {
                 viewStore.send(.selectTab(.home))

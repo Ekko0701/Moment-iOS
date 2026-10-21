@@ -12,14 +12,15 @@ struct MomentWidget: Widget {
     let kind: String = "com.ekko.moment.widget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(
+        AppIntentConfiguration(
             kind: kind,
+            intent: SelectSpaceIntent.self,
             provider: MomentWidgetProvider()
         ) { entry in
             MomentWidgetEntryView(entry: entry)
         }
         .configurationDisplayName("Moment")
-        .description("친구의 최신 순간을 확인하세요")
+        .description("고른 스페이스의 최신 순간을 확인하세요")
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
