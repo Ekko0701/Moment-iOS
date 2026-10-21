@@ -116,3 +116,21 @@ func settingsRenameRules() {
     member.nameInput = "새 이름"
     #expect(member.canRename == false)
 }
+
+// MARK: - 상세
+
+@Test("다른 그룹으로 바뀐 뒤 도착한 이전 그룹의 멤버 응답은 버린다")
+func detailDropsStaleMembers() {
+    var state = GroupDetailFeature.State(space: space())
+    state.isLoading = true
+
+    _ = GroupDetailFeature().reduce(
+        into: &state, action: .membersLoaded(spaceId: UUID(), .success([member("지은")])))
+    #expect(state.members.isEmpty)
+    #expect(state.isLoading)
+
+    _ = GroupDetailFeature().reduce(
+        into: &state, action: .membersLoaded(spaceId: state.space.id, .success([member("지은")])))
+    #expect(state.members.count == 1)
+    #expect(state.isLoading == false)
+}

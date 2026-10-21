@@ -97,6 +97,43 @@ public struct AppFeature {
                 connectState = oneToOneSpace == nil ? connectState : ConnectFeatureReducer.State()
             }
         }
+
+        /// 스페이스 하나를 홈 탭 스택에 연다. 그룹은 상세 화면, 1:1은 히스토리 화면이다.
+        /// 열려 있던 상세·설정·히스토리·연결 화면을 먼저 닫아, 화면에 보이는 스페이스와 피드가 항상 같은 스페이스를 가리키게 한다.
+        /// 이미 같은 그룹 상세가 열려 있으면 불러온 멤버를 유지한다. 타임라인 로드는 호출 측이 `.feed(.onAppear)`로 시작한다.
+        mutating func open(_ space: Space) {
+            let sameGroupDetail = groupDetail?.space.id == space.id ? groupDetail : nil
+            groupDetail = nil
+            groupSettings = nil
+            isHistoryPresented = false
+            isConnectPresented = false
+            selectedTab = .home
+
+            selectedSpaceId = space.id
+            composeState.selectedSpaceId = space.id
+            feedState = FeedFeatureReducer.State()
+            feedState.selectedSpaceId = space.id
+
+            if space.isGroup {
+                var detail = sameGroupDetail ?? GroupDetailFeature.State(space: space)
+                detail.space = space
+                groupDetail = detail
+            } else {
+                isHistoryPresented = true
+            }
+        }
+
+        /// 다른 스페이스를 보여주는 상세·설정·히스토리 화면을 닫는다.
+        /// 작성 탭에서 보낸 뒤 피드가 보낸 스페이스로 바뀌므로, 남는 화면은 항상 그 스페이스를 보여준다.
+        mutating func closeScreens(notShowing spaceId: UUID) {
+            if groupDetail?.space.id != spaceId {
+                groupDetail = nil
+                groupSettings = nil
+            }
+            if isHistoryPresented && oneToOneSpace?.id != spaceId {
+                isHistoryPresented = false
+            }
+        }
     }
 
     public enum Action {
@@ -352,17 +389,9 @@ public struct AppFeature {
                         state = .main(mainState)
                         return effect.map { .home($0) }
                     }
-                    mainState.selectedSpaceId = spaceId
-                    mainState.composeState.selectedSpaceId = spaceId
-                    mainState.feedState = FeedFeatureReducer.State()
-                    mainState.feedState.selectedSpaceId = spaceId
-                    if space.isGroup {
-                        mainState.groupDetail = GroupDetailFeature.State(space: space)
-                        state = .main(mainState)
-                        return effect.map { .home($0) }.merge(with: .send(.feed(.onAppear)))
-                    }
+                    mainState.open(space)
                     state = .main(mainState)
-                    return effect.map { .home($0) }.merge(with: .send(.setHistoryPresented(true)))
+                    return effect.map { .home($0) }.merge(with: .send(.feed(.onAppear)))
 
                 case .connectOneToOne:
                     mainState.isConnectPresented = true
@@ -407,6 +436,7 @@ public struct AppFeature {
                     newMainState.showsShareConfirmation = true
                     newMainState.feedState = FeedFeatureReducer.State()
                     newMainState.feedState.selectedSpaceId = moment.spaceId
+                    newMainState.closeScreens(notShowing: moment.spaceId)
                     state = .main(newMainState)
                     return effect.map { .compose($0) }
                         .merge(with: .send(.feed(.onAppear)))
@@ -550,12 +580,7 @@ public struct AppFeature {
                     if !mainState.spaces.contains(where: { $0.id == space.id }) {
                         mainState.apply(spaces: mainState.spaces + [space])
                     }
-                    mainState.selectedSpaceId = space.id
-                    mainState.composeState.selectedSpaceId = space.id
-                    mainState.feedState = FeedFeatureReducer.State()
-                    mainState.feedState.selectedSpaceId = space.id
-                    mainState.groupDetail = GroupDetailFeature.State(space: space)
-                    mainState.selectedTab = .home
+                    mainState.open(space)
                     state = .main(mainState)
                     return effect.map { .groupJoin($0) }
                         .merge(with: .send(.feed(.onAppear)))

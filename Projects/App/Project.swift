@@ -69,6 +69,20 @@ let project = Project(
                 ModuleDependency.coreKit,
             ]
         ),
+        // 앱 셸(AppFeature)의 상태 전이 테스트
+        .target(
+            name: "MomentAppTests",
+            destinations: [.iPhone],
+            product: .unitTests,
+            bundleId: "com.ekko.moment.tests",
+            deploymentTargets: .iOS("17.0"),
+            sources: ["Tests/**"],
+            dependencies: [
+                .target(name: "MomentApp"),
+                .package(product: "ComposableArchitecture"),
+                .package(product: "Dependencies"),
+            ]
+        ),
     ],
     schemes: [
         // 기본 MomentApp 스킴(자동 생성)은 Debug = 운영 서버.

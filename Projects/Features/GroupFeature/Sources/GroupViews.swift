@@ -154,7 +154,8 @@ public struct GroupMemberStripView: View {
             }
         }
         .padding(.vertical, Spacing.sm)
-        .onAppear { send(.onAppear) }
+        // 화면이 열려 있는 채로 다른 그룹으로 바뀌어도 그 그룹의 멤버를 다시 불러온다
+        .task(id: state.space.id) { send(.onAppear) }
         .errorAlert(state.error) { send(.dismissError) }
     }
 }
