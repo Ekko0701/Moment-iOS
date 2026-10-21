@@ -64,6 +64,9 @@ public struct WidgetSpaceInfo: Codable, Sendable, Equatable, Identifiable {
 /// - 전체 상태(`saveState(_:)`): 로그인·연결 필요 여부. `.empty`면 스페이스별 상태를 쓴다.
 /// - 스페이스별 상태(`saveState(_:for:)`): 각 스페이스의 나 제외 최신 모먼트.
 /// - 스페이스 목록(`saveSpaces`): 위젯 설정에서 고를 수 있는 스페이스.
+///
+/// 저장 프로퍼티는 불변 `UserDefaults` 하나뿐이다. `UserDefaults`는 문서상 스레드 안전하지만 SDK가 `Sendable`로
+/// 표시하지 않아 `@unchecked`로 선언한다. 가변 저장 프로퍼티를 추가하면 이 전제가 깨지므로 추가하지 않는다.
 public final class WidgetMomentStore: @unchecked Sendable {
     private static let appGroupIdentifier = "group.com.ekko.moment"
     private static let stateKey = "widgetMomentState"
@@ -128,20 +131,35 @@ public final class WidgetMomentStore: @unchecked Sendable {
         }
     }
 
-    /// 위젯이 실제로 그릴 상태. 로그인·연결 필요가 우선이고, 그다음 고른 스페이스(없으면 기본 스페이스)의 상태.
-    /// 스페이스별 저장 이전 형식(전체 키에 모먼트 1건)이 남아 있으면 그 모먼트를 해당 스페이스 상태로 본다.
+    /// 위젯이 실제로 그릴 상태. 로그인·연결 필요가 우선이고, 그다음 고른 스페이스의 상태.
+    /// 고른 스페이스가 없거나 이미 나간 스페이스면 기본 스페이스(1:1 우선)를 보여준다.
+    /// 전체 키에 모먼트 1건이 저장된 레거시 형식이 남아 있으면 그 모먼트를 해당 스페이스 상태로 본다.
     public func resolvedState(selectedSpaceId: UUID?) -> WidgetMomentState {
         let global = loadState()
         switch global {
         case .needLogin, .needConnect:
             return global
         case .hasMoment(let legacy):
-            let target = selectedSpaceId ?? defaultSpaceId() ?? legacy.spaceId
+            let target = availableSpaceId(selectedSpaceId) ?? defaultSpaceId() ?? legacy.spaceId
             return target == legacy.spaceId ? global : loadState(for: target)
         case .empty:
-            guard let target = selectedSpaceId ?? defaultSpaceId() else { return .empty }
+            guard let target = availableSpaceId(selectedSpaceId) ?? defaultSpaceId() else { return .empty }
             return loadState(for: target)
         }
+    }
+
+    /// 고른 스페이스가 아직 내 스페이스 목록에 있으면 그대로, 없으면 nil
+    private func availableSpaceId(_ selected: UUID?) -> UUID? {
+        guard let selected else { return nil }
+        return loadSpaces().contains { $0.id == selected } ? selected : nil
+    }
+
+    /// 속한 스페이스가 하나도 없을 때 — 스페이스 목록·스페이스별 상태·사진을 지우고 연결 필요 상태로 둔다
+    public func resetForNoSpaces() {
+        removeSpaceStates(except: [])
+        userDefaults.removeObject(forKey: Self.spacesKey)
+        saveState(.needConnect)
+        clearCache()
     }
 
     /// 로그아웃 — 모든 스페이스 데이터와 사진을 지우고 로그인 필요 상태로 둔다
@@ -250,31 +268,6 @@ public final class WidgetMomentStore: @unchecked Sendable {
         }
 
         for file in files where !fileNames.contains(file.lastPathComponent) {
-            try? FileManager.default.removeItem(at: file)
-        }
-    }
-
-    /// 위젯이 표시할 파일 하나만 남기고 캐시를 비운다.
-    /// 위젯은 항상 상대의 최신 모먼트 1건만 보여주므로 지난 이미지를 보관할 이유가 없다.
-    /// fileName이 nil이면 전부 삭제 — 연결 해제·로그아웃 후 상대 사진을 컨테이너에 남기지 않는다.
-    public func pruneImageCache(keeping fileName: String?) {
-        guard let containerURL = FileManager.default.containerURL(
-            forSecurityApplicationGroupIdentifier: Self.appGroupIdentifier
-        ) else {
-            return
-        }
-
-        let cacheURL = containerURL
-            .appendingPathComponent(Self.imageCacheDirectory, isDirectory: true)
-
-        guard let files = try? FileManager.default.contentsOfDirectory(
-            at: cacheURL,
-            includingPropertiesForKeys: nil
-        ) else {
-            return
-        }
-
-        for file in files where file.lastPathComponent != fileName {
             try? FileManager.default.removeItem(at: file)
         }
     }

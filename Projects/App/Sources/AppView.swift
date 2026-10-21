@@ -13,6 +13,8 @@ import Networking
 
 struct AppView: View {
     let store: StoreOf<AppFeature>
+    /// 로그인 복원 전에 들어온 위젯 링크. 메인 화면이 준비되면 처리한다
+    @State private var pendingDeepLink: URL?
 
     var body: some View {
         WithViewStore(store, observe: { $0 }) { viewStore in
@@ -36,6 +38,18 @@ struct AppView: View {
             // 터치를 절대 가로채지 않는(cancelsTouchesInView=false) 윈도우 레벨 UIKit 제스처로 설치한다.
             .background(KeyboardDismissGestureInstaller())
             .onOpenURL { url in
+                // 앱이 꺼진 상태에서 위젯을 누르면 스페이스 목록을 받기 전에 링크가 온다. 메인 화면이 뜨면 연다
+                if case .main = viewStore.state {
+                    handleDeepLink(url, viewStore: viewStore)
+                } else if url.host == "moment" {
+                    pendingDeepLink = url
+                } else {
+                    handleDeepLink(url, viewStore: viewStore)
+                }
+            }
+            .onChange(of: viewStore.state.isMain) { _, isMain in
+                guard isMain, let url = pendingDeepLink else { return }
+                pendingDeepLink = nil
                 handleDeepLink(url, viewStore: viewStore)
             }
             #if DEBUG
@@ -125,6 +139,13 @@ struct AppView: View {
                         send: { viewStore.send(.connect($0)) },
                         onRefresh: { viewStore.send(.refreshConnection) }
                     )
+                    // 스페이스가 없어도 방장 수락을 기다리는 그룹 요청은 보여준다
+                    .safeAreaInset(edge: .top) {
+                        PendingJoinRequestsView(requests: mainTabState.homeState.pendingJoinRequests) {
+                            viewStore.send(.home(.cancelJoinRequestTapped($0)))
+                        }
+                        .padding(.top, Spacing.sm)
+                    }
                     .navigationTitle("연결하기") // 시안 04
                     .navigationBarTitleDisplayMode(.inline)
                     .toolbar {
@@ -187,7 +208,7 @@ struct AppView: View {
         )) {
             if let create = mainTabState.groupCreate {
                 GroupCreateView(state: create, send: { viewStore.send(.groupCreate($0)) })
-                    .interactiveDismissDisabled(create.created != nil)
+                    .interactiveDismissDisabled(create.created != nil || create.isSubmitting)
             }
         }
         .sheet(isPresented: Binding(
@@ -196,6 +217,7 @@ struct AppView: View {
         )) {
             if let join = mainTabState.groupJoin {
                 GroupJoinView(state: join, send: { viewStore.send(.groupJoin($0)) })
+                    .interactiveDismissDisabled(join.isSubmitting)
             }
         }
         .tabItem {
@@ -237,8 +259,18 @@ struct AppView: View {
                     viewStore.send(.groupDetail(.settingsTapped))
                 } label: {
                     Image(systemName: "gearshape")
+                        .overlay(alignment: .topTrailing) {
+                            if detail.space.pendingJoinRequestCount > 0 {
+                                Circle()
+                                    .fill(MomentColor.accent)
+                                    .frame(width: 8, height: 8)
+                                    .offset(x: 3, y: -3)
+                            }
+                        }
                 }
-                .accessibilityLabel("그룹 설정")
+                .accessibilityLabel(detail.space.pendingJoinRequestCount > 0
+                                    ? "그룹 설정, 참여 요청 \(detail.space.pendingJoinRequestCount)건"
+                                    : "그룹 설정")
             }
         }
         .navigationDestination(

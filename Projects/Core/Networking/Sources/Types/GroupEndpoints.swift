@@ -2,14 +2,33 @@ import Foundation
 
 // MARK: - Group Endpoints
 
-/// 그룹 스페이스 생성·참여·초대 코드·종료 — 서버 계약: /v1/groups
+/// 그룹 스페이스 생성·참여 요청·초대 코드·종료 — 서버 계약: /v1/groups
 public enum GroupEndpoints {
     static func create(name: String) -> Endpoint {
         Endpoint(path: "/v1/groups", method: .post, body: CreateGroupRequest(name: name), requiresAuth: true)
     }
 
+    /// 코드로 참여를 요청한다. 응답은 참여 요청이며, 방장이 수락해야 멤버가 된다
     static func join(code: String) -> Endpoint {
         Endpoint(path: "/v1/groups/join", method: .post, body: JoinGroupRequest(code: code), requiresAuth: true)
+    }
+
+    static func myJoinRequests() -> Endpoint {
+        Endpoint(path: "/v1/groups/join-requests/me", method: .get, requiresAuth: true)
+    }
+
+    static func joinRequests(spaceId: UUID) -> Endpoint {
+        Endpoint(path: "/v1/groups/\(spaceId.uuidString)/join-requests", method: .get, requiresAuth: true)
+    }
+
+    static func decideJoinRequest(spaceId: UUID, requestId: UUID, approve: Bool) -> Endpoint {
+        Endpoint(path: "/v1/groups/\(spaceId.uuidString)/join-requests/\(requestId.uuidString)", method: .patch,
+                 body: DecideJoinRequestBody(action: approve ? "approve" : "reject"), requiresAuth: true)
+    }
+
+    static func cancelJoinRequest(spaceId: UUID, requestId: UUID) -> Endpoint {
+        Endpoint(path: "/v1/groups/\(spaceId.uuidString)/join-requests/\(requestId.uuidString)", method: .delete,
+                 requiresAuth: true)
     }
 
     static func inviteCode(spaceId: UUID) -> Endpoint {
@@ -50,6 +69,10 @@ struct CreateGroupRequest: Encodable, Sendable {
 
 struct JoinGroupRequest: Encodable, Sendable {
     let code: String
+}
+
+struct DecideJoinRequestBody: Encodable, Sendable {
+    let action: String
 }
 
 struct UpdateMembershipRequest: Encodable, Sendable {

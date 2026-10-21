@@ -69,9 +69,28 @@ public final class SpaceRepositoryImpl: SpaceRepositoryProtocol {
         return dto.toDomainModel()
     }
 
-    public func joinGroup(code: String) async throws -> Space {
-        let dto: SpaceDTO = try await apiClient.request(GroupEndpoints.join(code: code))
+    public func requestJoinGroup(code: String) async throws -> GroupJoinRequest {
+        let dto: JoinRequestDTO = try await apiClient.request(GroupEndpoints.join(code: code))
         return dto.toDomainModel()
+    }
+
+    public func myJoinRequests() async throws -> [GroupJoinRequest] {
+        let dtos: [JoinRequestDTO] = try await apiClient.request(GroupEndpoints.myJoinRequests())
+        return dtos.map { $0.toDomainModel() }
+    }
+
+    public func cancelJoinRequest(spaceId: UUID, requestId: UUID) async throws {
+        try await apiClient.requestVoid(GroupEndpoints.cancelJoinRequest(spaceId: spaceId, requestId: requestId))
+    }
+
+    public func joinRequests(spaceId: UUID) async throws -> [PendingJoinRequest] {
+        let dtos: [PendingJoinRequestDTO] = try await apiClient.request(GroupEndpoints.joinRequests(spaceId: spaceId))
+        return dtos.map { $0.toDomainModel() }
+    }
+
+    public func decideJoinRequest(spaceId: UUID, requestId: UUID, approve: Bool) async throws {
+        try await apiClient.requestVoid(
+            GroupEndpoints.decideJoinRequest(spaceId: spaceId, requestId: requestId, approve: approve))
     }
 
     public func groupInviteCode(spaceId: UUID) async throws -> GroupInviteCode {

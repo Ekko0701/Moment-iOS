@@ -13,7 +13,15 @@ public protocol SpaceRepositoryProtocol: Sendable {
 
     // MARK: 그룹 스페이스
     func createGroup(name: String) async throws -> CreatedGroup
-    func joinGroup(code: String) async throws -> Space
+    /// 코드로 참여를 요청한다. 같은 그룹에 대기 중 요청이 있으면 그 요청이 돌아온다
+    func requestJoinGroup(code: String) async throws -> GroupJoinRequest
+    /// 내가 보낸 대기 중 요청
+    func myJoinRequests() async throws -> [GroupJoinRequest]
+    func cancelJoinRequest(spaceId: UUID, requestId: UUID) async throws
+    /// 방장 전용. 그룹에 들어온 대기 중 요청
+    func joinRequests(spaceId: UUID) async throws -> [PendingJoinRequest]
+    /// 방장 전용. 수락하면 요청자가 멤버가 된다
+    func decideJoinRequest(spaceId: UUID, requestId: UUID, approve: Bool) async throws
     func groupInviteCode(spaceId: UUID) async throws -> GroupInviteCode
     /// 방장 전용. 이전 코드는 즉시 무효가 된다
     func reissueGroupInviteCode(spaceId: UUID) async throws -> GroupInviteCode

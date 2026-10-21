@@ -1,19 +1,21 @@
 import Foundation
 
 public struct Space: Sendable, Equatable, Identifiable {
-    public let id: UUID
-    public let type: SpaceType
-    public let name: String?
-    public let maxMembers: Int
-    public let status: String
-    public let members: [UserProfile]
-    public let createdAt: Date
+    public var id: UUID
+    public var type: SpaceType
+    public var name: String?
+    public var maxMembers: Int
+    public var status: String
+    public var members: [UserProfile]
+    public var createdAt: Date
     /// 이 스페이스에서 나의 역할
-    public let myRole: MemberRole
+    public var myRole: MemberRole
     /// 이 스페이스의 새 모먼트 알림을 받는지 여부
-    public let notificationsEnabled: Bool
+    public var notificationsEnabled: Bool
     /// 나와 차단 관계를 제외한 다른 멤버의 최신 모먼트. 홈 카드에 쓴다
-    public let latestMoment: Moment?
+    public var latestMoment: Moment?
+    /// 내가 방장인 그룹에 들어온 대기 중 참여 요청 수. 그 밖에는 0
+    public var pendingJoinRequestCount: Int
 
     public init(
         id: UUID,
@@ -25,7 +27,8 @@ public struct Space: Sendable, Equatable, Identifiable {
         createdAt: Date,
         myRole: MemberRole = .member,
         notificationsEnabled: Bool = true,
-        latestMoment: Moment? = nil
+        latestMoment: Moment? = nil,
+        pendingJoinRequestCount: Int = 0
     ) {
         self.id = id
         self.type = type
@@ -37,6 +40,7 @@ public struct Space: Sendable, Equatable, Identifiable {
         self.myRole = myRole
         self.notificationsEnabled = notificationsEnabled
         self.latestMoment = latestMoment
+        self.pendingJoinRequestCount = pendingJoinRequestCount
     }
 
     public var isGroup: Bool { type == .group }

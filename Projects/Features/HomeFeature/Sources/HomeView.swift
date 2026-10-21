@@ -25,6 +25,9 @@ public struct HomeView: View {
                     ForEach(state.spaces) { space in
                         spaceSection(space)
                     }
+                    PendingJoinRequestsView(requests: state.pendingJoinRequests) {
+                        send(.cancelJoinRequestTapped($0))
+                    }
                     groupActions
                 }
                 .padding(.vertical, Spacing.lg)
@@ -57,16 +60,30 @@ public struct HomeView: View {
         }
     }
 
+    // 카드·진입 버튼이 어느 스페이스를 여는지 VoiceOver가 알 수 있게 한다
+    private func openLabel(_ space: Space) -> String {
+        "\(spaceTitle(space)) 열기"
+    }
+
+    private func momentAccessibilityText(_ moment: Moment) -> String {
+        var parts = ["\(moment.author.nickname)님의 모먼트"]
+        if moment.imageURL != nil { parts.append("사진") }
+        if let text = moment.text, !text.isEmpty { parts.append(text) }
+        return parts.joined(separator: ", ")
+    }
+
     private func spaceLabel(_ space: Space) -> some View {
         HStack(spacing: 6) {
             if space.isGroup {
                 Image(systemName: "person.3.fill")
-                    .font(.system(size: 11))
+                    .font(.caption2)
                     .foregroundColor(MomentColor.ink.opacity(0.7))
+                    .accessibilityHidden(true)
             } else {
                 Circle()
                     .fill(MomentColor.orbCoral.opacity(0.75))
                     .frame(width: 18, height: 18)
+                    .accessibilityHidden(true)
             }
 
             Text(spaceTitle(space))
@@ -77,6 +94,15 @@ public struct HomeView: View {
                 Text("\(space.memberCount)명")
                     .font(.caption.weight(.medium))
                     .foregroundColor(MomentColor.ink.opacity(0.55))
+                if space.pendingJoinRequestCount > 0 {
+                    Text("참여 요청 \(space.pendingJoinRequestCount)")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(MomentColor.accent)
+                        .clipShape(Capsule())
+                }
             } else {
                 Text("D+\(state.daysTogether(in: space))")
                     .font(.caption.weight(.medium))
@@ -103,14 +129,19 @@ public struct HomeView: View {
         if let moment = space.latestMoment {
             if moment.imageURL != nil {
                 photoMomentCard(moment, spaceId: space.id)
+                    .accessibilityLabel(momentAccessibilityText(moment))
+                    .accessibilityHint(openLabel(space))
             } else {
                 textMomentCard(moment, spaceId: space.id)
+                    .accessibilityLabel(momentAccessibilityText(moment))
+                    .accessibilityHint(openLabel(space))
             }
         } else if state.isRefreshing && state.spaces.isEmpty {
             glassCard {
                 ProgressView()
                     .tint(MomentColor.ink)
                     .padding(.vertical, Spacing.md)
+                    .accessibilityLabel("불러오는 중")
             }
         } else {
             Button {
@@ -123,6 +154,7 @@ public struct HomeView: View {
                 }
             }
             .buttonStyle(MomentPressStyle(scale: 0.98))
+            .accessibilityHint(openLabel(space))
         }
     }
 
@@ -240,6 +272,7 @@ public struct HomeView: View {
                 .overlay(Capsule().stroke(MomentColor.surfaceStroke, lineWidth: 1))
         }
         .buttonStyle(MomentPressStyle())
+        .accessibilityLabel(openLabel(space))
     }
 
     // MARK: - 그룹·연결 진입

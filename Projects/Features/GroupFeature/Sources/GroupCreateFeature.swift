@@ -70,6 +70,8 @@ public struct GroupCreateFeature {
                 return .send(.delegate(.created(created.space)))
 
             case .cancelTapped:
+                // 만드는 중에는 닫지 않는다. 결과가 버려지면 서버에만 그룹이 생긴다
+                guard !state.isSubmitting else { return .none }
                 return .send(.delegate(.cancelled))
 
             case .dismissError:

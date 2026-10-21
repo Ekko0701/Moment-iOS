@@ -44,3 +44,15 @@ func onAppearStartsRefreshing() {
     _ = HomeFeature().reduce(into: &state, action: .onAppear)
     #expect(state.isRefreshing)
 }
+
+@Test("참여 요청을 취소하면 화면 목록에서 바로 빠진다")
+func cancelJoinRequestRemovesFromList() {
+    var state = HomeFeature.State()
+    let keep = GroupJoinRequest(id: UUID(), spaceId: UUID(), spaceName: "가족", status: .pending, createdAt: Date())
+    let cancel = GroupJoinRequest(id: UUID(), spaceId: UUID(), spaceName: "동호회", status: .pending, createdAt: Date())
+    state.pendingJoinRequests = [keep, cancel]
+
+    _ = HomeFeature().reduce(into: &state, action: .cancelJoinRequestTapped(cancel))
+
+    #expect(state.pendingJoinRequests == [keep])
+}

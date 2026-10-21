@@ -4,12 +4,15 @@ import Domain
 import Dependencies
 
 /// 홈 — 내가 속한 스페이스마다 카드 한 장. 각 카드는 나를 제외한 최신 모먼트 1건을 보여준다.
-/// 데이터는 앱 셸이 내 스페이스 목록(/v1/spaces/me)으로 채우며, 홈은 새로고침과 진입만 요청한다.
+/// 방장 수락을 기다리는 내 참여 요청도 함께 보여준다.
+/// 데이터는 앱 셸이 내 스페이스 목록(/v1/spaces/me)과 참여 요청으로 채우며, 홈은 새로고침·진입·요청 취소만 요청한다.
 public struct HomeFeature {
     public struct State: Equatable {
         public var spaces: [Space] = []
         public var currentUser: UserProfile? = nil
         public var isRefreshing = false
+        /// 내가 보낸, 방장 수락을 기다리는 참여 요청
+        public var pendingJoinRequests: [GroupJoinRequest] = []
 
         public init() {}
 
@@ -35,6 +38,7 @@ public struct HomeFeature {
         case connectTapped
         case createGroupTapped
         case joinGroupTapped
+        case cancelJoinRequestTapped(GroupJoinRequest)
         case delegate(Delegate)
 
         public enum Delegate: Equatable {
@@ -43,6 +47,7 @@ public struct HomeFeature {
             case connectOneToOne
             case createGroup
             case joinGroup
+            case cancelJoinRequest(GroupJoinRequest)
         }
     }
 
@@ -64,6 +69,11 @@ public struct HomeFeature {
 
             case .joinGroupTapped:
                 return .send(.delegate(.joinGroup))
+
+            case .cancelJoinRequestTapped(let request):
+                // 화면에서 바로 빼고, 실제 취소는 앱 셸이 처리한 뒤 목록을 서버 기준으로 다시 맞춘다
+                state.pendingJoinRequests.removeAll { $0.id == request.id }
+                return .send(.delegate(.cancelJoinRequest(request)))
 
             case .delegate:
                 return .none

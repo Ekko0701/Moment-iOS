@@ -24,6 +24,11 @@ public struct AppFeature {
         public init() {
             self = .launching
         }
+
+        var isMain: Bool {
+            if case .main = self { return true }
+            return false
+        }
     }
 
     public struct MainTabState: Equatable {
@@ -146,6 +151,8 @@ public struct AppFeature {
         // 상대가 수락했으면(스페이스 생성됨) 홈 카드로 전환한다.
         case refreshConnection
         case reloadSpaces
+        // 내가 보낸, 방장 수락을 기다리는 그룹 참여 요청
+        case joinRequestsLoaded([GroupJoinRequest])
         case selectTab(MainTabState.Tab)
         case setHistoryPresented(Bool)
         case setConnectPresented(Bool)
@@ -166,6 +173,13 @@ public struct AppFeature {
         case groupJoin(GroupJoinFeature.Action)
     }
 
+    // 한 번에 하나만 살아 있어야 하는 effect. 새로 시작하면 이전 것은 취소된다
+    private enum CancelID: Hashable, Sendable {
+        case loadSpaces
+        case widgetSync
+    }
+
+    /// 내 스페이스 목록과 내 참여 요청을 불러온다. 마지막 요청만 반영되도록 이전 요청은 취소한다
     private func loadSpaces() -> Effect<Action> {
         .run { [sessionUseCase = self.sessionUseCase] send in
             let result: Result<[Space], DomainError> = await Result {
@@ -174,7 +188,26 @@ public struct AppFeature {
                 error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)
             }
             await send(.spacesLoaded(result: result))
+            // 참여 요청 목록은 실패해도 스페이스 카드에 영향이 없으므로 이전 목록을 유지한다
+            @Dependency(\.groupUseCase) var groupUseCase
+            if case .success = result, let requests = try? await groupUseCase.myJoinRequests() {
+                await send(.joinRequestsLoaded(requests))
+            }
         }
+        .cancellable(id: CancelID.loadSpaces, cancelInFlight: true)
+    }
+
+    /// 위젯 데이터를 스페이스 목록에 맞춘다. 새 동기화가 시작되거나 로그아웃하면 진행 중인 동기화는 취소된다
+    private func widgetSync(spaces: [Space], myUserId: UUID?) -> Effect<Action> {
+        guard !spaces.isEmpty else {
+            WidgetMomentStore().resetForNoSpaces()
+            WidgetCenter.shared.reloadAllTimelines()
+            return .cancel(id: CancelID.widgetSync)
+        }
+        return .run { _ in
+            await syncWidget(spaces: spaces, myUserId: myUserId)
+        }
+        .cancellable(id: CancelID.widgetSync, cancelInFlight: true)
     }
 
     public var body: some ReducerOf<Self> {
@@ -198,25 +231,19 @@ public struct AppFeature {
                 mainState.homeState.currentUser = user
                 mainState.settingsState.userProfile = user
                 mainState.apply(spaces: spaces)
-                if spaces.isEmpty {
-                    let store = WidgetMomentStore()
-                    store.saveState(.needConnect)
-                    store.clearCache()
-                    WidgetCenter.shared.reloadAllTimelines()
-                }
                 state = .main(mainState)
-                if spaces.isEmpty { return .none }
-                return .run { [myUserId = user.id] _ in
-                    await syncWidget(spaces: spaces, myUserId: myUserId)
-                }
+                return widgetSync(spaces: spaces, myUserId: user.id).merge(with: .run { send in
+                    @Dependency(\.groupUseCase) var groupUseCase
+                    if let requests = try? await groupUseCase.myJoinRequests() {
+                        await send(.joinRequestsLoaded(requests))
+                    }
+                })
 
             case .appInitialized(.failure):
                 state = .auth(AuthFeatureReducer.State())
-                let store = WidgetMomentStore()
-                store.saveState(.needLogin)
-                store.clearCache()
+                WidgetMomentStore().resetForLogout()
                 WidgetCenter.shared.reloadAllTimelines()
-                return .none
+                return .cancel(id: CancelID.widgetSync)
 
             case .spacesLoaded(.success(let spaces)):
                 // 기존 메인 상태가 있으면 유지(currentUser 등 보존), 없으면 새로 만든다.
@@ -227,24 +254,24 @@ public struct AppFeature {
                     mainState = MainTabState()
                 }
                 mainState.apply(spaces: spaces)
-                if spaces.isEmpty {
-                    let store = WidgetMomentStore()
-                    store.saveState(.needConnect)
-                    store.clearCache()
-                    WidgetCenter.shared.reloadAllTimelines()
-                }
                 state = .main(mainState)
-                let widgetSync: Effect<Action> = spaces.isEmpty ? .none : .run { [myUserId = mainState.currentUser?.id] _ in
-                    await syncWidget(spaces: spaces, myUserId: myUserId)
-                }
+                let sync = widgetSync(spaces: spaces, myUserId: mainState.currentUser?.id)
                 if mainState.currentUser == nil {
-                    return widgetSync.merge(with: .run { [sessionUseCase = self.sessionUseCase] send in
+                    return sync.merge(with: .run { [sessionUseCase = self.sessionUseCase] send in
                         if let user = try? await sessionUseCase.myProfile() {
                             await send(.profileLoaded(user))
                         }
                     })
                 }
-                return widgetSync
+                return sync
+
+            case .joinRequestsLoaded(let requests):
+                guard case .main(var mainState) = state else {
+                    return .none
+                }
+                mainState.homeState.pendingJoinRequests = requests
+                state = .main(mainState)
+                return .none
 
             case .profileLoaded(let user):
                 guard case .main(var mainState) = state else {
@@ -336,10 +363,16 @@ public struct AppFeature {
                 guard case .main(var mainState) = state else {
                     return .none
                 }
+                // 요청을 보낸 뒤 시트를 쓸어내려 닫아도 홈에 대기 중 요청이 보이게 한다
+                let sentRequest = mainState.groupJoin?.sentRequest
+                let createdGroup = mainState.groupCreate?.created != nil
                 mainState.groupCreate = nil
                 mainState.groupJoin = nil
+                if let sentRequest, !mainState.homeState.pendingJoinRequests.contains(where: { $0.id == sentRequest.id }) {
+                    mainState.homeState.pendingJoinRequests.insert(sentRequest, at: 0)
+                }
                 state = .main(mainState)
-                return .none
+                return sentRequest != nil || createdGroup ? loadSpaces() : .none
 
             case .auth(let action):
                 guard case .auth(var authState) = state else {
@@ -407,6 +440,14 @@ public struct AppFeature {
                     mainState.groupJoin = GroupJoinFeature.State()
                     state = .main(mainState)
                     return effect.map { .home($0) }
+
+                case .cancelJoinRequest(let request):
+                    state = .main(mainState)
+                    return effect.map { .home($0) }.merge(with: .run { send in
+                        @Dependency(\.groupUseCase) var groupUseCase
+                        try? await groupUseCase.cancelJoinRequest(request)
+                        await send(.reloadSpaces)
+                    })
                 }
 
             case .feed(let action):
@@ -467,10 +508,15 @@ public struct AppFeature {
                 state = .main(mainState)
 
                 if case .delegate(.loggedOut) = action {
+                    // 진행 중인 위젯 동기화·목록 로드를 먼저 끊어, 이전 계정 데이터가 다시 쓰이지 않게 한다
                     state = .auth(AuthFeatureReducer.State())
                     WidgetMomentStore().resetForLogout()
                     WidgetCenter.shared.reloadAllTimelines()
-                    return effect.map { .settings($0) }
+                    return .merge(
+                        .cancel(id: CancelID.widgetSync),
+                        .cancel(id: CancelID.loadSpaces),
+                        effect.map { .settings($0) }
+                    )
                 }
 
                 // 1:1 이름 변경·연결 해제 → 스페이스 목록을 다시 받아 홈·작성·설정을 함께 갱신한다
@@ -485,12 +531,6 @@ public struct AppFeature {
                     newMainState.connectState = ConnectFeatureReducer.State()
                     newMainState.apply(spaces: mainState.spaces.filter { $0.type != .oneToOne })
                     state = .main(newMainState)
-                    if newMainState.spaces.isEmpty {
-                        let store = WidgetMomentStore()
-                        store.saveState(.needConnect)
-                        store.clearCache()
-                        WidgetCenter.shared.reloadAllTimelines()
-                    }
                     return effect.map { .settings($0) }.merge(with: loadSpaces())
                 }
 
@@ -530,6 +570,17 @@ public struct AppFeature {
                     return effect.map { .groupSettings($0) }
                         .merge(with: loadSpaces())
                         .merge(with: .send(.groupDetail(.onAppear)))
+                case .delegate(.notificationsChanged(let enabled)):
+                    // 알림 설정은 이 스페이스 값만 바꾸면 되므로 목록을 다시 받지 않는다
+                    let spaceId = settings.space.id
+                    mainState.apply(spaces: mainState.spaces.map { space in
+                        guard space.id == spaceId else { return space }
+                        var updated = space
+                        updated.notificationsEnabled = enabled
+                        return updated
+                    })
+                    state = .main(mainState)
+                    return effect.map { .groupSettings($0) }
                 case .delegate(.exited):
                     mainState.groupSettings = nil
                     mainState.groupDetail = nil
@@ -574,17 +625,14 @@ public struct AppFeature {
                 mainState.groupJoin = join
 
                 switch action {
-                case .delegate(.joined(let space)):
-                    // 참여한 그룹을 바로 연다. 목록은 뒤이어 서버 기준으로 다시 맞춘다
+                case .delegate(.requested(let request)):
+                    // 방장이 수락하기 전까지 그룹은 목록에 없다. 홈에는 대기 중 요청으로 보인다
                     mainState.groupJoin = nil
-                    if !mainState.spaces.contains(where: { $0.id == space.id }) {
-                        mainState.apply(spaces: mainState.spaces + [space])
+                    if !mainState.homeState.pendingJoinRequests.contains(where: { $0.id == request.id }) {
+                        mainState.homeState.pendingJoinRequests.insert(request, at: 0)
                     }
-                    mainState.open(space)
                     state = .main(mainState)
-                    return effect.map { .groupJoin($0) }
-                        .merge(with: .send(.feed(.onAppear)))
-                        .merge(with: loadSpaces())
+                    return effect.map { .groupJoin($0) }.merge(with: loadSpaces())
                 case .delegate(.cancelled):
                     mainState.groupJoin = nil
                     state = .main(mainState)
@@ -613,6 +661,8 @@ private let widgetImageMaxBytes = 10 * 1024 * 1024
 /// 스페이스 목록으로 위젯 데이터를 맞춘다. 스페이스마다 나 제외 최신 모먼트 1건과 그 사진을 저장하고,
 /// 위젯 설정에서 고를 수 있는 스페이스 목록을 갱신한다. 목록에서 빠진 스페이스의 데이터와 사진은 지운다.
 private func syncWidget(spaces: [Space], myUserId: UUID?) async {
+    // 취소되면(로그아웃·새 동기화) 더 쓰지 않는다. 사진 내려받기 사이사이에서도 확인한다
+    guard !Task.isCancelled else { return }
     let store = WidgetMomentStore()
     // 전체 상태를 비워 두면 위젯은 스페이스별 상태를 읽는다(로그인·연결 필요가 아님을 뜻함)
     store.saveState(.empty)
@@ -627,6 +677,7 @@ private func syncWidget(spaces: [Space], myUserId: UUID?) async {
             continue
         }
         let imageFileName = await cacheWidgetImage(for: moment, using: store)
+        guard !Task.isCancelled else { return }
         if let imageFileName { keptImages.insert(imageFileName) }
         store.saveState(.hasMoment(WidgetMomentSnapshot(
             momentId: moment.id,
@@ -639,6 +690,7 @@ private func syncWidget(spaces: [Space], myUserId: UUID?) async {
         )), for: space.id)
     }
 
+    guard !Task.isCancelled else { return }
     store.removeSpaceStates(except: Set(spaces.map(\.id)))
     store.pruneImageCache(keeping: keptImages)
     WidgetCenter.shared.reloadAllTimelines()

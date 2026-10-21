@@ -65,3 +65,38 @@ func spaceMemberDTODecodes() throws {
     #expect(members[0].role == .owner)
     #expect(members[0].latestMoment == nil)
 }
+
+@Test("참여 요청 엔드포인트는 서버 계약 경로·메서드·action 값을 쓴다")
+func joinRequestEndpoints() throws {
+    let spaceId = UUID()
+    let requestId = UUID()
+    #expect(GroupEndpoints.myJoinRequests().path == "/v1/groups/join-requests/me")
+    #expect(GroupEndpoints.joinRequests(spaceId: spaceId).path == "/v1/groups/\(spaceId.uuidString)/join-requests")
+    let approve = GroupEndpoints.decideJoinRequest(spaceId: spaceId, requestId: requestId, approve: true)
+    #expect(approve.method == .patch)
+    #expect(approve.path == "/v1/groups/\(spaceId.uuidString)/join-requests/\(requestId.uuidString)")
+    let body = try #require(approve.body as? DecideJoinRequestBody)
+    #expect(body.action == "approve")
+    let reject = try #require(
+        GroupEndpoints.decideJoinRequest(spaceId: spaceId, requestId: requestId, approve: false).body
+            as? DecideJoinRequestBody)
+    #expect(reject.action == "reject")
+    #expect(GroupEndpoints.cancelJoinRequest(spaceId: spaceId, requestId: requestId).method == .delete)
+}
+
+@Test("참여 요청 응답과 방장용 대기 요청 응답을 매핑한다")
+func joinRequestDTOsDecode() throws {
+    let spaceId = UUID()
+    let request = try JSONDecoder().decode(JoinRequestDTO.self, from: Data("""
+    {"id":"\(UUID().uuidString)","spaceId":"\(spaceId.uuidString)","spaceName":"주말 산책","status":"PENDING",
+     "createdAt":1700000000000}
+    """.utf8)).toDomainModel()
+    #expect(request.spaceId == spaceId)
+    #expect(request.status == .pending)
+
+    let pending = try JSONDecoder().decode(PendingJoinRequestDTO.self, from: Data("""
+    {"id":"\(UUID().uuidString)","userId":"\(UUID().uuidString)","handle":"c","nickname":"씨씨",
+     "profileImageUrl":null,"createdAt":1700000000000}
+    """.utf8)).toDomainModel()
+    #expect(pending.user.nickname == "씨씨")
+}

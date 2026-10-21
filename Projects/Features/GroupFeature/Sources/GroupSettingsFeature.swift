@@ -3,13 +3,19 @@ import ComposableArchitecture
 import Domain
 import Dependencies
 
-/// 그룹 설정 — 초대 코드, 알림, 멤버, 이름, 나가기·종료.
-/// 방장 전용 항목(이름 변경·코드 재발급·내보내기·종료)은 방장일 때만 노출하고 서버도 같은 규칙으로 막는다.
+/// 그룹 설정 — 초대 코드, 참여 요청, 알림, 멤버, 이름, 나가기·종료.
+/// 방장 전용 항목(참여 요청 수락·거절, 이름 변경, 코드 재발급, 내보내기, 종료)은 방장일 때만 노출하고 서버도 같은 규칙으로 막는다.
 public struct GroupSettingsFeature {
     public struct State: Equatable {
         public var space: Space
         public var currentUserId: UUID?
         public var members: [SpaceMember] = []
+        /// 방장에게 보이는 대기 중 참여 요청
+        public var joinRequests: [PendingJoinRequest] = []
+        /// 수락·거절 응답을 기다리는 요청. 같은 요청을 두 번 누르지 못하게 한다
+        public var decidingRequestIds: Set<UUID> = []
+        /// 알림 설정 저장 중. 끝날 때까지 토글을 막아 요청 순서가 뒤집히지 않게 한다
+        public var isUpdatingNotifications = false
         public var inviteCode: GroupInviteCode? = nil
         public var notificationsEnabled: Bool
         public var nameInput: String
@@ -37,7 +43,11 @@ public struct GroupSettingsFeature {
         case onAppear
         case codeLoaded(Result<GroupInviteCode, DomainError>)
         case membersLoaded(Result<[SpaceMember], DomainError>)
+        case joinRequestsLoaded(Result<[PendingJoinRequest], DomainError>)
+        case decideJoinRequestTapped(PendingJoinRequest, approve: Bool)
+        case decideJoinRequestResponse(requestId: UUID, approve: Bool, Result<Void, DomainError>)
         case reissueCodeTapped
+        case reissueResponse(Result<GroupInviteCode, DomainError>)
         case notificationsToggled(Bool)
         case notificationsResponse(Result<Bool, DomainError>)
         case nameChanged(String)
@@ -57,10 +67,28 @@ public struct GroupSettingsFeature {
         case delegate(Delegate)
 
         public enum Delegate: Equatable {
-            /// 이름·알림 설정이 바뀌어 상위 화면의 스페이스 정보를 다시 읽어야 한다
+            /// 이름·멤버·참여 요청이 바뀌어 상위 화면의 스페이스 정보를 다시 읽어야 한다
             case spaceChanged
+            /// 내 알림 설정만 바뀌었다. 상위 화면은 목록을 다시 받지 않고 이 값만 반영한다
+            case notificationsChanged(Bool)
             /// 내가 나갔거나 그룹을 종료해 더 이상 이 그룹에 속하지 않는다
             case exited
+        }
+    }
+
+    private static func loadMembers(spaceId: UUID) -> Effect<Action> {
+        .run { send in
+            @Dependency(\.groupUseCase) var groupUseCase
+            await send(.membersLoaded(Result { try await groupUseCase.members(spaceId: spaceId) }
+                .mapError { $0.asDomainError }))
+        }
+    }
+
+    private static func loadJoinRequests(spaceId: UUID) -> Effect<Action> {
+        .run { send in
+            @Dependency(\.groupUseCase) var groupUseCase
+            await send(.joinRequestsLoaded(Result { try await groupUseCase.joinRequests(spaceId: spaceId) }
+                .mapError { $0.asDomainError }))
         }
     }
 
@@ -68,7 +96,9 @@ public struct GroupSettingsFeature {
         Reduce<State, Action> { state, action in
             switch action {
             case .onAppear:
+                let loadRequests: Effect<Action> = state.isOwner ? Self.loadJoinRequests(spaceId: state.space.id) : .none
                 return .merge(
+                    loadRequests,
                     .run { [spaceId = state.space.id] send in
                         @Dependency(\.groupUseCase) var groupUseCase
                         do {
@@ -77,14 +107,7 @@ public struct GroupSettingsFeature {
                             await send(.codeLoaded(.failure(error.asDomainError)))
                         }
                     },
-                    .run { [spaceId = state.space.id] send in
-                        @Dependency(\.groupUseCase) var groupUseCase
-                        do {
-                            await send(.membersLoaded(.success(try await groupUseCase.members(spaceId: spaceId))))
-                        } catch {
-                            await send(.membersLoaded(.failure(error.asDomainError)))
-                        }
-                    }
+                    Self.loadMembers(spaceId: state.space.id)
                 )
 
             case .codeLoaded(.success(let code)):
@@ -92,10 +115,12 @@ public struct GroupSettingsFeature {
                 state.inviteCode = code
                 return .none
 
-            case .codeLoaded(.failure):
-                // 코드가 없거나 만료된 경우 — 방장은 재발급 버튼으로 해결하므로 오류를 띄우지 않는다
-                state.isWorking = false
+            case .codeLoaded(.failure(let error)):
+                // 코드가 없는 경우(notFound)는 방장이 재발급 버튼으로 해결하므로 오류를 띄우지 않는다.
+                // 네트워크·서버 오류는 "코드 없음"으로 오해하지 않도록 알린다
                 state.inviteCode = nil
+                if case .notFound = error { return .none }
+                state.error = error
                 return .none
 
             case .membersLoaded(.success(let members)):
@@ -106,20 +131,62 @@ public struct GroupSettingsFeature {
                 state.error = error
                 return .none
 
+            case .joinRequestsLoaded(.success(let requests)):
+                state.joinRequests = requests
+                return .none
+
+            case .joinRequestsLoaded(.failure(let error)):
+                state.error = error
+                return .none
+
+            case .decideJoinRequestTapped(let request, let approve):
+                guard state.isOwner, !state.decidingRequestIds.contains(request.id) else { return .none }
+                state.decidingRequestIds.insert(request.id)
+                return .run { [spaceId = state.space.id, requestId = request.id] send in
+                    @Dependency(\.groupUseCase) var groupUseCase
+                    let result = await Result {
+                        try await groupUseCase.decideJoinRequest(spaceId: spaceId, requestId: requestId, approve: approve)
+                    }.mapError { $0.asDomainError }
+                    await send(.decideJoinRequestResponse(requestId: requestId, approve: approve, result))
+                }
+
+            case .decideJoinRequestResponse(let requestId, let approve, .success):
+                state.decidingRequestIds.remove(requestId)
+                state.joinRequests.removeAll { $0.id == requestId }
+                state.space.pendingJoinRequestCount = state.joinRequests.count
+                let reloadMembers: Effect<Action> = approve ? Self.loadMembers(spaceId: state.space.id) : .none
+                return .merge(reloadMembers, .send(.delegate(.spaceChanged)))
+
+            case .decideJoinRequestResponse(let requestId, _, .failure(let error)):
+                // 정원 초과·이미 처리됨 등. 목록을 서버 기준으로 다시 맞춘다
+                state.decidingRequestIds.remove(requestId)
+                state.error = error
+                return Self.loadJoinRequests(spaceId: state.space.id)
+
             case .reissueCodeTapped:
                 guard state.isOwner, !state.isWorking else { return .none }
                 state.isWorking = true
                 return .run { [spaceId = state.space.id] send in
                     @Dependency(\.groupUseCase) var groupUseCase
-                    do {
-                        await send(.codeLoaded(.success(try await groupUseCase.reissueInviteCode(spaceId: spaceId))))
-                    } catch {
-                        await send(.exitResponse(.failure(error.asDomainError)))
-                    }
+                    await send(.reissueResponse(Result { try await groupUseCase.reissueInviteCode(spaceId: spaceId) }
+                        .mapError { $0.asDomainError }))
                 }
 
+            case .reissueResponse(.success(let code)):
+                state.isWorking = false
+                state.inviteCode = code
+                return .none
+
+            case .reissueResponse(.failure(let error)):
+                state.isWorking = false
+                state.error = error
+                return .none
+
             case .notificationsToggled(let enabled):
-                // 토글은 즉시 반영하고, 실패하면 서버에 저장된 값(space.notificationsEnabled)으로 되돌린다
+                // 토글은 즉시 반영하고, 실패하면 서버에 저장된 값(space.notificationsEnabled)으로 되돌린다.
+                // 저장이 끝날 때까지 다음 토글은 받지 않는다
+                guard !state.isUpdatingNotifications, enabled != state.notificationsEnabled else { return .none }
+                state.isUpdatingNotifications = true
                 state.notificationsEnabled = enabled
                 return .run { [spaceId = state.space.id] send in
                     @Dependency(\.groupUseCase) var groupUseCase
@@ -132,10 +199,12 @@ public struct GroupSettingsFeature {
                 }
 
             case .notificationsResponse(.success(let enabled)):
-                state.space = state.space.with(notificationsEnabled: enabled)
-                return .send(.delegate(.spaceChanged))
+                state.isUpdatingNotifications = false
+                state.space.notificationsEnabled = enabled
+                return .send(.delegate(.notificationsChanged(enabled)))
 
             case .notificationsResponse(.failure(let error)):
+                state.isUpdatingNotifications = false
                 state.notificationsEnabled = state.space.notificationsEnabled
                 state.error = error
                 return .none
@@ -160,7 +229,7 @@ public struct GroupSettingsFeature {
 
             case .renameResponse(.success(let name)):
                 state.isWorking = false
-                state.space = state.space.renamed(name)
+                state.space.name = name
                 return .send(.delegate(.spaceChanged))
 
             case .renameResponse(.failure(let error)):
@@ -217,6 +286,7 @@ public struct GroupSettingsFeature {
 
             case .confirmLeave:
                 state.showLeaveConfirm = false
+                guard !state.isWorking else { return .none }
                 state.isWorking = true
                 return .run { [spaceId = state.space.id] send in
                     @Dependency(\.groupUseCase) var groupUseCase
@@ -226,6 +296,7 @@ public struct GroupSettingsFeature {
 
             case .confirmDelete:
                 state.showDeleteConfirm = false
+                guard state.isOwner, !state.isWorking else { return .none }
                 state.isWorking = true
                 return .run { [spaceId = state.space.id] send in
                     @Dependency(\.groupUseCase) var groupUseCase
@@ -256,16 +327,3 @@ public struct GroupSettingsFeature {
 }
 
 extension GroupSettingsFeature: Reducer {}
-
-extension Space {
-    func renamed(_ name: String) -> Space {
-        Space(id: id, type: type, name: name, maxMembers: maxMembers, status: status, members: members,
-              createdAt: createdAt, myRole: myRole, notificationsEnabled: notificationsEnabled,
-              latestMoment: latestMoment)
-    }
-
-    func with(notificationsEnabled enabled: Bool) -> Space {
-        Space(id: id, type: type, name: name, maxMembers: maxMembers, status: status, members: members,
-              createdAt: createdAt, myRole: myRole, notificationsEnabled: enabled, latestMoment: latestMoment)
-    }
-}

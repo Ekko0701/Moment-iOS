@@ -49,7 +49,9 @@ public struct GroupCreateView: View {
                         MomentPillButton("만들기", style: .primary, minHeight: 54) { send(.submitTapped) }
                             .disabled(!state.canSubmit)
                             .opacity(state.canSubmit ? 1 : 0.6)
-                        if state.isSubmitting { ProgressView().tint(MomentColor.ink) }
+                        if state.isSubmitting {
+                            ProgressView().tint(MomentColor.ink).accessibilityLabel("그룹을 만드는 중")
+                        }
                     }
                     Spacer()
                 }
@@ -61,6 +63,7 @@ public struct GroupCreateView: View {
                 if state.created == nil {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("취소") { send(.cancelTapped) }
+                            .disabled(state.isSubmitting)
                     }
                 }
             }
@@ -85,26 +88,52 @@ public struct GroupJoinView: View {
             ZStack {
                 MomentColor.canvas.ignoresSafeArea()
                 VStack(spacing: Spacing.lg) {
-                    SurfaceCard {
-                        VStack(alignment: .leading, spacing: Spacing.sm) {
-                            Text("초대 코드 6자리")
-                                .font(MomentTypography.bodySM)
-                                .foregroundColor(MomentColor.ink.opacity(0.6))
-                            TextField("ABC123", text: Binding(
-                                get: { state.code },
-                                set: { send(.codeChanged($0)) }
-                            ))
-                            .font(.system(size: 28, weight: .semibold, design: .monospaced))
-                            .textInputAutocapitalization(.characters)
-                            .autocorrectionDisabled()
-                            .submitLabel(.join)
-                            .onSubmit { send(.submitTapped) }
+                    if let request = state.sentRequest {
+                        SurfaceCard {
+                            VStack(spacing: Spacing.sm) {
+                                Image(systemName: "hourglass")
+                                    .font(.title2)
+                                    .foregroundColor(MomentColor.ink.opacity(0.6))
+                                    .accessibilityHidden(true)
+                                Text("참여를 요청했어요")
+                                    .font(MomentTypography.cardTitle)
+                                    .foregroundColor(MomentColor.ink)
+                                Text("‘\(request.spaceName)’ 방장이 수락하면 홈에 그룹이 나타나요.")
+                                    .font(MomentTypography.bodySM)
+                                    .foregroundColor(MomentColor.ink.opacity(0.6))
+                                    .multilineTextAlignment(.center)
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                        MomentPillButton("확인", style: .primary, minHeight: 54) { send(.doneTapped) }
+                    } else {
+                        SurfaceCard {
+                            VStack(alignment: .leading, spacing: Spacing.sm) {
+                                Text("초대 코드 6자리")
+                                    .font(MomentTypography.bodySM)
+                                    .foregroundColor(MomentColor.ink.opacity(0.6))
+                                TextField("ABC123", text: Binding(
+                                    get: { state.code },
+                                    set: { send(.codeChanged($0)) }
+                                ))
+                                .font(.system(.title, design: .monospaced).weight(.semibold))
+                                .textInputAutocapitalization(.characters)
+                                .autocorrectionDisabled()
+                                .submitLabel(.join)
+                                .onSubmit { send(.submitTapped) }
+                                .accessibilityLabel("초대 코드")
+                                Text("방장이 수락하면 그룹에 들어가요.")
+                                    .font(MomentTypography.caption)
+                                    .foregroundColor(MomentColor.ink.opacity(0.5))
+                            }
+                        }
+                        MomentPillButton("참여 요청", style: .primary, minHeight: 54) { send(.submitTapped) }
+                            .disabled(!state.canSubmit)
+                            .opacity(state.canSubmit ? 1 : 0.6)
+                        if state.isSubmitting {
+                            ProgressView().tint(MomentColor.ink).accessibilityLabel("참여를 요청하는 중")
                         }
                     }
-                    MomentPillButton("참여하기", style: .primary, minHeight: 54) { send(.submitTapped) }
-                        .disabled(!state.canSubmit)
-                        .opacity(state.canSubmit ? 1 : 0.6)
-                    if state.isSubmitting { ProgressView().tint(MomentColor.ink) }
                     Spacer()
                 }
                 .padding(Spacing.lg)
@@ -113,7 +142,8 @@ public struct GroupJoinView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("취소") { send(.cancelTapped) }
+                    Button(state.sentRequest == nil ? "취소" : "닫기") { send(.cancelTapped) }
+                        .disabled(state.isSubmitting)
                 }
             }
             .errorAlert(state.error) { send(.dismissError) }
@@ -140,7 +170,7 @@ public struct GroupMemberStripView: View {
                     .font(MomentTypography.bodySM)
                     .foregroundColor(MomentColor.ink.opacity(0.6))
                 Spacer()
-                if state.isLoading { ProgressView().scaleEffect(0.7) }
+                if state.isLoading { ProgressView().scaleEffect(0.7).accessibilityLabel("멤버를 불러오는 중") }
             }
             .padding(.horizontal, Spacing.lg)
 
@@ -196,7 +226,7 @@ struct MemberMomentTile: View {
 
             HStack(spacing: 3) {
                 if member.role == .owner {
-                    Image(systemName: "crown.fill").font(.system(size: 9)).foregroundColor(MomentColor.accent)
+                    Image(systemName: "crown.fill").font(.caption2).foregroundColor(MomentColor.accent)
                 }
                 Text(member.user.nickname)
                     .font(.caption.weight(.medium))
@@ -205,6 +235,21 @@ struct MemberMomentTile: View {
             }
             .frame(width: 96)
         }
+        // 타일 하나를 "닉네임, 방장, 최신 모먼트" 한 문장으로 읽는다
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityText)
+    }
+
+    private var accessibilityText: String {
+        var parts = [member.user.nickname]
+        if member.role == .owner { parts.append("방장") }
+        if let moment = member.latestMoment {
+            if moment.imageURL != nil { parts.append("사진 모먼트") }
+            if let text = moment.text, !text.isEmpty { parts.append(text) }
+        } else {
+            parts.append("아직 모먼트 없음")
+        }
+        return parts.joined(separator: ", ")
     }
 }
 
@@ -225,11 +270,13 @@ public struct GroupSettingsView: View {
                 if let code = state.inviteCode {
                     HStack {
                         Text(code.code)
-                            .font(.system(size: 22, weight: .semibold, design: .monospaced))
+                            .font(.system(.title2, design: .monospaced).weight(.semibold))
+                            .accessibilityLabel(spelledCode(code.code))
                         Spacer()
                         ShareLink(item: inviteMessage(code)) {
                             Image(systemName: "square.and.arrow.up")
                         }
+                        .accessibilityLabel("초대 코드 보내기")
                     }
                     Text(code.isExpired() ? "만료된 코드예요" : "\(code.expiresAt.formatted(date: .abbreviated, time: .shortened))까지 사용할 수 있어요")
                         .font(MomentTypography.bodySM)
@@ -244,11 +291,47 @@ public struct GroupSettingsView: View {
                 }
             }
 
+            if state.isOwner && !state.joinRequests.isEmpty {
+                Section {
+                    ForEach(state.joinRequests) { request in
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(request.user.nickname)
+                                Text("@\(request.user.handle)")
+                                    .font(.caption)
+                                    .foregroundColor(MomentColor.ink.opacity(0.5))
+                            }
+                            Spacer()
+                            if state.decidingRequestIds.contains(request.id) {
+                                ProgressView().accessibilityLabel("처리하는 중")
+                            } else {
+                                Button("거절") { send(.decideJoinRequestTapped(request, approve: false)) }
+                                    .buttonStyle(.borderless)
+                                    .foregroundColor(MomentColor.ink.opacity(0.6))
+                                    .accessibilityLabel("\(request.user.nickname)님 요청 거절")
+                                Button("수락") { send(.decideJoinRequestTapped(request, approve: true)) }
+                                    .buttonStyle(.borderless)
+                                    .fontWeight(.semibold)
+                                    .disabled(state.members.count >= state.space.maxMembers)
+                                    .accessibilityLabel("\(request.user.nickname)님 요청 수락")
+                            }
+                        }
+                    }
+                } header: {
+                    Text("참여 요청 \(state.joinRequests.count)")
+                } footer: {
+                    if state.members.count >= state.space.maxMembers {
+                        Text("정원이 찼어요. 멤버가 나가면 수락할 수 있어요.")
+                    }
+                }
+            }
+
             Section {
                 Toggle("새 모먼트 알림", isOn: Binding(
                     get: { state.notificationsEnabled },
                     set: { send(.notificationsToggled($0)) }
                 ))
+                .disabled(state.isUpdatingNotifications)
             }
 
             if state.isOwner {
@@ -276,6 +359,8 @@ public struct GroupSettingsView: View {
                         if state.isOwner && member.user.id != state.currentUserId {
                             Button("내보내기", role: .destructive) { send(.removeMemberTapped(member)) }
                                 .font(MomentTypography.bodySM)
+                                .buttonStyle(.borderless)
+                                .accessibilityLabel("\(member.user.nickname)님 내보내기")
                         }
                     }
                 }
@@ -295,6 +380,8 @@ public struct GroupSettingsView: View {
         .navigationTitle(state.space.name ?? "그룹 설정")
         .navigationBarTitleDisplayMode(.inline)
         .disabled(state.isWorking)
+        // 나가기·종료·내보내기 처리 중에는 뒤로 가지 못하게 해 결과가 버려지지 않게 한다
+        .navigationBarBackButtonHidden(state.isWorking)
         .onAppear { send(.onAppear) }
         .confirmationDialog("그룹에서 나갈까요?", isPresented: Binding(
             get: { state.showLeaveConfirm }, set: { if !$0 { send(.cancelConfirm) } }
@@ -319,11 +406,16 @@ public struct GroupSettingsView: View {
     }
 
     private func inviteMessage(_ code: GroupInviteCode) -> String {
-        "Moment 그룹 \"\(state.space.name ?? "")\"에 초대할게요. 앱의 '코드로 그룹 참여'에 \(code.code)를 입력해 주세요."
+        "Moment 그룹 \"\(state.space.name ?? "")\"에 초대할게요. 앱의 '코드로 그룹 참여'에 \(code.code)를 입력하면 제가 수락할게요."
     }
 }
 
 // MARK: - 공통
+
+/// VoiceOver가 코드를 한 단어가 아니라 글자 단위로 읽도록 띄어 쓴다
+func spelledCode(_ code: String) -> String {
+    "초대 코드 " + code.map(String.init).joined(separator: " ")
+}
 
 struct GroupCodeCard: View {
     let title: String
@@ -340,15 +432,16 @@ struct GroupCodeCard: View {
                     .font(MomentTypography.bodySM)
                     .foregroundColor(MomentColor.ink.opacity(0.6))
                 Text(code.code)
-                    .font(.system(size: 34, weight: .bold, design: .monospaced))
+                    .font(.system(.largeTitle, design: .monospaced).weight(.bold))
                     .foregroundColor(MomentColor.ink)
                     .padding(.vertical, Spacing.xs)
                     .textSelection(.enabled)
+                    .accessibilityLabel(spelledCode(code.code))
                 ShareLink(item: "Moment 그룹 초대 코드: \(code.code)") {
                     Label("코드 보내기", systemImage: "square.and.arrow.up")
                         .font(.footnote.weight(.medium))
                 }
-                Text("7일 동안 여러 명이 같은 코드로 참여할 수 있어요")
+                Text("7일 동안 쓸 수 있어요. 코드로 요청하면 방장이 수락해야 들어와요")
                     .font(MomentTypography.caption)
                     .foregroundColor(MomentColor.ink.opacity(0.5))
             }

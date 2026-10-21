@@ -52,7 +52,7 @@ func resolvedStatePerSpace() {
     }
 }
 
-@Test("이전 형식(전체 키에 모먼트 1건)은 그 모먼트의 스페이스를 고른 위젯에 그대로 보인다")
+@Test("레거시 형식(전체 키에 모먼트 1건)은 그 모먼트의 스페이스를 고른 위젯에 그대로 보인다")
 func legacyGlobalMomentStillShows() {
     let store = makeStore()
     let spaceId = UUID()
@@ -91,5 +91,37 @@ func logoutResetsEverything() {
     #expect(store.loadState(for: id).isMoment == false)
     guard case .needLogin = store.resolvedState(selectedSpaceId: id) else {
         Issue.record("로그인 필요여야 한다"); return
+    }
+}
+
+@Test("위젯에서 고른 스페이스를 나가면 기본 스페이스를 보여준다")
+func leftSelectedSpaceFallsBackToDefault() {
+    let store = makeStore()
+    let pair = WidgetSpaceInfo(id: UUID(), name: "1:1", isGroup: false)
+    let leftGroup = UUID()
+    store.saveSpaces([pair])
+    store.saveState(.empty)
+    store.saveState(.hasMoment(snapshot(spaceId: pair.id, text: "연인")), for: pair.id)
+
+    guard case .hasMoment(let shown) = store.resolvedState(selectedSpaceId: leftGroup) else {
+        Issue.record("기본 스페이스 모먼트가 보여야 한다"); return
+    }
+    #expect(shown.text == "연인")
+}
+
+@Test("속한 스페이스가 없어지면 스페이스 목록·상태를 지우고 연결 필요로 둔다")
+func noSpacesResetsToNeedConnect() {
+    let store = makeStore()
+    let id = UUID()
+    store.saveSpaces([WidgetSpaceInfo(id: id, name: "가족", isGroup: true)])
+    store.saveState(.empty)
+    store.saveState(.hasMoment(snapshot(spaceId: id, text: "x")), for: id)
+
+    store.resetForNoSpaces()
+
+    #expect(store.loadSpaces().isEmpty)
+    #expect(store.loadState(for: id).isMoment == false)
+    guard case .needConnect = store.resolvedState(selectedSpaceId: id) else {
+        Issue.record("연결 필요여야 한다"); return
     }
 }
