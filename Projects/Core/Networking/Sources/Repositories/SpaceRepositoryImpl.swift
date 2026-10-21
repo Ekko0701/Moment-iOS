@@ -61,4 +61,44 @@ public final class SpaceRepositoryImpl: SpaceRepositoryProtocol {
         let endpoint = InvitationEndpoints.respondInvitation(invitationId: invitationId, body: body)
         try await apiClient.requestVoid(endpoint)
     }
+
+    // MARK: - 그룹 스페이스
+
+    public func createGroup(name: String) async throws -> CreatedGroup {
+        let dto: CreateGroupDTO = try await apiClient.request(GroupEndpoints.create(name: name))
+        return dto.toDomainModel()
+    }
+
+    public func joinGroup(code: String) async throws -> Space {
+        let dto: SpaceDTO = try await apiClient.request(GroupEndpoints.join(code: code))
+        return dto.toDomainModel()
+    }
+
+    public func groupInviteCode(spaceId: UUID) async throws -> GroupInviteCode {
+        let dto: GroupInviteCodeDTO = try await apiClient.request(GroupEndpoints.inviteCode(spaceId: spaceId))
+        return dto.toDomainModel()
+    }
+
+    public func reissueGroupInviteCode(spaceId: UUID) async throws -> GroupInviteCode {
+        let dto: GroupInviteCodeDTO = try await apiClient.request(GroupEndpoints.reissueInviteCode(spaceId: spaceId))
+        return dto.toDomainModel()
+    }
+
+    public func members(spaceId: UUID) async throws -> [SpaceMember] {
+        let dtos: [SpaceMemberDTO] = try await apiClient.request(SpaceMemberEndpoints.list(spaceId: spaceId))
+        return dtos.map { $0.toDomainModel() }
+    }
+
+    public func removeMember(spaceId: UUID, userId: UUID) async throws {
+        try await apiClient.requestVoid(SpaceMemberEndpoints.remove(spaceId: spaceId, userId: userId))
+    }
+
+    public func setNotifications(spaceId: UUID, enabled: Bool) async throws {
+        try await apiClient.requestVoid(
+            SpaceMemberEndpoints.updateMine(spaceId: spaceId, notificationsEnabled: enabled))
+    }
+
+    public func deleteGroup(spaceId: UUID) async throws {
+        try await apiClient.requestVoid(GroupEndpoints.delete(spaceId: spaceId))
+    }
 }
