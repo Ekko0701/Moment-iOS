@@ -14,6 +14,8 @@ public struct ComposeFeature {
         public var selectedImage: Data? = nil
         public var text: String = ""
         public var selectedSpaceId: UUID? = nil
+        /// 보낼 수 있는 스페이스. 둘 이상이면 화면이 보낼 곳을 고르게 한다
+        public var availableSpaces: [Space] = []
         public var isUploading = false
         public var isProcessingPhoto = false
         public var error: DomainError? = nil
@@ -21,6 +23,10 @@ public struct ComposeFeature {
         public var characterCount: Int { text.count }
         public var maxCharacters = 500
         // 서버 계약: 사진 또는 글 중 최소 1개 (F-04-01)
+        public var selectedSpace: Space? {
+            availableSpaces.first { $0.id == selectedSpaceId }
+        }
+
         public var canSubmit: Bool {
             (selectedImage != nil || !text.isEmpty) && !isUploading && !isProcessingPhoto
         }
@@ -33,6 +39,7 @@ public struct ComposeFeature {
         case imageSelected(Data)
         case photoProcessingFailed
         case textChanged(String)
+        case spaceSelected(UUID)
         case clearImage
         case submitTapped
         case cancelTapped
@@ -83,6 +90,11 @@ public struct ComposeFeature {
                 state.error = .unknown(
                     code: "PHOTO_PROCESS_FAILED",
                     message: "사진을 처리하지 못했어요. 다른 사진을 선택해 주세요.")
+                return .none
+
+            case .spaceSelected(let id):
+                guard state.availableSpaces.contains(where: { $0.id == id }) else { return .none }
+                state.selectedSpaceId = id
                 return .none
 
             case .textChanged(let newText):

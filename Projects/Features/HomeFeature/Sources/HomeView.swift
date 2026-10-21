@@ -20,34 +20,19 @@ public struct HomeView: View {
             // GlassMinimal 시안: 홈은 순백 캔버스 — 사진(히어로)이 유일한 색이 되도록 오브 제거
             MomentColor.canvas.ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                Spacer(minLength: Spacing.lg)
-
-                if state.space != nil {
-                    // 관계 정보는 내비 상단이 아니라 카드 바로 위 — 콘텐츠와 한 덩어리로 읽히도록
-                    spaceLabel
-                        .padding(.bottom, Spacing.sm)
-
-                    momentContent
-                        .padding(.horizontal, Spacing.lg)
-                        // 비동기 모먼트가 도착할 때 스냅 교체 대신 부드럽게 안착
-                        .animation(.easeOut(duration: 0.25), value: state.latestMoment)
-                } else {
-                    // 이론상 홈 진입 시 스페이스가 항상 있지만, 방어적으로 안내를 남긴다
-                    Text("아직 연결된 스페이스가 없어요")
-                        .font(MomentTypography.body)
-                        .foregroundColor(MomentColor.ink.opacity(0.6))
+            ScrollView {
+                VStack(spacing: Spacing.xl) {
+                    ForEach(state.spaces) { space in
+                        spaceSection(space)
+                    }
+                    groupActions
                 }
-
-                // 시안 02b: 히스토리 진입은 카드 바로 아래 — 카드와 한 묶음으로 읽히도록
-                historyHint
-                    .padding(.top, Spacing.sm)
-
-                Spacer(minLength: Spacing.lg)
+                .padding(.vertical, Spacing.lg)
             }
+            .refreshable { send(.refreshPulled) }
         }
         .onAppear { send(.onAppear) }
-        // 내비는 앱 정체성만 — 관계 정보(스페이스 · D+n)는 카드 위 spaceLabel이 담당한다
+        // 내비는 앱 정체성만 — 관계 정보는 카드 위 라벨이 담당한다
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Text("Moment")
@@ -57,67 +42,95 @@ public struct HomeView: View {
         }
     }
 
-    // MARK: - 스페이스 라벨 (카드 바로 위)
+    // MARK: - 스페이스 한 장 (라벨 + 히어로 카드 + 진입 힌트)
 
-    private var spaceLabel: some View {
+    private func spaceSection(_ space: Space) -> some View {
+        VStack(spacing: Spacing.sm) {
+            spaceLabel(space)
+
+            momentContent(space)
+                .padding(.horizontal, Spacing.lg)
+                // 비동기 모먼트가 도착할 때 스냅 교체 대신 부드럽게 안착
+                .animation(.easeOut(duration: 0.25), value: space.latestMoment)
+
+            enterHint(space)
+        }
+    }
+
+    private func spaceLabel(_ space: Space) -> some View {
         HStack(spacing: 6) {
-            Circle()
-                .fill(MomentColor.orbCoral.opacity(0.75))
-                .frame(width: 18, height: 18)
+            if space.isGroup {
+                Image(systemName: "person.3.fill")
+                    .font(.system(size: 11))
+                    .foregroundColor(MomentColor.ink.opacity(0.7))
+            } else {
+                Circle()
+                    .fill(MomentColor.orbCoral.opacity(0.75))
+                    .frame(width: 18, height: 18)
+            }
 
-            Text(spaceTitle)
+            Text(spaceTitle(space))
                 .font(.footnote.weight(.medium))
                 .foregroundColor(MomentColor.ink)
 
-            if let days = state.daysTogether {
-                Text("D+\(days)")
+            if space.isGroup {
+                Text("\(space.memberCount)명")
+                    .font(.caption.weight(.medium))
+                    .foregroundColor(MomentColor.ink.opacity(0.55))
+            } else {
+                Text("D+\(state.daysTogether(in: space))")
                     .font(.caption.weight(.medium))
                     .foregroundColor(MomentColor.accent)
             }
         }
     }
 
-    private var spaceTitle: String {
-        // 사용자가 붙인 이름이 우선 — 없으면 상대 이름 기반 폴백 (개인화는 원하는 사람만)
-        if let name = state.space?.name, !name.isEmpty {
+    private func spaceTitle(_ space: Space) -> String {
+        // 사용자가 붙인 이름이 우선 — 1:1은 없으면 상대 이름 기반 폴백
+        if let name = space.name, !name.isEmpty {
             return name
         }
-        if let partner = state.partner {
+        if let partner = state.partner(in: space) {
             return "\(partner.nickname)님과의 스페이스"
         }
-        return "우리 둘의 스페이스"
+        return space.isGroup ? "그룹" : "우리 둘의 스페이스"
     }
 
     // MARK: - 모먼트 콘텐츠 (사진 / 텍스트 / 빈 상태 분기)
 
     @ViewBuilder
-    private var momentContent: some View {
-        if let moment = state.latestMoment {
+    private func momentContent(_ space: Space) -> some View {
+        if let moment = space.latestMoment {
             if moment.imageURL != nil {
-                photoMomentCard(moment)
+                photoMomentCard(moment, spaceId: space.id)
             } else {
-                textMomentCard(moment)
+                textMomentCard(moment, spaceId: space.id)
             }
-        } else if state.isLoading {
+        } else if state.isRefreshing && state.spaces.isEmpty {
             glassCard {
                 ProgressView()
                     .tint(MomentColor.ink)
                     .padding(.vertical, Spacing.md)
             }
         } else {
-            glassCard {
-                Text("아직 상대방의 모먼트가 없어요")
-                    .font(MomentTypography.body)
-                    .foregroundColor(MomentColor.ink.opacity(0.65))
+            Button {
+                send(.spaceTapped(space.id))
+            } label: {
+                glassCard {
+                    Text(space.isGroup ? "아직 다른 멤버의 모먼트가 없어요" : "아직 상대방의 모먼트가 없어요")
+                        .font(MomentTypography.body)
+                        .foregroundColor(MomentColor.ink.opacity(0.65))
+                }
             }
+            .buttonStyle(MomentPressStyle(scale: 0.98))
         }
     }
 
     // MARK: - 사진 모먼트 카드 (Locket 스타일 대형 카드)
 
-    private func photoMomentCard(_ moment: Moment) -> some View {
+    private func photoMomentCard(_ moment: Moment, spaceId: UUID) -> some View {
         Button {
-            send(.spaceCardTapped)
+            send(.spaceTapped(spaceId))
         } label: {
             AsyncImage(url: moment.imageURL) { phase in
                 if let image = phase.image {
@@ -129,7 +142,7 @@ public struct HomeView: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            // 시안: 모든 모먼트가 같은 자리·같은 크기 — 사진도 텍스트·빈 상태와 동일한 정사각형.
+            // 모든 모먼트가 같은 자리·같은 크기 — 사진도 텍스트·빈 상태와 동일한 정사각형.
             // scaledToFill과 결합해 중앙 크롭되며, 사진↔글 전환 시 레이아웃이 출렁이지 않는다.
             .aspectRatio(1, contentMode: .fit)
             .clipShape(RoundedRectangle(cornerRadius: 26))
@@ -151,14 +164,14 @@ public struct HomeView: View {
         .buttonStyle(MomentPressStyle(scale: 0.98))
     }
 
-    // MARK: - 텍스트 모먼트 카드 (높이가 내용에 맞는 글래스 카드)
+    // MARK: - 텍스트 모먼트 카드
 
-    private func textMomentCard(_ moment: Moment) -> some View {
+    private func textMomentCard(_ moment: Moment, spaceId: UUID) -> some View {
         Button {
-            send(.spaceCardTapped)
+            send(.spaceTapped(spaceId))
         } label: {
             glassCard {
-                // 시안 02b: 문장이 정중앙의 주인공 — 큰 타이포(Dynamic Type 대응), 여유로운 행간
+                // 문장이 정중앙의 주인공 — 큰 타이포(Dynamic Type 대응), 여유로운 행간
                 Text(moment.text ?? "")
                     .font(.title2.weight(.medium))
                     .foregroundColor(MomentColor.ink)
@@ -174,7 +187,7 @@ public struct HomeView: View {
         .buttonStyle(MomentPressStyle(scale: 0.98))
     }
 
-    // 밝은 서피스 위 발신자 칩 — 그레이 캡슐 (시안 02b)
+    // 밝은 서피스 위 발신자 칩 — 그레이 캡슐
     private func senderBadge(_ moment: Moment) -> some View {
         HStack(spacing: 6) {
             Circle()
@@ -196,8 +209,7 @@ public struct HomeView: View {
         .clipShape(Capsule())
     }
 
-    // 정사각형 서피스 카드 공통 래퍼 — 시안: 텍스트 모먼트·로딩·빈 상태가 히어로 자리에서
-    // 1:1 형태 언어를 공유한다 (사진 = 세로 히어로 ↔ 글·안내 = 정사각형). 콘텐츠는 중앙 배치.
+    // 정사각형 서피스 카드 공통 래퍼 — 텍스트 모먼트·로딩·빈 상태가 히어로 자리에서 1:1 형태를 공유한다
     private func glassCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         content()
             .padding(.vertical, 28)
@@ -212,13 +224,13 @@ public struct HomeView: View {
             )
     }
 
-    // MARK: - 히스토리 진입 힌트
+    // MARK: - 진입 힌트 (카드 바로 아래)
 
-    private var historyHint: some View {
+    private func enterHint(_ space: Space) -> some View {
         Button {
-            send(.spaceCardTapped)
+            send(.spaceTapped(space.id))
         } label: {
-            Text("지난 순간 모아보기")
+            Text(space.isGroup ? "그룹 들어가기" : "지난 순간 모아보기")
                 .font(.footnote.weight(.medium))
                 .foregroundColor(MomentColor.ink)
                 .padding(.horizontal, Spacing.md)
@@ -228,6 +240,21 @@ public struct HomeView: View {
                 .overlay(Capsule().stroke(MomentColor.surfaceStroke, lineWidth: 1))
         }
         .buttonStyle(MomentPressStyle())
+    }
+
+    // MARK: - 그룹·연결 진입
+
+    private var groupActions: some View {
+        VStack(spacing: Spacing.sm) {
+            if state.oneToOneSpace == nil {
+                MomentSecondaryPillButton("1:1로 연결하기") { send(.connectTapped) }
+            }
+            HStack(spacing: Spacing.sm) {
+                MomentSecondaryPillButton("그룹 만들기") { send(.createGroupTapped) }
+                MomentSecondaryPillButton("코드로 참여") { send(.joinGroupTapped) }
+            }
+        }
+        .padding(.horizontal, Spacing.lg)
     }
 }
 
@@ -247,73 +274,43 @@ extension Date {
 
 // MARK: - Xcode Previews
 
-#Preview("홈 — 텍스트 모먼트") {
-    let me = UserProfile(id: UUID(), handle: "moment_5678", nickname: "동주")
-    let partner = UserProfile(id: UUID(), handle: "moment_1234", nickname: "지은")
+private let previewMe = UserProfile(id: UUID(), handle: "moment_5678", nickname: "동주")
+private let previewPartner = UserProfile(id: UUID(), handle: "moment_1234", nickname: "지은")
+
+#Preview("홈 — 1:1 텍스트 + 그룹 사진") {
     let state: HomeFeature.State = {
         var s = HomeFeature.State()
-        s.currentUser = me
-        s.space = Space(
-            id: UUID(),
-            type: .oneToOne,
-            maxMembers: 2,
-            status: "ACTIVE",
-            members: [me, partner],
-            createdAt: Calendar.current.date(byAdding: .day, value: -99, to: Date()) ?? Date()
-        )
-        s.latestMoment = Moment(
-            id: UUID(),
-            spaceId: UUID(),
-            author: partner,
-            text: "오늘 하루도 수고했어, 저녁에 산책 어때? 🌙",
-            createdAt: Date().addingTimeInterval(-3600)
-        )
+        s.currentUser = previewMe
+        s.spaces = [
+            Space(
+                id: UUID(), type: .oneToOne, maxMembers: 2, status: "ACTIVE",
+                members: [previewMe, previewPartner],
+                createdAt: Calendar.current.date(byAdding: .day, value: -99, to: Date()) ?? Date(),
+                latestMoment: Moment(id: UUID(), spaceId: UUID(), author: previewPartner,
+                                     text: "오늘 하루도 수고했어, 저녁에 산책 어때? 🌙",
+                                     createdAt: Date().addingTimeInterval(-3600))
+            ),
+            Space(
+                id: UUID(), type: .group, name: "주말 산책", maxMembers: 6, status: "ACTIVE",
+                members: [previewMe, previewPartner], createdAt: Date(), myRole: .owner,
+                latestMoment: Moment(id: UUID(), spaceId: UUID(), author: previewPartner,
+                                     imageURL: URL(string: "https://example.com/sunset.jpg"),
+                                     text: "퇴근길 하늘 🌇", createdAt: Date().addingTimeInterval(-600))
+            ),
+        ]
         return s
     }()
     HomeView(state: state, send: { _ in })
 }
 
-#Preview("홈 — 사진 모먼트") {
-    let me = UserProfile(id: UUID(), handle: "moment_5678", nickname: "동주")
-    let partner = UserProfile(id: UUID(), handle: "moment_1234", nickname: "지은")
+#Preview("홈 — 그룹만, 모먼트 없음") {
     let state: HomeFeature.State = {
         var s = HomeFeature.State()
-        s.currentUser = me
-        s.space = Space(
-            id: UUID(),
-            type: .oneToOne,
-            maxMembers: 2,
-            status: "ACTIVE",
-            members: [me, partner],
-            createdAt: Calendar.current.date(byAdding: .day, value: -99, to: Date()) ?? Date()
-        )
-        s.latestMoment = Moment(
-            id: UUID(),
-            spaceId: UUID(),
-            author: partner,
-            imageURL: URL(string: "https://example.com/sunset.jpg"),
-            text: "퇴근길 하늘이 예뻐서 한 장 🌇",
-            createdAt: Date().addingTimeInterval(-3600)
-        )
-        return s
-    }()
-    HomeView(state: state, send: { _ in })
-}
-
-#Preview("홈 — 모먼트 없음") {
-    let me = UserProfile(id: UUID(), handle: "moment_5678", nickname: "동주")
-    let partner = UserProfile(id: UUID(), handle: "moment_1234", nickname: "지은")
-    let state: HomeFeature.State = {
-        var s = HomeFeature.State()
-        s.currentUser = me
-        s.space = Space(
-            id: UUID(),
-            type: .oneToOne,
-            maxMembers: 2,
-            status: "ACTIVE",
-            members: [me, partner],
-            createdAt: Date()
-        )
+        s.currentUser = previewMe
+        s.spaces = [
+            Space(id: UUID(), type: .group, name: "가족", maxMembers: 6, status: "ACTIVE",
+                  members: [previewMe], createdAt: Date(), myRole: .owner)
+        ]
         return s
     }()
     HomeView(state: state, send: { _ in })

@@ -14,5 +14,6 @@ let workspace = Workspace(
         "Projects/Features/FeedFeature",
         "Projects/Features/ComposeFeature",
         "Projects/Features/SettingsFeature",
+        "Projects/Features/GroupFeature",
     ]
 )

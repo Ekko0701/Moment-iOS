@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import Domain
 @testable import ComposeFeature
 
 @Test("빈 입력은 공유할 수 없다")
@@ -37,4 +38,21 @@ func clearImageRestoresEmptyRule() {
     state.selectedImage = Data([0xFF])
     state.selectedImage = nil
     #expect(state.canSubmit == false)
+}
+
+@Test("보낼 곳은 보낼 수 있는 스페이스 중에서만 바꿀 수 있다")
+func spaceSelectionLimitedToAvailable() {
+    let pair = Space(id: UUID(), type: .oneToOne, maxMembers: 2, status: "ACTIVE", members: [], createdAt: Date())
+    let group = Space(id: UUID(), type: .group, name: "가족", maxMembers: 6, status: "ACTIVE", members: [],
+                      createdAt: Date())
+    var state = ComposeFeature.State()
+    state.availableSpaces = [pair, group]
+    state.selectedSpaceId = pair.id
+
+    _ = ComposeFeature().reduce(into: &state, action: .spaceSelected(group.id))
+    #expect(state.selectedSpaceId == group.id)
+    #expect(state.selectedSpace?.name == "가족")
+
+    _ = ComposeFeature().reduce(into: &state, action: .spaceSelected(UUID()))
+    #expect(state.selectedSpaceId == group.id)
 }

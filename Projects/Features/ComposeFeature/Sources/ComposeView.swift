@@ -2,6 +2,7 @@ import PhotosUI
 import SwiftUI
 import UIKit
 import MomentUIKit
+import Domain
 
 /// 작성 — Final-MVP: 타이틀 없이 글래스 에디터 카드 + 카운터 + 다크 필 공유 버튼.
 /// 매크로 없는 TCA 구성에서 모듈 경계를 지키기 위해 store.scope 대신 (state, send) 주입을 사용.
@@ -23,8 +24,13 @@ public struct ComposeView: View {
             MomentColor.canvas.ignoresSafeArea()
 
             VStack(spacing: Spacing.lg) {
+                if state.availableSpaces.count > 1 {
+                    destinationPicker
+                        .padding(.top, Spacing.sm)
+                }
+
                 editorCard
-                    .padding(.top, Spacing.lg)
+                    .padding(.top, state.availableSpaces.count > 1 ? 0 : Spacing.lg)
 
                 // 시안 05: CTA는 항상 잉크 캡슐(54pt) — 비활성은 스타일 교체가 아닌 투명도로.
                 // (secondary는 캔버스색이라 화이트 톤에서 배경이 사라져 보임)
@@ -55,6 +61,45 @@ public struct ComposeView: View {
         ) {
             Button("확인", role: .cancel) {}
         }
+    }
+
+    // MARK: - 보낼 곳 (스페이스가 둘 이상일 때)
+
+    private var destinationPicker: some View {
+        Menu {
+            ForEach(state.availableSpaces) { space in
+                Button {
+                    send(.spaceSelected(space.id))
+                } label: {
+                    if space.id == state.selectedSpaceId {
+                        Label(destinationTitle(space), systemImage: "checkmark")
+                    } else {
+                        Text(destinationTitle(space))
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Text("보낼 곳")
+                    .foregroundColor(MomentColor.ink.opacity(0.55))
+                Text(state.selectedSpace.map(destinationTitle) ?? "선택")
+                    .foregroundColor(MomentColor.ink)
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(MomentColor.ink.opacity(0.55))
+            }
+            .font(.footnote.weight(.medium))
+            .padding(.horizontal, Spacing.md)
+            .padding(.vertical, 8)
+            .background(MomentColor.surfaceSoft)
+            .clipShape(Capsule())
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func destinationTitle(_ space: Space) -> String {
+        if let name = space.name, !name.isEmpty { return name }
+        return space.isGroup ? "그룹" : "1:1 스페이스"
     }
 
     // MARK: - 에디터 카드

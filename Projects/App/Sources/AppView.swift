@@ -7,6 +7,7 @@ import HomeFeature
 import FeedFeature
 import ComposeFeature
 import SettingsFeature
+import GroupFeature
 import MomentUIKit
 import Networking
 
@@ -54,9 +55,12 @@ struct AppView: View {
                 return
             }
         } else if url.host == "connect" {
-            // 연결 화면은 홈 탭의 빈 상태이므로 홈 탭으로 이동
-            if case .main(let mainTabState) = viewStore.state, mainTabState.currentSpace == nil {
+            // 연결 화면은 홈 탭의 빈 상태이거나 홈에서 푸시되는 화면이므로 홈 탭으로 이동
+            if case .main(let mainTabState) = viewStore.state, mainTabState.oneToOneSpace == nil {
                 viewStore.send(.selectTab(.home))
+                if !mainTabState.spaces.isEmpty {
+                    viewStore.send(.setConnectPresented(true))
+                }
             }
         } else if url.host == "moment" {
             let pathComponents = url.pathComponents.filter { $0 != "/" }
@@ -105,11 +109,11 @@ struct AppView: View {
     }
 
     // MARK: - Home Tab
-    // 스페이스가 없으면 홈 탭이 연결 화면을 보여준다 (연결 성립 시 자연스럽게 스페이스 홈으로 전환)
+    // 스페이스가 하나도 없으면 홈 탭이 연결 화면을 보여준다 (연결·그룹 참여 시 자연스럽게 카드 홈으로 전환)
     private func homeTabView(_ viewStore: ViewStoreOf<AppFeature>, _ mainTabState: AppFeature.MainTabState) -> some View {
         NavigationStack {
             Group {
-                if mainTabState.currentSpace == nil {
+                if mainTabState.spaces.isEmpty {
                     ConnectView(
                         state: mainTabState.connectState,
                         send: { viewStore.send(.connect($0)) },
@@ -117,9 +121,44 @@ struct AppView: View {
                     )
                     .navigationTitle("연결하기") // 시안 04
                     .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Menu {
+                                Button("그룹 만들기") { viewStore.send(.home(.createGroupTapped)) }
+                                Button("코드로 그룹 참여") { viewStore.send(.home(.joinGroupTapped)) }
+                            } label: {
+                                Image(systemName: "person.3")
+                            }
+                            .accessibilityLabel("그룹")
+                        }
+                    }
                 } else {
                     HomeView(state: mainTabState.homeState, send: { viewStore.send(.home($0)) })
                         .navigationBarTitleDisplayMode(.inline) // 시안: 중앙 인라인 (2줄 타이틀은 HomeView가 공급)
+                }
+            }
+            .navigationDestination(
+                isPresented: Binding(
+                    get: { mainTabState.isConnectPresented },
+                    set: { viewStore.send(.setConnectPresented($0)) }
+                )
+            ) {
+                ConnectView(
+                    state: mainTabState.connectState,
+                    send: { viewStore.send(.connect($0)) },
+                    onRefresh: { viewStore.send(.refreshConnection) }
+                )
+                .navigationTitle("1:1로 연결하기")
+                .navigationBarTitleDisplayMode(.inline)
+            }
+            .navigationDestination(
+                isPresented: Binding(
+                    get: { mainTabState.groupDetail != nil },
+                    set: { viewStore.send(.setGroupDetailPresented($0)) }
+                )
+            ) {
+                if let detail = mainTabState.groupDetail {
+                    groupDetailScreen(viewStore, mainTabState, detail)
                 }
             }
             .navigationDestination(
@@ -136,6 +175,23 @@ struct AppView: View {
                     .navigationTitle("지난 순간") // 시안: 히스토리 타이틀 고정, 공간 정보는 홈 서브타이틀 담당
             }
         }
+        .sheet(isPresented: Binding(
+            get: { mainTabState.groupCreate != nil },
+            set: { if !$0 { viewStore.send(.dismissGroupSheets) } }
+        )) {
+            if let create = mainTabState.groupCreate {
+                GroupCreateView(state: create, send: { viewStore.send(.groupCreate($0)) })
+                    .interactiveDismissDisabled(create.created != nil)
+            }
+        }
+        .sheet(isPresented: Binding(
+            get: { mainTabState.groupJoin != nil },
+            set: { if !$0 { viewStore.send(.dismissGroupSheets) } }
+        )) {
+            if let join = mainTabState.groupJoin {
+                GroupJoinView(state: join, send: { viewStore.send(.groupJoin($0)) })
+            }
+        }
         .tabItem {
             // 탭바의 자동 .fill 변형을 끄고 선택 상태로 채움/아웃라인을 직접 제어 (시안: Instagram식)
             Label("홈", systemImage: mainTabState.selectedTab == .home ? "house.fill" : "house")
@@ -144,11 +200,58 @@ struct AppView: View {
         .tag(AppFeature.MainTabState.Tab.home)
     }
 
+    // MARK: - Group Detail
+    // 상단 멤버별 최신 모먼트 + 아래 그룹 타임라인. 설정은 같은 스택에 푸시한다
+    private func groupDetailScreen(
+        _ viewStore: ViewStoreOf<AppFeature>,
+        _ mainTabState: AppFeature.MainTabState,
+        _ detail: GroupDetailFeature.State
+    ) -> some View {
+        VStack(spacing: 0) {
+            GroupMemberStripView(state: detail, send: { viewStore.send(.groupDetail($0)) })
+            Divider().opacity(0.4)
+            FeedView(
+                state: mainTabState.feedState,
+                send: { viewStore.send(.feed($0)) },
+                currentUserId: mainTabState.currentUser?.id
+            )
+        }
+        .background(MomentColor.canvas.ignoresSafeArea())
+        .navigationTitle(detail.space.name ?? "그룹")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                Button {
+                    viewStore.send(.groupDetail(.composeTapped))
+                } label: {
+                    Image(systemName: "plus.circle")
+                }
+                .accessibilityLabel("이 그룹에 보내기")
+                Button {
+                    viewStore.send(.groupDetail(.settingsTapped))
+                } label: {
+                    Image(systemName: "gearshape")
+                }
+                .accessibilityLabel("그룹 설정")
+            }
+        }
+        .navigationDestination(
+            isPresented: Binding(
+                get: { mainTabState.groupSettings != nil },
+                set: { viewStore.send(.setGroupSettingsPresented($0)) }
+            )
+        ) {
+            if let settings = mainTabState.groupSettings {
+                GroupSettingsView(state: settings, send: { viewStore.send(.groupSettings($0)) })
+            }
+        }
+    }
+
     // MARK: - Compose Tab
     private func composeTabView(_ viewStore: ViewStoreOf<AppFeature>, _ mainTabState: AppFeature.MainTabState) -> some View {
         NavigationStack {
             Group {
-                if mainTabState.currentSpace == nil {
+                if mainTabState.spaces.isEmpty {
                     connectRequiredView(viewStore)
                 } else {
                     ComposeView(state: mainTabState.composeState, send: { viewStore.send(.compose($0)) })
@@ -175,7 +278,7 @@ struct AppView: View {
                     .font(.system(size: 32, weight: .semibold))
                     .foregroundColor(MomentColor.ink.opacity(0.7))
 
-                Text("먼저 상대방과 연결해 주세요")
+                Text("먼저 상대방과 연결하거나 그룹에 참여해 주세요")
                     .font(MomentTypography.body)
                     .foregroundColor(MomentColor.ink)
 
@@ -268,7 +371,7 @@ struct AppView: View {
                 state: mainTabState.settingsState,
                 send: { viewStore.send(.settings($0)) },
                 currentUser: mainTabState.currentUser,
-                currentSpace: mainTabState.currentSpace
+                currentSpace: mainTabState.oneToOneSpace
             )
             .navigationTitle("설정") // 시안 06: 중앙 인라인 타이틀
             .navigationBarTitleDisplayMode(.inline)

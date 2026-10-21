@@ -44,6 +44,7 @@ let project = Project(
                 ModuleDependency.feature("FeedFeature"),
                 ModuleDependency.feature("ComposeFeature"),
                 ModuleDependency.feature("SettingsFeature"),
+                ModuleDependency.feature("GroupFeature"),
                 .package(product: "ComposableArchitecture"),
                 .package(product: "Dependencies"),
                 .target(name: "MomentWidget"),
