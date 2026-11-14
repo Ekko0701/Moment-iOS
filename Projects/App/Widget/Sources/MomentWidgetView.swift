@@ -59,66 +59,57 @@ struct MomentSmallWidgetView: View {
         if let imageFileName = snapshot.imageFileName,
            let imageData = WidgetMomentStore().loadCachedImage(fileName: imageFileName),
            let uiImage = UIImage(data: imageData) {
-            // Image background with text overlay
-            ZStack(alignment: .bottomLeading) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .scaledToFill()
+            VStack(alignment: .leading, spacing: 4) {
+                Text(snapshot.text ?? "")
+                    .font(.caption2)
+                    .fontWeight(.medium)
+                    .lineLimit(2)
+                    .foregroundColor(.white)
+                    .shadow(radius: 1)
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(snapshot.text ?? "")
+                HStack(spacing: 4) {
+                    Text(snapshot.authorNickname)
                         .font(.caption2)
-                        .fontWeight(.medium)
-                        .lineLimit(2)
-                        .foregroundColor(.white)
+                        .foregroundColor(.white.opacity(0.9))
                         .shadow(radius: 1)
 
-                    HStack(spacing: 4) {
-                        Text(snapshot.authorNickname)
-                            .font(.caption2)
-                            .foregroundColor(.white.opacity(0.9))
-                            .shadow(radius: 1)
+                    Spacer()
 
-                        Spacer()
-
-                        Text(snapshot.createdAt.relativeTimeString)
-                            .font(.caption2)
-                            .foregroundColor(.white.opacity(0.7))
-                            .shadow(radius: 1)
-                    }
+                    Text(snapshot.createdAt.relativeTimeString)
+                        .font(.caption2)
+                        .foregroundColor(.white.opacity(0.7))
+                        .shadow(radius: 1)
                 }
-                .padding(8)
             }
-            .clipped()
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+            .containerBackground(for: .widget) {
+                WidgetPhotoBackground(image: uiImage)
+            }
             .widgetURL(URL(string: "moment://moment/\(snapshot.spaceId)/\(snapshot.momentId)"))
         } else {
             // Text-only with pastel color block background based on hash
             let blockColor = getBlockColor(for: snapshot.momentId)
-            ZStack(alignment: .center) {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(blockColor)
+            VStack(alignment: .center, spacing: 4) {
+                Text(snapshot.text ?? "")
+                    .font(.caption2)
+                    .fontWeight(.medium)
+                    .lineLimit(2)
+                    .foregroundColor(.black)
 
-                VStack(alignment: .center, spacing: 4) {
-                    Text(snapshot.text ?? "")
+                HStack(spacing: 4) {
+                    Text(snapshot.authorNickname)
                         .font(.caption2)
-                        .fontWeight(.medium)
-                        .lineLimit(2)
-                        .foregroundColor(.black)
+                        .foregroundColor(.black.opacity(0.7))
 
-                    HStack(spacing: 4) {
-                        Text(snapshot.authorNickname)
-                            .font(.caption2)
-                            .foregroundColor(.black.opacity(0.7))
+                    Spacer()
 
-                        Spacer()
-
-                        Text(snapshot.createdAt.relativeTimeString)
-                            .font(.caption2)
-                            .foregroundColor(.black.opacity(0.6))
-                    }
+                    Text(snapshot.createdAt.relativeTimeString)
+                        .font(.caption2)
+                        .foregroundColor(.black.opacity(0.6))
                 }
-                .padding(8)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .containerBackground(blockColor, for: .widget)
             .widgetURL(URL(string: "moment://moment/\(snapshot.spaceId)/\(snapshot.momentId)"))
         }
     }
@@ -208,37 +199,32 @@ struct MomentMediumWidgetView: View {
         if let imageFileName = snapshot.imageFileName,
            let imageData = WidgetMomentStore().loadCachedImage(fileName: imageFileName),
            let uiImage = UIImage(data: imageData) {
-            // Image background with text overlay
-            ZStack(alignment: .bottomLeading) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .scaledToFill()
+            VStack(alignment: .leading, spacing: 6) {
+                Text(snapshot.text ?? "")
+                    .font(.callout)
+                    .fontWeight(.medium)
+                    .lineLimit(2)
+                    .foregroundColor(.white)
+                    .shadow(radius: 1)
 
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(snapshot.text ?? "")
-                        .font(.callout)
-                        .fontWeight(.medium)
-                        .lineLimit(2)
-                        .foregroundColor(.white)
+                HStack(spacing: 6) {
+                    Text(snapshot.authorNickname)
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.9))
                         .shadow(radius: 1)
 
-                    HStack(spacing: 6) {
-                        Text(snapshot.authorNickname)
-                            .font(.caption)
-                            .foregroundColor(.white.opacity(0.9))
-                            .shadow(radius: 1)
+                    Spacer()
 
-                        Spacer()
-
-                        Text(snapshot.createdAt.relativeTimeString)
-                            .font(.caption)
-                            .foregroundColor(.white.opacity(0.7))
-                            .shadow(radius: 1)
-                    }
+                    Text(snapshot.createdAt.relativeTimeString)
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.7))
+                        .shadow(radius: 1)
                 }
-                .padding(12)
             }
-            .clipped()
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+            .containerBackground(for: .widget) {
+                WidgetPhotoBackground(image: uiImage)
+            }
             .widgetURL(URL(string: "moment://moment/\(snapshot.spaceId)/\(snapshot.momentId)"))
         } else {
             // Text-only with gradient background
@@ -278,6 +264,24 @@ struct MomentMediumWidgetView: View {
             }
             .containerBackground(.fill.tertiary, for: .widget)
             .widgetURL(URL(string: "moment://moment/\(snapshot.spaceId)/\(snapshot.momentId)"))
+        }
+    }
+}
+
+/// 사진 모먼트 위젯의 배경. 아래쪽을 어둡게 깔아 흰 글자가 읽히게 한다.
+private struct WidgetPhotoBackground: View {
+    let image: UIImage
+
+    var body: some View {
+        ZStack {
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFill()
+            LinearGradient(
+                colors: [.clear, .black.opacity(0.45)],
+                startPoint: .center,
+                endPoint: .bottom
+            )
         }
     }
 }
