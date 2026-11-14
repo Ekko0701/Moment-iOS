@@ -126,6 +126,8 @@ public struct ComposeView: View {
                     .foregroundColor(MomentColor.ink)
                     .scrollContentBackground(.hidden)
                     .frame(minHeight: 180)
+                    .disabled(state.isUploading)
+                    .accessibilityLabel("오늘의 순간")
                 }
 
                 HStack {

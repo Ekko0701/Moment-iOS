@@ -56,3 +56,18 @@ func spaceSelectionLimitedToAvailable() {
     _ = ComposeFeature().reduce(into: &state, action: .spaceSelected(UUID()))
     #expect(state.selectedSpaceId == group.id)
 }
+
+@Test("공백·줄바꿈만 있는 글은 공유할 수 없다")
+func whitespaceOnlyCannotSubmit() {
+    var state = ComposeFeature.State()
+    state.text = "  \n\t "
+    #expect(state.canSubmit == false)
+    #expect(state.trimmedText.isEmpty)
+}
+
+@Test("500자를 넘는 입력은 넘는 부분만 잘린다")
+func overflowIsTruncated() {
+    var state = ComposeFeature.State()
+    _ = ComposeFeature().reduce(into: &state, action: .textChanged(String(repeating: "가", count: 520)))
+    #expect(state.characterCount == 500)
+}

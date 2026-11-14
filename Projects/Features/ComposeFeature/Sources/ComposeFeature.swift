@@ -27,8 +27,13 @@ public struct ComposeFeature {
             availableSpaces.first { $0.id == selectedSpaceId }
         }
 
+        /// 앞뒤 공백·줄바꿈을 뺀 글. 전송 가능 여부와 실제 전송 내용은 이것을 기준으로 한다
+        public var trimmedText: String {
+            text.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
         public var canSubmit: Bool {
-            (selectedImage != nil || !text.isEmpty) && !isUploading && !isProcessingPhoto
+            (selectedImage != nil || !trimmedText.isEmpty) && !isUploading && !isProcessingPhoto
         }
 
         public init() {}
@@ -98,9 +103,8 @@ public struct ComposeFeature {
                 return .none
 
             case .textChanged(let newText):
-                if newText.count <= state.maxCharacters {
-                    state.text = newText
-                }
+                // 500자를 넘는 입력·붙여넣기는 넘는 부분만 자른다
+                state.text = String(newText.prefix(state.maxCharacters))
                 return .none
 
             case .clearImage:
@@ -115,7 +119,7 @@ public struct ComposeFeature {
 
                 state.isUploading = true
 
-                return .run { [useCase = self.shareMomentUseCase, spaceId, text = state.text, imageData = state.selectedImage] send in
+                return .run { [useCase = self.shareMomentUseCase, spaceId, text = state.trimmedText, imageData = state.selectedImage] send in
                     do {
                         let moment = try await useCase.execute(
                             spaceId: spaceId,
