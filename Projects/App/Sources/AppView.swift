@@ -127,10 +127,17 @@ struct AppView: View {
                 .padding(.vertical, 10)
                 .glassCapsule()
                 .padding(.bottom, 68) // 플로팅 탭바(≈49pt) + 간격
+                .accessibilityElement(children: .combine)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
         .animation(.easeOut(duration: 0.25), value: mainTabState.showsShareConfirmation)
+        // 토스트는 포커스를 받지 않으므로 나타날 때 햅틱과 VoiceOver 안내로 함께 알린다
+        .onChange(of: mainTabState.showsShareConfirmation) { _, isShowing in
+            guard isShowing else { return }
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            UIAccessibility.post(notification: .announcement, argument: "순간을 보냈어요")
+        }
     }
 
     // MARK: - Home Tab
