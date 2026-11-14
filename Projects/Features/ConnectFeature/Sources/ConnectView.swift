@@ -105,10 +105,9 @@ public struct ConnectView: View {
     private var myCodeCard: some View {
         SurfaceCard {
             VStack(spacing: Spacing.sm) {
-                Text("MY CODE")
-                    .font(.system(size: 11, design: .default))
-                    .tracking(1.2)
-                    .foregroundColor(MomentColor.ink.opacity(0.5))
+                Text("내 코드")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(MomentColor.ink.opacity(0.65))
 
                 if let code = state.issuedCode {
                     Text(code)
@@ -176,10 +175,9 @@ public struct ConnectView: View {
 
     private var receivedInvitations: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text("RECEIVED")
-                .font(.system(size: 11, design: .default))
-                .tracking(1.2)
-                .foregroundColor(MomentColor.ink.opacity(0.5))
+            Text("받은 요청")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundColor(MomentColor.ink.opacity(0.65))
 
             ForEach(state.receivedInvitations.filter { $0.status == .pending }, id: \.id) { invitation in
                 SurfaceCard {

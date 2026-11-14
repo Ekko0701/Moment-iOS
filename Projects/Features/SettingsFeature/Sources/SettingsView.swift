@@ -187,10 +187,9 @@ public struct SettingsView: View {
     private func spaceCard(_ space: Space) -> some View {
         SurfaceCard {
             VStack(alignment: .leading, spacing: Spacing.sm) {
-                Text("MY SPACE")
-                    .font(.system(size: 11, design: .default))
-                    .tracking(1.2)
-                    .foregroundColor(MomentColor.ink.opacity(0.5))
+                Text("내 스페이스")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(MomentColor.ink.opacity(0.65))
 
                 HStack {
                     // 사용자가 붙인 이름이 있으면 그것을, 없으면 상대 이름 기반 폴백
@@ -277,10 +276,9 @@ public struct SettingsView: View {
     private var accountCard: some View {
         SurfaceCard {
             VStack(alignment: .leading, spacing: Spacing.sm) {
-                Text("ACCOUNT")
-                    .font(.system(size: 11, design: .default))
-                    .tracking(1.2)
-                    .foregroundColor(MomentColor.ink.opacity(0.5))
+                Text("계정")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(MomentColor.ink.opacity(0.65))
 
                 Button {
                     send(.logoutTapped)
