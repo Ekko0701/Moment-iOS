@@ -26,7 +26,14 @@ public struct FeedView: View {
             MomentColor.canvas.ignoresSafeArea()
 
             if state.moments.isEmpty {
-                emptyState
+                if state.isLoading {
+                    ProgressView()
+                        .tint(MomentColor.ink)
+                } else if state.failedPage == .first {
+                    failedState
+                } else {
+                    emptyState
+                }
             } else {
                 ScrollView {
                     LazyVStack(spacing: Spacing.md) {
@@ -41,9 +48,25 @@ public struct FeedView: View {
                         }
 
                         if state.nextCursor != nil {
-                            ProgressView()
+                            if state.failedPage == .next {
+                                Button {
+                                    send(.loadMore)
+                                } label: {
+                                    Label("이전 순간을 불러오지 못했어요 · 다시 시도", systemImage: "arrow.clockwise")
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundColor(MomentColor.ink.opacity(0.7))
+                                        .padding(.horizontal, Spacing.md)
+                                        .padding(.vertical, Spacing.sm)
+                                        .background(MomentColor.ink.opacity(0.06))
+                                        .clipShape(Capsule())
+                                }
+                                .buttonStyle(MomentPressStyle())
                                 .padding(.vertical, Spacing.md)
-                                .onAppear { send(.loadMore) }
+                            } else {
+                                ProgressView()
+                                    .padding(.vertical, Spacing.md)
+                                    .onAppear { send(.loadMore) }
+                            }
                         }
                     }
                     .padding(.horizontal, Spacing.lg)
@@ -51,10 +74,6 @@ public struct FeedView: View {
                 }
             }
 
-            if state.isLoading && state.moments.isEmpty {
-                ProgressView()
-                    .tint(MomentColor.ink)
-            }
         }
         .alert(
             state.error?.errorDescription ?? "오류가 발생했어요",
@@ -217,6 +236,27 @@ public struct FeedView: View {
     }
 
     // MARK: - 빈 상태
+
+    private var failedState: some View {
+        SurfaceCard {
+            VStack(spacing: Spacing.md) {
+                Image(systemName: "wifi.exclamationmark")
+                    .font(.system(size: 28, weight: .semibold))
+                    .foregroundColor(MomentColor.ink.opacity(0.7))
+
+                Text("순간을 불러오지 못했어요")
+                    .font(MomentTypography.body)
+                    .foregroundColor(MomentColor.ink)
+
+                MomentPillButton("다시 시도", style: .primary) {
+                    send(.onAppear)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(Spacing.lg)
+        }
+        .padding(.horizontal, Spacing.lg)
+    }
 
     private var emptyState: some View {
         SurfaceCard {

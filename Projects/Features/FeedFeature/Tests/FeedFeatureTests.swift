@@ -106,3 +106,40 @@ func failedReactionRollsBack() {
     #expect(state.moments[0] == original)
     #expect(state.error != nil)
 }
+
+@Test("다음 페이지가 실패하면 재시도 상태가 되고, 다시 요청하면 풀린다")
+func nextPageFailureAllowsRetry() {
+    let spaceId = UUID()
+    var state = FeedFeature.State()
+    state.selectedSpaceId = spaceId
+    state.moments = moments(20, in: spaceId)
+    state.nextCursor = "c1"
+    state.isLoadingMore = true
+
+    _ = FeedFeature().reduce(
+        into: &state,
+        action: .timelineResponse(spaceId: spaceId, page: .next, .failure(.unknown(code: "E", message: "x"))))
+    #expect(state.failedPage == .next)
+    #expect(state.isLoadingMore == false)
+    #expect(state.error == nil)
+    #expect(state.nextCursor == "c1")
+
+    _ = FeedFeature().reduce(into: &state, action: .loadMore)
+    #expect(state.failedPage == nil)
+    #expect(state.isLoadingMore)
+}
+
+@Test("첫 페이지가 실패하면 오류를 알리고 실패 상태를 남긴다")
+func firstPageFailureIsReported() {
+    let spaceId = UUID()
+    var state = FeedFeature.State()
+    state.selectedSpaceId = spaceId
+    state.isLoading = true
+
+    _ = FeedFeature().reduce(
+        into: &state,
+        action: .timelineResponse(spaceId: spaceId, page: .first, .failure(.unknown(code: "E", message: "x"))))
+    #expect(state.failedPage == .first)
+    #expect(state.error != nil)
+    #expect(state.isLoading == false)
+}

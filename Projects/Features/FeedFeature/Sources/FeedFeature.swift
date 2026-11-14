@@ -14,6 +14,8 @@ public struct FeedFeature {
         public var isLoadingMore = false
         public var selectedSpaceId: UUID? = nil
         public var error: DomainError? = nil
+        /// 마지막 타임라인 요청이 실패한 페이지. 화면은 이 값으로 재시도 버튼을 보여 준다
+        public var failedPage: Page? = nil
 
         public init() {}
     }
@@ -66,6 +68,7 @@ public struct FeedFeature {
                 }
                 state.isLoading = true
                 state.isLoadingMore = false
+                state.failedPage = nil
                 return Self.loadTimeline(spaceId: spaceId, cursor: nil, page: .first)
 
             case .refresh:
@@ -76,6 +79,7 @@ public struct FeedFeature {
                 state.isLoadingMore = false
                 state.moments = []
                 state.nextCursor = nil
+                state.failedPage = nil
                 return Self.loadTimeline(spaceId: spaceId, cursor: nil, page: .first)
 
             case .loadMore:
@@ -86,6 +90,7 @@ public struct FeedFeature {
                     return .none
                 }
                 state.isLoadingMore = true
+                state.failedPage = nil
                 return Self.loadTimeline(spaceId: spaceId, cursor: nextCursor, page: .next)
 
             case .reactionTapped(let momentId, let emoji):
@@ -126,13 +131,16 @@ public struct FeedFeature {
                     state.isLoadingMore = false
                 }
                 state.nextCursor = paginated.nextCursor
+                state.failedPage = nil
                 state.error = nil
                 return .none
 
-            case .timelineResponse(_, _, .failure(let error)):
+            case .timelineResponse(_, let page, .failure(let error)):
                 state.isLoading = false
                 state.isLoadingMore = false
-                state.error = error
+                state.failedPage = page
+                // 다음 페이지 실패는 목록 끝의 재시도 버튼으로 알린다
+                if page == .first { state.error = error }
                 return .none
 
             case .reactionResponse(_, _, _, .success):
