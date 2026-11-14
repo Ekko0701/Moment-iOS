@@ -122,7 +122,7 @@ struct MomentSmallWidgetView: View {
             Color(red: 0.937, green: 0.835, blue: 0.835),     // pink
             Color(red: 0.773, green: 0.690, blue: 0.957)      // lilac
         ]
-        let index = abs(momentId.hashValue) % colors.count
+        let index = Int(momentId.uuid.0) % colors.count
         return colors[index]
     }
 }
