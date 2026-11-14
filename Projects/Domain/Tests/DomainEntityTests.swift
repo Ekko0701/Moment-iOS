@@ -32,3 +32,30 @@ func momentWithTextOnly() {
     #expect(moment.text == "안녕")
     #expect(moment.reactions.isEmpty)
 }
+
+private func spaceCreated(at date: Date) -> Space {
+    Space(id: UUID(), type: .oneToOne, maxMembers: 2, status: "ACTIVE", members: [], createdAt: date)
+}
+
+private let seoul: Calendar = {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone(identifier: "Asia/Seoul")!
+    return calendar
+}()
+
+private func seoulDate(_ y: Int, _ m: Int, _ d: Int, _ h: Int, _ min: Int) -> Date {
+    seoul.date(from: DateComponents(year: y, month: m, day: d, hour: h, minute: min))!
+}
+
+@Test("함께한 날: 연결한 날은 1일차")
+func daysTogetherStartsAtOne() {
+    let created = seoulDate(2026, 11, 14, 9, 0)
+    #expect(spaceCreated(at: created).daysTogether(now: seoulDate(2026, 11, 14, 22, 0), calendar: seoul) == 1)
+}
+
+@Test("함께한 날: 24시간이 안 돼도 날짜가 바뀌면 하루 늘어난다")
+func daysTogetherCountsCalendarDays() {
+    let created = seoulDate(2026, 11, 14, 23, 50)
+    #expect(spaceCreated(at: created).daysTogether(now: seoulDate(2026, 11, 15, 0, 10), calendar: seoul) == 2)
+    #expect(spaceCreated(at: created).daysTogether(now: seoulDate(2026, 11, 24, 8, 0), calendar: seoul) == 11)
+}

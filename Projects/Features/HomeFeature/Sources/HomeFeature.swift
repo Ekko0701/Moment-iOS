@@ -26,8 +26,7 @@ public struct HomeFeature {
 
         /// 연결 후 함께한 일수 (연결 당일 = 1일차)
         public func daysTogether(in space: Space, now: Date = Date()) -> Int {
-            let days = Calendar.current.dateComponents([.day], from: space.createdAt, to: now).day ?? 0
-            return days + 1
+            space.daysTogether(now: now)
         }
     }
 

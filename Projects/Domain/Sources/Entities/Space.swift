@@ -54,3 +54,12 @@ public struct Space: Sendable, Equatable, Identifiable {
         return members.first { $0.id != myId }
     }
 }
+
+public extension Space {
+    /// 연결 후 함께한 일수. 연결한 날이 1일차이고, 달력 날짜가 바뀔 때마다 하나씩 늘어난다
+    func daysTogether(now: Date = Date(), calendar: Calendar = .current) -> Int {
+        let start = calendar.startOfDay(for: createdAt)
+        let today = calendar.startOfDay(for: now)
+        return (calendar.dateComponents([.day], from: start, to: today).day ?? 0) + 1
+    }
+}

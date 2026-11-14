@@ -200,8 +200,7 @@ public struct SettingsView: View {
 
                     Spacer()
 
-                    let daysConnected = Calendar.current.dateComponents([.day], from: space.createdAt, to: Date()).day ?? 0
-                    Text("D+\(daysConnected)")
+                    Text("D+\(space.daysTogether())")
                         .font(.system(size: 13, design: .default))
                         .foregroundColor(MomentColor.ink.opacity(0.55))
                 }
