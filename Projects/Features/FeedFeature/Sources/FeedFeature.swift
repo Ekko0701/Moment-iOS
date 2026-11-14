@@ -14,7 +14,6 @@ public struct FeedFeature {
         public var isLoadingMore = false
         public var selectedSpaceId: UUID? = nil
         public var error: DomainError? = nil
-        public var selectedReactions: [UUID: String] = [:]
 
         public init() {}
     }
@@ -24,14 +23,13 @@ public struct FeedFeature {
         case refresh
         case loadMore
         case reactionTapped(momentId: UUID, emoji: String)
-        case removeReaction(momentId: UUID)
         case momentTapped(Moment)
         case dismissError
 
         /// 요청한 스페이스와 페이지 종류를 함께 돌려받아, 그사이 스페이스가 바뀌었으면 응답을 버린다
         case timelineResponse(spaceId: UUID, page: Page, Result<PaginatedMoments, DomainError>)
-        case reactionResponse(momentId: UUID, emoji: String, Result<Void, DomainError>)
-        case removeReactionResponse(momentId: UUID, Result<Void, DomainError>)
+        /// applied: 낙관적으로 반영한 내 반응, previous: 실패하면 되돌릴 모먼트
+        case reactionResponse(momentId: UUID, applied: String?, previous: Moment, Result<Void, DomainError>)
     }
 
     /// 첫 페이지는 목록을 교체하고, 다음 페이지는 이어 붙인다
@@ -91,45 +89,21 @@ public struct FeedFeature {
                 return Self.loadTimeline(spaceId: spaceId, cursor: nextCursor, page: .next)
 
             case .reactionTapped(let momentId, let emoji):
-                let previousReaction = state.selectedReactions[momentId]
-
-                if previousReaction == emoji {
-                    state.selectedReactions.removeValue(forKey: momentId)
-                    return .run { [momentId] send in
-                        @Dependency(\.feedUseCase) var feedUseCase
-                        do {
-                            try await feedUseCase.removeReaction(from: momentId)
-                            await send(.removeReactionResponse(momentId: momentId, .success(())))
-                        } catch {
-                            let domainError = error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)
-                            await send(.removeReactionResponse(momentId: momentId, .failure(domainError)))
-                        }
-                    }
-                } else {
-                    state.selectedReactions[momentId] = emoji
-                    return .run { [momentId, emoji] send in
-                        @Dependency(\.feedUseCase) var feedUseCase
-                        do {
-                            try await feedUseCase.react(to: momentId, emoji: emoji)
-                            await send(.reactionResponse(momentId: momentId, emoji: emoji, .success(())))
-                        } catch {
-                            let domainError = error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)
-                            await send(.reactionResponse(momentId: momentId, emoji: emoji, .failure(domainError)))
-                        }
-                    }
-                }
-
-            case .removeReaction(let momentId):
-                state.selectedReactions.removeValue(forKey: momentId)
-                return .run { [momentId] send in
+                // 같은 반응을 다시 누르면 지우고, 다른 반응이면 바꾼다. 서버 응답 전에 선택과 개수를 먼저 반영한다
+                guard let index = state.moments.firstIndex(where: { $0.id == momentId }) else { return .none }
+                let previous = state.moments[index]
+                let applied: String? = previous.myReaction == emoji ? nil : emoji
+                state.moments[index] = previous.withMyReaction(applied)
+                return .run { send in
                     @Dependency(\.feedUseCase) var feedUseCase
-                    do {
-                        try await feedUseCase.removeReaction(from: momentId)
-                        await send(.removeReactionResponse(momentId: momentId, .success(())))
-                    } catch {
-                        let domainError = error as? DomainError ?? .unknown(code: "ERROR", message: error.localizedDescription)
-                        await send(.removeReactionResponse(momentId: momentId, .failure(domainError)))
-                    }
+                    let result: Result<Void, DomainError> = await Result {
+                        if let applied {
+                            try await feedUseCase.react(to: momentId, emoji: applied)
+                        } else {
+                            try await feedUseCase.removeReaction(from: momentId)
+                        }
+                    }.mapError { $0 as? DomainError ?? .unknown(code: "ERROR", message: $0.localizedDescription) }
+                    await send(.reactionResponse(momentId: momentId, applied: applied, previous: previous, result))
                 }
 
             case .momentTapped:
@@ -161,20 +135,16 @@ public struct FeedFeature {
                 state.error = error
                 return .none
 
-            case .reactionResponse(let momentId, let emoji, .success):
-                state.selectedReactions[momentId] = emoji
+            case .reactionResponse(_, _, _, .success):
                 state.error = nil
                 return .none
 
-            case .reactionResponse(_, _, .failure(let error)):
-                state.error = error
-                return .none
-
-            case .removeReactionResponse(_, .success):
-                state.error = nil
-                return .none
-
-            case .removeReactionResponse(_, .failure(let error)):
+            case .reactionResponse(let momentId, let applied, let previous, .failure(let error)):
+                // 그사이 다른 반응을 누르지 않았을 때만 되돌린다
+                if let index = state.moments.firstIndex(where: { $0.id == momentId }),
+                   state.moments[index].myReaction == applied {
+                    state.moments[index] = previous
+                }
                 state.error = error
                 return .none
             }

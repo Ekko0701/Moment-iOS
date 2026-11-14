@@ -131,9 +131,9 @@ public struct FeedView: View {
                     .multilineTextAlignment(.leading)
             }
 
-            // 리액션 칩 — 서버 왕복 전에도 즉시 반영되도록 낙관 상태(selectedReactions)를 우선한다
+            // 리액션 칩 — 누르면 서버 응답 전에 선택과 개수가 먼저 바뀐다
             if !moment.reactions.isEmpty {
-                let mine = state.selectedReactions[moment.id] ?? moment.myReaction
+                let mine = moment.myReaction
                 HStack(spacing: Spacing.xs) {
                     ForEach(moment.reactions, id: \.emoji) { reaction in
                         let isSelected = mine == reaction.emoji

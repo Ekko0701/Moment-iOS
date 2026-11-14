@@ -69,3 +69,40 @@ func loadMoreWaitsForFirstPage() {
 
     #expect(state.isLoadingMore == false)
 }
+
+private func reacted(my: String?, counts: [(String, Int)]) -> Moment {
+    Moment(id: UUID(), spaceId: UUID(), author: author, text: "글", createdAt: Date(),
+           myReaction: my, reactions: counts.map { ReactionCount(emoji: $0.0, count: $0.1) })
+}
+
+@Test("내 반응과 같은 이모지를 누르면 서버에서 받은 내 반응도 해제된다")
+func tappingMyReactionRemovesIt() {
+    var state = FeedFeature.State()
+    state.moments = [reacted(my: "❤️", counts: [("❤️", 2)])]
+    _ = FeedFeature().reduce(into: &state, action: .reactionTapped(momentId: state.moments[0].id, emoji: "❤️"))
+    #expect(state.moments[0].myReaction == nil)
+    #expect(state.moments[0].reactions == [ReactionCount(emoji: "❤️", count: 1)])
+}
+
+@Test("다른 이모지를 누르면 개수가 옮겨 가고, 처음 남기는 반응도 개수가 생긴다")
+func tappingOtherReactionMovesCount() {
+    var state = FeedFeature.State()
+    state.moments = [reacted(my: "❤️", counts: [("❤️", 1)]), reacted(my: nil, counts: [])]
+    _ = FeedFeature().reduce(into: &state, action: .reactionTapped(momentId: state.moments[0].id, emoji: "😂"))
+    #expect(state.moments[0].myReaction == "😂")
+    #expect(state.moments[0].reactions == [ReactionCount(emoji: "😂", count: 1)])
+    _ = FeedFeature().reduce(into: &state, action: .reactionTapped(momentId: state.moments[1].id, emoji: "👍"))
+    #expect(state.moments[1].reactions == [ReactionCount(emoji: "👍", count: 1)])
+}
+
+@Test("요청이 실패하면 반응을 누르기 전으로 되돌린다")
+func failedReactionRollsBack() {
+    var state = FeedFeature.State()
+    let original = reacted(my: nil, counts: [("😊", 1)])
+    state.moments = [original]
+    _ = FeedFeature().reduce(into: &state, action: .reactionTapped(momentId: original.id, emoji: "😊"))
+    _ = FeedFeature().reduce(into: &state, action: .reactionResponse(
+        momentId: original.id, applied: "😊", previous: original, .failure(.unknown(code: "E", message: "실패"))))
+    #expect(state.moments[0] == original)
+    #expect(state.error != nil)
+}
