@@ -22,7 +22,7 @@ public struct GroupCreateView: View {
                 VStack(spacing: Spacing.lg) {
                     if let created = state.created {
                         GroupCodeCard(
-                            title: "\(created.space.name ?? "그룹")을 만들었어요",
+                            title: created.space.name.map { "‘\($0)’ 그룹을 만들었어요" } ?? "그룹을 만들었어요",
                             message: "아래 코드를 함께할 사람에게 보내 주세요.",
                             code: created.inviteCode
                         )
