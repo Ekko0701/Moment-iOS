@@ -26,8 +26,19 @@ public struct AuthFeature {
         /// 이메일 폼 제출 가능 여부 — 클라이언트 1차 검증(서버가 최종 검증).
         public var canSubmitEmail: Bool {
             guard email.contains("@"), password.count >= 8 else { return false }
-            if mode == .emailSignup { return nickname.count >= 2 }
+            if mode == .emailSignup { return (2...12).contains(nickname.utf16.count) }
             return true
+        }
+
+        /// 제출할 수 없는 이유. 이미 입력을 시작한 칸만 보고, 빈 칸은 탓하지 않는다
+        public var submitBlockedReason: String? {
+            if !email.isEmpty, !email.contains("@") { return "이메일 형식을 확인해 주세요." }
+            if !password.isEmpty, password.count < 8 { return "비밀번호는 8자 이상이에요." }
+            if mode == .emailSignup, !nickname.isEmpty {
+                if nickname.utf16.count < 2 { return "닉네임은 2자 이상이에요." }
+                if nickname.utf16.count > 12 { return "닉네임은 12자까지 쓸 수 있어요." }
+            }
+            return nil
         }
     }
 

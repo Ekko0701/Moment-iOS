@@ -129,6 +129,8 @@ public struct AuthView: View {
                     set: { send(.passwordChanged($0)) }
                 ), isSecure: true, disablesAutocapitalization: true, contentType: .password)
 
+                submitHint
+
                 Button("비밀번호를 잊으셨나요?") {
                     showsResetNotice = true
                 }
@@ -184,6 +186,8 @@ public struct AuthView: View {
                     set: { send(.nicknameChanged($0)) }
                 ), contentType: .nickname)
 
+                submitHint
+
                 MomentPillButton(isLoading ? "처리 중…" : "가입하기", style: .primary,
                         minHeight: Self.ctaHeight) {
                     send(.emailSubmitTapped)
@@ -202,6 +206,19 @@ public struct AuthView: View {
     }
 
     // MARK: - 공용 컴포넌트
+
+    /// 버튼이 꺼져 있는 이유를 입력 칸 아래에 알려 준다
+    @ViewBuilder
+    private var submitHint: some View {
+        if let reason = state.submitBlockedReason {
+            Text(reason)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(MomentColor.ink.opacity(0.7))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, Spacing.xs)
+                .transition(.opacity)
+        }
+    }
 
     private func appleLoginButton(isGlass: Bool) -> some View {
         // 캡슐은 clipShape가 아니라 버튼 자체의 cornerRadius로 만든다 —

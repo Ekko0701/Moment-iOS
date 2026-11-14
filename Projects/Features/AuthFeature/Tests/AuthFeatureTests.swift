@@ -35,3 +35,26 @@ func modeChangeClearsError() {
     #expect(state.mode == .emailLogin)
     #expect(state.error == nil)
 }
+
+@Test("제출할 수 없는 이유는 입력을 시작한 칸만 알려 준다")
+func submitBlockedReason() {
+    var state = AuthFeature.State()
+    state.mode = .emailSignup
+    #expect(state.submitBlockedReason == nil)
+
+    state.email = "a"
+    #expect(state.submitBlockedReason == "이메일 형식을 확인해 주세요.")
+
+    state.email = "a@b.co"
+    state.password = "1234"
+    #expect(state.submitBlockedReason == "비밀번호는 8자 이상이에요.")
+
+    state.password = "12345678"
+    state.nickname = String(repeating: "가", count: 13)
+    #expect(state.submitBlockedReason == "닉네임은 12자까지 쓸 수 있어요.")
+    #expect(state.canSubmitEmail == false)
+
+    state.nickname = "동주"
+    #expect(state.submitBlockedReason == nil)
+    #expect(state.canSubmitEmail)
+}
