@@ -53,9 +53,14 @@ struct AppView: View {
                 handleDeepLink(url, viewStore: viewStore)
             }
             #if DEBUG
-            // 로컬↔운영 혼동 방지용 서버 배지 — DEBUG 빌드에서만 컴파일된다
-            .overlay(alignment: .topTrailing) {
+            // 로컬↔운영 혼동 방지용 서버 배지 — DEBUG 빌드에서만 컴파일된다.
+            // 툴바·탭 바를 가리지 않도록 홈 인디케이터 줄의 왼쪽 여백에 둔다
+            .overlay {
                 DebugServerBadge()
+                    .padding(.leading, 44)
+                    .padding(.bottom, 8)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                    .ignoresSafeArea()
             }
             #endif
         }
@@ -417,7 +422,6 @@ struct AppView: View {
                 .padding(.vertical, 3)
                 .background(MomentColor.glassFill)
                 .clipShape(Capsule())
-                .padding(.trailing, 6)
                 .allowsHitTesting(false)
         }
     }
