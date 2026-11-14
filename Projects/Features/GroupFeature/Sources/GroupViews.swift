@@ -388,7 +388,7 @@ public struct GroupSettingsView: View {
                      : "나가도 내가 올린 모먼트는 그룹에 남아요.")
             }
         }
-        .navigationTitle(state.space.name ?? "그룹 설정")
+        .navigationTitle("그룹 설정")
         .navigationBarTitleDisplayMode(.inline)
         .disabled(state.isWorking)
         // 나가기·종료·내보내기 처리 중에는 뒤로 가지 못하게 해 결과가 버려지지 않게 한다
