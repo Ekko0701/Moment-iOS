@@ -3,6 +3,10 @@ import ProjectDescriptionHelpers
 
 let project = Project(
     name: "App",
+    options: .options(
+        defaultKnownRegions: ["ko", "Base"],
+        developmentRegion: "ko"
+    ),
     packages: [
         MomentPackage.composableArchitecture,
         MomentPackage.dependencies,
@@ -22,7 +26,7 @@ let project = Project(
                 with: [
                     "UIMainStoryboardFile": "",
                     "UILaunchStoryboardName": "LaunchScreen",
-                    "NSLocalNetworkUsageDescription": "To communicate with the Moment server",
+                    "NSLocalNetworkUsageDescription": "개발 서버와 통신하려면 로컬 네트워크 접근이 필요해요.",
                     "NSBonjourServices": ["_http._tcp"],
                     // 로컬 개발 서버(http://localhost:8080) 연결 허용.
                     // ATS를 전역으로 끄지 않고 루프백/로컬 네트워킹만 예외 처리한다.
