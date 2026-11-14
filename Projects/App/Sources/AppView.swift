@@ -383,6 +383,19 @@ struct AppView: View {
                 _ gestureRecognizer: UIGestureRecognizer,
                 shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
             ) -> Bool { true }
+
+            // 텍스트 입력 뷰 안의 터치는 받지 않는다 — 입력 중 커서 이동·선택·붙여넣기 메뉴가 키보드를 닫지 않게
+            func gestureRecognizer(
+                _ gestureRecognizer: UIGestureRecognizer,
+                shouldReceive touch: UITouch
+            ) -> Bool {
+                var view = touch.view
+                while let current = view {
+                    if current is UITextInput { return false }
+                    view = current.superview
+                }
+                return true
+            }
         }
     }
 
