@@ -131,33 +131,7 @@ public struct FeedView: View {
                     .multilineTextAlignment(.leading)
             }
 
-            // 리액션 칩 — 누르면 서버 응답 전에 선택과 개수가 먼저 바뀐다
-            if !moment.reactions.isEmpty {
-                let mine = moment.myReaction
-                HStack(spacing: Spacing.xs) {
-                    ForEach(moment.reactions, id: \.emoji) { reaction in
-                        let isSelected = mine == reaction.emoji
-                        Button {
-                            send(.reactionTapped(momentId: moment.id, emoji: reaction.emoji))
-                        } label: {
-                            HStack(spacing: 4) {
-                                Text(reaction.emoji)
-                                    .font(.system(size: 13))
-                                Text("\(reaction.count)")
-                                    .font(.system(size: 12, weight: .medium))
-                            }
-                            .padding(.horizontal, Spacing.sm)
-                            .padding(.vertical, 6)
-                            .background(isSelected ? MomentColor.ink.opacity(0.85) : MomentColor.ink.opacity(0.06))
-                            .foregroundColor(isSelected ? MomentColor.inverseInk : MomentColor.ink)
-                            .clipShape(Capsule())
-                        }
-                        .buttonStyle(MomentPressStyle())
-                    }
-                }
-                // 선택 하이라이트가 스냅 없이 부드럽게 이동
-                .animation(.easeOut(duration: 0.15), value: mine)
-            }
+            reactionRow(moment)
         }
         .padding(Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -173,6 +147,73 @@ public struct FeedView: View {
             )
             .stroke(MomentColor.surfaceStroke, lineWidth: 1)
         )
+    }
+
+    // MARK: - 리액션
+
+    /// 리액션 칩과 반응 추가 메뉴. 누르면 서버 응답 전에 선택과 개수가 먼저 바뀐다.
+    private func reactionRow(_ moment: Moment) -> some View {
+        let mine = moment.myReaction
+        return HStack(spacing: Spacing.xs) {
+            ForEach(moment.reactions, id: \.emoji) { reaction in
+                let isSelected = mine == reaction.emoji
+                Button {
+                    send(.reactionTapped(momentId: moment.id, emoji: reaction.emoji))
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(reaction.emoji)
+                            .font(.system(size: 13))
+                        Text("\(reaction.count)")
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                    .padding(.horizontal, Spacing.sm)
+                    .padding(.vertical, 6)
+                    .background(isSelected ? MomentColor.ink.opacity(0.85) : MomentColor.ink.opacity(0.06))
+                    .foregroundColor(isSelected ? MomentColor.inverseInk : MomentColor.ink)
+                    .clipShape(Capsule())
+                }
+                .buttonStyle(MomentPressStyle())
+                .accessibilityLabel("\(reaction.emoji) \(reaction.count)개")
+                .accessibilityValue(isSelected ? "내가 남긴 반응" : "")
+                .accessibilityHint(isSelected ? "누르면 반응을 취소해요" : "누르면 이 반응을 남겨요")
+                .accessibilityAddTraits(isSelected ? .isSelected : [])
+            }
+
+            addReactionMenu(moment)
+        }
+        // 선택 하이라이트가 스냅 없이 부드럽게 이동
+        .animation(.easeOut(duration: 0.15), value: mine)
+    }
+
+    private func addReactionMenu(_ moment: Moment) -> some View {
+        Menu {
+            ForEach(Moment.allowedReactions, id: \.self) { emoji in
+                Button {
+                    send(.reactionTapped(momentId: moment.id, emoji: emoji))
+                } label: {
+                    if moment.myReaction == emoji {
+                        Label(emoji, systemImage: "checkmark")
+                    } else {
+                        Text(emoji)
+                    }
+                }
+            }
+        } label: {
+            Image(systemName: "face.smiling")
+                .font(.system(size: 14, weight: .medium))
+                .overlay(alignment: .topTrailing) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 7, weight: .bold))
+                        .offset(x: 4, y: -2)
+                }
+                .foregroundColor(MomentColor.ink.opacity(0.6))
+                .padding(.horizontal, Spacing.sm)
+                .padding(.vertical, 6)
+                .background(MomentColor.ink.opacity(0.06))
+                .clipShape(Capsule())
+                .contentShape(Capsule())
+        }
+        .accessibilityLabel(moment.myReaction == nil ? "반응 남기기" : "반응 바꾸기")
     }
 
     // MARK: - 빈 상태
