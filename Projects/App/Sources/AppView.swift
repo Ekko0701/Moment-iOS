@@ -249,7 +249,7 @@ struct AppView: View {
             )
         }
         .background(MomentColor.canvas.ignoresSafeArea())
-        .navigationTitle(detail.space.name ?? "그룹")
+        .navigationTitle(detail.space.displayName(myUserId: mainTabState.currentUser?.id))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
@@ -296,7 +296,11 @@ struct AppView: View {
                 if mainTabState.spaces.isEmpty {
                     connectRequiredView(viewStore)
                 } else {
-                    ComposeView(state: mainTabState.composeState, send: { viewStore.send(.compose($0)) })
+                    ComposeView(
+                        state: mainTabState.composeState,
+                        send: { viewStore.send(.compose($0)) },
+                        currentUserId: mainTabState.currentUser?.id
+                    )
                 }
             }
             .navigationTitle("보내기") // 시안 05: 중앙 인라인 타이틀

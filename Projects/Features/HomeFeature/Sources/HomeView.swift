@@ -126,14 +126,7 @@ public struct HomeView: View {
     }
 
     private func spaceTitle(_ space: Space) -> String {
-        // 사용자가 붙인 이름이 우선 — 1:1은 없으면 상대 이름 기반 폴백
-        if let name = space.name, !name.isEmpty {
-            return name
-        }
-        if let partner = state.partner(in: space) {
-            return "\(partner.nickname)님과의 스페이스"
-        }
-        return space.isGroup ? "그룹" : "우리 둘의 스페이스"
+        space.displayName(myUserId: state.currentUser?.id)
     }
 
     // MARK: - 모먼트 콘텐츠 (사진 / 텍스트 / 빈 상태 분기)

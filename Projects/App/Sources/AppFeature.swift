@@ -678,7 +678,7 @@ private func syncWidget(spaces: [Space], myUserId: UUID?) async {
     // 전체 상태를 비워 두면 위젯은 스페이스별 상태를 읽는다(로그인·연결 필요가 아님을 뜻함)
     store.saveState(.empty)
     store.saveSpaces(spaces.map { space in
-        WidgetSpaceInfo(id: space.id, name: widgetSpaceName(space, myUserId: myUserId), isGroup: space.isGroup)
+        WidgetSpaceInfo(id: space.id, name: space.displayName(myUserId: myUserId), isGroup: space.isGroup)
     })
 
     var keptImages = Set<String>()
@@ -705,12 +705,6 @@ private func syncWidget(spaces: [Space], myUserId: UUID?) async {
     store.removeSpaceStates(except: Set(spaces.map(\.id)))
     store.pruneImageCache(keeping: keptImages)
     WidgetCenter.shared.reloadAllTimelines()
-}
-
-private func widgetSpaceName(_ space: Space, myUserId: UUID?) -> String {
-    if let name = space.name, !name.isEmpty { return name }
-    if let partner = space.partner(excluding: myUserId) { return "\(partner.nickname)님과의 스페이스" }
-    return space.isGroup ? "그룹" : "1:1 스페이스"
 }
 
 /// 모먼트 사진을 내려받아 위젯 캐시에 저장하고 파일명을 돌려준다.

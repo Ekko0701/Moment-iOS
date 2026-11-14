@@ -9,14 +9,20 @@ import Domain
 public struct ComposeView: View {
     let state: ComposeFeature.State
     let send: (ComposeFeature.Action) -> Void
+    let currentUserId: UUID?
 
     // PhotosPickerItem은 시스템 피커의 선택 핸들일 뿐이라 리듀서 상태로 올리지 않는다.
     // Data 로드가 끝나는 즉시 photoPicked로 넘기고 nil로 되돌린다.
     @State private var pickerItem: PhotosPickerItem?
 
-    public init(state: ComposeFeature.State, send: @escaping (ComposeFeature.Action) -> Void) {
+    public init(
+        state: ComposeFeature.State,
+        send: @escaping (ComposeFeature.Action) -> Void,
+        currentUserId: UUID? = nil
+    ) {
         self.state = state
         self.send = send
+        self.currentUserId = currentUserId
     }
 
     public var body: some View {
@@ -98,8 +104,7 @@ public struct ComposeView: View {
     }
 
     private func destinationTitle(_ space: Space) -> String {
-        if let name = space.name, !name.isEmpty { return name }
-        return space.isGroup ? "그룹" : "1:1 스페이스"
+        space.displayName(myUserId: currentUserId)
     }
 
     // MARK: - 에디터 카드

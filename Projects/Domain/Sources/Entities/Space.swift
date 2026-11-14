@@ -63,3 +63,13 @@ public extension Space {
         return (calendar.dateComponents([.day], from: start, to: today).day ?? 0) + 1
     }
 }
+
+public extension Space {
+    /// 화면에 보일 이름. 붙인 이름이 우선이고, 없으면 1:1은 상대 닉네임, 그룹은 "그룹"으로 대신한다.
+    func displayName(myUserId: UUID?) -> String {
+        if let name = name?.trimmingCharacters(in: .whitespaces), !name.isEmpty { return name }
+        if isGroup { return "그룹" }
+        if let partner = partner(excluding: myUserId) { return "\(partner.nickname)님과의 스페이스" }
+        return "우리 둘의 스페이스"
+    }
+}

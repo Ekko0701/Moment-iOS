@@ -220,13 +220,8 @@ public struct SettingsView: View {
         }
     }
 
-    /// 공간 이름 표시 규칙 — 홈(HomeView.spaceTitle)과 동일하게 맞춘다
     private func spaceTitle(_ space: Space) -> String {
-        if let name = space.name, !name.isEmpty { return name }
-        if let partner = space.members.first(where: { $0.id != currentUser?.id }) {
-            return "\(partner.nickname)님과의 스페이스"
-        }
-        return "우리 둘의 스페이스"
+        space.displayName(myUserId: currentUser?.id)
     }
 
     // MARK: - 스페이스 이름 변경 시트

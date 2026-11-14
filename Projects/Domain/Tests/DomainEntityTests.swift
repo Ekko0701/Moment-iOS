@@ -59,3 +59,23 @@ func daysTogetherCountsCalendarDays() {
     #expect(spaceCreated(at: created).daysTogether(now: seoulDate(2026, 11, 15, 0, 10), calendar: seoul) == 2)
     #expect(spaceCreated(at: created).daysTogether(now: seoulDate(2026, 11, 24, 8, 0), calendar: seoul) == 11)
 }
+
+@Test("스페이스 표시 이름: 붙인 이름 → 1:1 상대 닉네임 → 기본 이름")
+func spaceDisplayName() {
+    let me = UserProfile(id: UUID(), handle: "m_me", nickname: "동주")
+    let partner = UserProfile(id: UUID(), handle: "m_p", nickname: "지은")
+    let named = Space(id: UUID(), type: .oneToOne, name: "우리집", maxMembers: 2, status: "ACTIVE",
+                      members: [me, partner], createdAt: Date())
+    #expect(named.displayName(myUserId: me.id) == "우리집")
+
+    let unnamed = Space(id: UUID(), type: .oneToOne, name: "  ", maxMembers: 2, status: "ACTIVE",
+                        members: [me, partner], createdAt: Date())
+    #expect(unnamed.displayName(myUserId: me.id) == "지은님과의 스페이스")
+
+    let alone = Space(id: UUID(), type: .oneToOne, maxMembers: 2, status: "ACTIVE", members: [], createdAt: Date())
+    #expect(alone.displayName(myUserId: me.id) == "우리 둘의 스페이스")
+
+    let group = Space(id: UUID(), type: .group, maxMembers: 6, status: "ACTIVE", members: [me, partner],
+                      createdAt: Date())
+    #expect(group.displayName(myUserId: me.id) == "그룹")
+}
