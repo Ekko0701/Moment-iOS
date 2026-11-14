@@ -8,7 +8,7 @@ public struct ConnectUseCase: Sendable {
 
     public init() {}
 
-    public func issueCode() async throws -> String {
+    public func issueCode() async throws -> InviteCode {
         try await spaceRepository.issueInviteCode()
     }
 

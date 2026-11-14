@@ -10,6 +10,7 @@ public struct ConnectFeature {
     public struct State: Equatable {
         public var selectedTab: Tab = .code
         public var issuedCode: String? = nil
+        public var issuedCodeExpiresAt: Date? = nil
         public var codeInput: String = ""
         public var searchHandle: String = ""
         public var searchResult: UserProfile? = nil
@@ -38,7 +39,7 @@ public struct ConnectFeature {
         case respondTapped(id: UUID, action: InvitationAction)
         case dismissError
 
-        case codeResponse(Result<String, DomainError>)
+        case codeResponse(Result<InviteCode, DomainError>)
         case submitCodeResponse(Result<Invitation, DomainError>)
         case searchResponse(Result<UserProfile?, DomainError>)
         case invitationsResponse(Result<(received: [Invitation], sent: [Invitation]), DomainError>)
@@ -164,7 +165,8 @@ public struct ConnectFeature {
                 return .none
 
             case .codeResponse(.success(let code)):
-                state.issuedCode = code
+                state.issuedCode = code.code
+                state.issuedCodeExpiresAt = code.expiresAt
                 state.isLoading = false
                 state.error = nil
                 return .none

@@ -465,7 +465,7 @@ struct GroupCodeCard: View {
                     Label("코드 보내기", systemImage: "square.and.arrow.up")
                         .font(.footnote.weight(.medium))
                 }
-                Text("7일 동안 쓸 수 있어요. 코드로 요청하면 방장이 수락해야 들어와요")
+                Text("\(code.expiresAt.formatted(date: .abbreviated, time: .shortened))까지 사용할 수 있어요. 코드로 요청하면 방장이 수락해야 들어와요.")
                     .font(MomentTypography.caption)
                     .foregroundColor(MomentColor.ink.opacity(0.5))
             }

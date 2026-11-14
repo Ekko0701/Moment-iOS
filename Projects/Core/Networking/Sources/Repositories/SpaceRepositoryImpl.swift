@@ -24,14 +24,14 @@ public final class SpaceRepositoryImpl: SpaceRepositoryProtocol {
         try await apiClient.requestVoid(endpoint)
     }
 
-    public func issueInviteCode() async throws -> String {
+    public func issueInviteCode() async throws -> InviteCode {
         let endpoint = InvitationEndpoints.issueInviteCode()
         struct InviteCodeResponse: Decodable {
             let code: String
-            let expiresAt: String
+            let expiresAt: Date
         }
         let dto: InviteCodeResponse = try await apiClient.request(endpoint)
-        return dto.code
+        return InviteCode(code: dto.code, expiresAt: dto.expiresAt)
     }
 
     public func sendInvitation(toUserId: UUID) async throws -> Invitation {

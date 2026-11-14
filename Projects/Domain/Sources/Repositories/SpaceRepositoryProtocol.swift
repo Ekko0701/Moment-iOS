@@ -5,7 +5,7 @@ public protocol SpaceRepositoryProtocol: Sendable {
     /// 공간 이름 변경. nil/공백을 넘기면 이름 없음 상태로 되돌아간다
     func rename(spaceId: UUID, name: String?) async throws
     func leave(spaceId: UUID) async throws
-    func issueInviteCode() async throws -> String
+    func issueInviteCode() async throws -> InviteCode
     func sendInvitation(toUserId: UUID) async throws -> Invitation
     func sendInvitationByCode(code: String) async throws -> Invitation
     func invitations(direction: InvitationDirection) async throws -> [Invitation]

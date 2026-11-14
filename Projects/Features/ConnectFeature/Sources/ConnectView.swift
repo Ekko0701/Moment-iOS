@@ -117,10 +117,11 @@ public struct ConnectView: View {
                         .foregroundColor(MomentColor.ink)
                         .textSelection(.enabled)
 
-                    Text("VALID FOR 24H")
-                        .font(.system(size: 11, design: .default))
-                        .tracking(1.0)
-                        .foregroundColor(MomentColor.ink.opacity(0.5))
+                    if let expiresAt = state.issuedCodeExpiresAt {
+                        Text("\(expiresAt.formatted(date: .abbreviated, time: .shortened))까지 사용할 수 있어요")
+                            .font(.system(size: 12, design: .default))
+                            .foregroundColor(MomentColor.ink.opacity(0.6))
+                    }
 
                     Button {
                         UIPasteboard.general.string = code
@@ -233,6 +234,7 @@ public struct ConnectView: View {
     let state: ConnectFeature.State = {
         var s = ConnectFeature.State()
         s.issuedCode = "YUTLGA"
+        s.issuedCodeExpiresAt = Date().addingTimeInterval(24 * 60 * 60)
         return s
     }()
     ConnectView(state: state, send: { _ in }, onRefresh: {})
