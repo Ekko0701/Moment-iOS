@@ -394,24 +394,33 @@ public struct GroupSettingsView: View {
         // 나가기·종료·내보내기 처리 중에는 뒤로 가지 못하게 해 결과가 버려지지 않게 한다
         .navigationBarBackButtonHidden(state.isWorking)
         .onAppear { send(.onAppear) }
-        .confirmationDialog("그룹에서 나갈까요?", isPresented: Binding(
+        // 되돌리기 어려운 동작은 취소 버튼이 항상 보이는 alert로 확인한다
+        .alert("그룹에서 나갈까요?", isPresented: Binding(
             get: { state.showLeaveConfirm }, set: { if !$0 { send(.cancelConfirm) } }
-        ), titleVisibility: .visible) {
+        )) {
             Button("나가기", role: .destructive) { send(.confirmLeave) }
+            Button("취소", role: .cancel) { send(.cancelConfirm) }
+        } message: {
+            Text(state.isOwner
+                 ? "방장이 나가면 가장 먼저 들어온 멤버가 방장이 돼요."
+                 : "나가도 내가 올린 모먼트는 그룹에 남아요.")
         }
-        .confirmationDialog("그룹을 종료할까요? 모든 멤버가 나가요.", isPresented: Binding(
+        .alert("그룹을 종료할까요?", isPresented: Binding(
             get: { state.showDeleteConfirm }, set: { if !$0 { send(.cancelConfirm) } }
-        ), titleVisibility: .visible) {
+        )) {
             Button("그룹 종료", role: .destructive) { send(.confirmDelete) }
+            Button("취소", role: .cancel) { send(.cancelConfirm) }
+        } message: {
+            Text("모든 멤버가 그룹에서 나가요. 되돌릴 수 없어요.")
         }
-        .confirmationDialog(
+        .alert(
             "\(state.memberToRemove?.user.nickname ?? "")님을 내보낼까요?",
             isPresented: Binding(
                 get: { state.memberToRemove != nil }, set: { if !$0 { send(.cancelRemoveMember) } }
-            ),
-            titleVisibility: .visible
+            )
         ) {
             Button("내보내기", role: .destructive) { send(.confirmRemoveMember) }
+            Button("취소", role: .cancel) { send(.cancelRemoveMember) }
         }
         .errorAlert(state.error) { send(.dismissError) }
     }
