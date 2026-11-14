@@ -69,7 +69,7 @@ public struct ConnectView: View {
                     }
 
                     // 받은 초대
-                    if !state.receivedInvitations.isEmpty {
+                    if !pendingReceived.isEmpty {
                         receivedInvitations
                     }
 
@@ -173,13 +173,18 @@ public struct ConnectView: View {
 
     // MARK: - 받은 초대
 
+    /// 아직 응답하지 않은 받은 요청. 수락·거절·만료된 요청은 보여주지 않는다
+    private var pendingReceived: [Invitation] {
+        state.receivedInvitations.filter { $0.status == .pending }
+    }
+
     private var receivedInvitations: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             Text("받은 요청")
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundColor(MomentColor.ink.opacity(0.65))
 
-            ForEach(state.receivedInvitations.filter { $0.status == .pending }, id: \.id) { invitation in
+            ForEach(pendingReceived, id: \.id) { invitation in
                 SurfaceCard {
                     HStack(spacing: Spacing.md) {
                         Circle()
