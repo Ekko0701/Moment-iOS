@@ -25,7 +25,8 @@ let project = Project(
             infoPlist: .extendingDefault(
                 with: [
                     "UIMainStoryboardFile": "",
-                    "UILaunchStoryboardName": "LaunchScreen",
+                    // 스토리보드 없이 시스템 배경색(라이트 흰색, 다크 검정)으로 시작 화면을 그린다
+                    "UILaunchScreen": [:],
                     "NSLocalNetworkUsageDescription": "개발 서버와 통신하려면 로컬 네트워크 접근이 필요해요.",
                     "NSBonjourServices": ["_http._tcp"],
                     // 로컬 개발 서버(http://localhost:8080) 연결 허용.
