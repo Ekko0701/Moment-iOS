@@ -45,6 +45,7 @@ public struct GroupCreateView: View {
                                     .foregroundColor(MomentColor.ink.opacity(0.5))
                                     .frame(maxWidth: .infinity, alignment: .trailing)
                             }
+                            .padding(Spacing.md)
                         }
                         MomentPillButton("만들기", style: .primary, minHeight: 54) { send(.submitTapped) }
                             .disabled(!state.canSubmit)
@@ -104,6 +105,7 @@ public struct GroupJoinView: View {
                                     .multilineTextAlignment(.center)
                             }
                             .frame(maxWidth: .infinity)
+                            .padding(Spacing.md)
                         }
                         MomentPillButton("확인", style: .primary, minHeight: 54) { send(.doneTapped) }
                     } else {
@@ -126,6 +128,8 @@ public struct GroupJoinView: View {
                                     .font(MomentTypography.caption)
                                     .foregroundColor(MomentColor.ink.opacity(0.5))
                             }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(Spacing.md)
                         }
                         MomentPillButton("참여 요청", style: .primary, minHeight: 54) { send(.submitTapped) }
                             .disabled(!state.canSubmit)
@@ -466,6 +470,7 @@ struct GroupCodeCard: View {
                     .foregroundColor(MomentColor.ink.opacity(0.5))
             }
             .frame(maxWidth: .infinity)
+            .padding(Spacing.md)
         }
     }
 }
