@@ -19,7 +19,29 @@ public struct SettingsFeature {
         public var showSpaceNameSheet = false
 
         public init() {}
+
+        public var trimmedNickname: String { nicknameInput.trimmingCharacters(in: .whitespaces) }
+        public var trimmedSpaceName: String { spaceNameInput.trimmingCharacters(in: .whitespaces) }
+
+        /// 서버 규칙(2~12자)을 만족하고 지금 닉네임과 다를 때만 저장할 수 있다
+        public var canSubmitNickname: Bool {
+            let length = trimmedNickname.utf16.count
+            return !isLoading
+                && SettingsFeature.nicknameLength.contains(length)
+                && trimmedNickname != userProfile?.nickname
+        }
+
+        /// 비우기(기본 이름으로 되돌리기)를 포함해 최대 10자이고, 지금 이름과 다를 때만 저장할 수 있다
+        public var canSubmitSpaceName: Bool {
+            !isLoading
+                && trimmedSpaceName.utf16.count <= SettingsFeature.spaceNameMaxLength
+                && trimmedSpaceName != (currentSpace?.name ?? "")
+        }
     }
+
+    /// 서버 검증과 같은 길이 규칙. 서버는 UTF-16 길이로 센다.
+    public static let nicknameLength = 2...12
+    public static let spaceNameMaxLength = 10
 
     public enum Action {
         case onAppear
@@ -73,15 +95,12 @@ public struct SettingsFeature {
                 }
 
             case .nicknameChanged(let newNickname):
-                state.nicknameInput = newNickname
+                state.nicknameInput = String(newNickname.prefix(Self.nicknameLength.upperBound))
                 return .none
 
             case .nicknameSubmitTapped:
-                let nickname = state.nicknameInput.trimmingCharacters(in: .whitespaces)
-                guard !nickname.isEmpty else {
-                    state.error = .unknown(code: "ERROR", message: "닉네임을 입력해 주세요.")
-                    return .none
-                }
+                guard state.canSubmitNickname else { return .none }
+                let nickname = state.trimmedNickname
 
                 state.isLoading = true
                 return .run { [nickname] send in
@@ -106,7 +125,7 @@ public struct SettingsFeature {
                 return .none
 
             case .spaceNameChanged(let newName):
-                state.spaceNameInput = newName
+                state.spaceNameInput = String(newName.prefix(Self.spaceNameMaxLength))
                 return .none
 
             case .showSpaceNameEditSheet:
@@ -120,9 +139,9 @@ public struct SettingsFeature {
                 return .none
 
             case .spaceNameSubmitTapped:
-                guard let spaceId = state.currentSpace?.id else { return .none }
+                guard let spaceId = state.currentSpace?.id, state.canSubmitSpaceName else { return .none }
                 // 공백만 입력하면 이름을 지우는 것으로 본다 (서버가 null로 정규화)
-                let trimmed = state.spaceNameInput.trimmingCharacters(in: .whitespaces)
+                let trimmed = state.trimmedSpaceName
                 let newName: String? = trimmed.isEmpty ? nil : trimmed
 
                 state.isLoading = true

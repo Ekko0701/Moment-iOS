@@ -53,15 +53,12 @@ public struct SettingsView: View {
         .onAppear {
             send(.onAppear)
         }
-        .alert(
-            state.error?.errorDescription ?? "오류가 발생했어요",
-            isPresented: Binding(
-                get: { state.error != nil },
-                set: { if !$0 { send(.dismissError) } }
-            )
-        ) {
-            Button("확인", role: .cancel) {}
-        }
+        // 시트가 떠 있는 동안의 오류는 시트 쪽 alert가 보여 준다
+        .modifier(ErrorAlert(
+            error: state.error,
+            isActive: !state.showNicknameSheet && !state.showSpaceNameSheet,
+            dismiss: { send(.dismissError) }
+        ))
         // 연결 해제 2단계 확인 (F-02-07) — Feature의 showDisconnectConfirm을 소비해야
         // confirmDisconnect가 발행되어 실제 해제가 실행된다.
         // alert를 쓰는 이유: iOS 26의 confirmationDialog는 출처에 앵커된 팝오버로 렌더되면서
@@ -111,30 +108,24 @@ public struct SettingsView: View {
     // MARK: - 닉네임 변경 시트
 
     private var nicknameSheet: some View {
-        ZStack {
-            MomentColor.canvas.ignoresSafeArea()
-
-            VStack(spacing: Spacing.md) {
-                Text("닉네임 변경")
-                    .font(.system(size: 17, weight: .bold))
-                    .foregroundColor(MomentColor.ink)
-                    .padding(.top, Spacing.lg)
-
-                MomentTextField("닉네임 (2~12자)", text: Binding(
-                    get: { state.nicknameInput },
-                    set: { send(.nicknameChanged($0)) }
-                ))
-
-                MomentPillButton(state.isLoading ? "저장 중…" : "저장", style: .primary) {
-                    send(.nicknameSubmitTapped)
-                }
-                .disabled(state.isLoading)
-
-                Spacer()
-            }
-            .padding(.horizontal, Spacing.lg)
-        }
-        .presentationDetents([.height(240)])
+        EditSheet(
+            title: "닉네임 변경",
+            placeholder: "닉네임",
+            text: Binding(
+                get: { state.nicknameInput },
+                set: { send(.nicknameChanged($0)) }
+            ),
+            contentType: .nickname,
+            countText: "\(state.trimmedNickname.count) / \(SettingsFeature.nicknameLength.upperBound)",
+            hint: "2~12자로 입력해 주세요.",
+            isLoading: state.isLoading,
+            canSubmit: state.canSubmitNickname,
+            error: state.error,
+            onCancel: { send(.hideNicknameEditSheet) },
+            onSubmit: { send(.nicknameSubmitTapped) },
+            onDismissError: { send(.dismissError) }
+        )
+        .presentationDetents([.height(280)])
     }
 
     // MARK: - 프로필 카드
@@ -241,33 +232,23 @@ public struct SettingsView: View {
     // MARK: - 스페이스 이름 변경 시트
 
     private var spaceNameSheet: some View {
-        ZStack {
-            MomentColor.canvas.ignoresSafeArea()
-
-            VStack(spacing: Spacing.md) {
-                Text("스페이스 이름")
-                    .font(.system(size: 17, weight: .bold))
-                    .foregroundColor(MomentColor.ink)
-                    .padding(.top, Spacing.lg)
-
-                MomentTextField("예: 우리들의 공간 (최대 10자)", text: Binding(
-                    get: { state.spaceNameInput },
-                    set: { send(.spaceNameChanged($0)) }
-                ))
-
-                MomentPillButton(state.isLoading ? "저장 중…" : "저장", style: .primary) {
-                    send(.spaceNameSubmitTapped)
-                }
-                .disabled(state.isLoading)
-
-                Text("비워두면 “OO님과의 스페이스”로 표시돼요.")
-                    .font(.system(size: 12))
-                    .foregroundColor(MomentColor.ink.opacity(0.55))
-
-                Spacer()
-            }
-            .padding(.horizontal, Spacing.lg)
-        }
+        EditSheet(
+            title: "스페이스 이름",
+            placeholder: "예: 우리들의 공간",
+            text: Binding(
+                get: { state.spaceNameInput },
+                set: { send(.spaceNameChanged($0)) }
+            ),
+            contentType: nil,
+            countText: "\(state.trimmedSpaceName.count) / \(SettingsFeature.spaceNameMaxLength)",
+            hint: "비워두면 “OO님과의 스페이스”로 표시돼요.",
+            isLoading: state.isLoading,
+            canSubmit: state.canSubmitSpaceName,
+            error: state.error,
+            onCancel: { send(.hideSpaceNameEditSheet) },
+            onSubmit: { send(.spaceNameSubmitTapped) },
+            onDismissError: { send(.dismissError) }
+        )
         .presentationDetents([.height(280)])
     }
 
@@ -307,6 +288,89 @@ public struct SettingsView: View {
                 .padding(.vertical, Spacing.xxs)
             }
             .padding(Spacing.md)
+        }
+    }
+}
+
+// MARK: - 편집 시트
+
+/// 한 줄 이름을 고치는 하프 시트. 취소 버튼, 글자 수, 저장 가능 여부를 함께 보여 준다.
+private struct EditSheet: View {
+    let title: String
+    let placeholder: String
+    @Binding var text: String
+    let contentType: UITextContentType?
+    let countText: String
+    let hint: String
+    let isLoading: Bool
+    let canSubmit: Bool
+    let error: DomainError?
+    let onCancel: () -> Void
+    let onSubmit: () -> Void
+    let onDismissError: () -> Void
+
+    var body: some View {
+        ZStack {
+            MomentColor.canvas.ignoresSafeArea()
+
+            VStack(spacing: Spacing.md) {
+                ZStack {
+                    Text(title)
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundColor(MomentColor.ink)
+                    HStack {
+                        Button("취소", action: onCancel)
+                            .font(.system(size: 15))
+                            .foregroundColor(MomentColor.ink.opacity(0.7))
+                            .disabled(isLoading)
+                        Spacer()
+                    }
+                }
+                .padding(.top, Spacing.lg)
+
+                VStack(alignment: .trailing, spacing: Spacing.xxs) {
+                    MomentTextField(placeholder, text: $text, contentType: contentType)
+                    Text(countText)
+                        .font(.system(size: 11))
+                        .foregroundColor(MomentColor.ink.opacity(0.45))
+                        .accessibilityLabel("글자 수 \(countText)")
+                }
+
+                MomentPillButton(isLoading ? "저장 중…" : "저장", style: .primary) {
+                    onSubmit()
+                }
+                .disabled(!canSubmit)
+                .opacity(canSubmit ? 1.0 : 0.6)
+                .animation(.easeOut(duration: 0.15), value: canSubmit)
+
+                Text(hint)
+                    .font(.system(size: 12))
+                    .foregroundColor(MomentColor.ink.opacity(0.55))
+
+                Spacer()
+            }
+            .padding(.horizontal, Spacing.lg)
+        }
+        .interactiveDismissDisabled(isLoading)
+        .modifier(ErrorAlert(error: error, isActive: true, dismiss: onDismissError))
+    }
+}
+
+/// 오류 alert. 시트가 떠 있으면 시트 쪽에서 띄워야 보이므로 isActive로 어느 쪽이 띄울지 고른다.
+private struct ErrorAlert: ViewModifier {
+    let error: DomainError?
+    let isActive: Bool
+    let dismiss: () -> Void
+
+    func body(content: Content) -> some View {
+        content.alert(
+            error?.errorDescription ?? "오류가 발생했어요",
+            isPresented: Binding(
+                get: { isActive && error != nil },
+                set: { if !$0 { dismiss() } }
+            )
+        ) {
+            Button("확인", role: .cancel) {}
         }
     }
 }
