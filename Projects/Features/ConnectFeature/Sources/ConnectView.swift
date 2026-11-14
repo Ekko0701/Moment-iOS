@@ -42,10 +42,10 @@ public struct ConnectView: View {
 
                     // 코드 입력 + 연결 요청
                     VStack(spacing: Spacing.sm) {
-                        MomentTextField("초대 코드 입력", text: Binding(
+                        MomentTextField("초대 코드 6자리", text: Binding(
                             get: { state.codeInput },
                             set: { send(.codeInputChanged($0)) }
-                        ), disablesAutocapitalization: true)
+                        ), disablesAutocapitalization: true, keyboardType: .asciiCapable)
 
                         Text("상대에게 받은 6자리 코드를 입력하면 연결 요청을 보낼 수 있어요")
                             .font(.system(size: 12))
@@ -56,6 +56,8 @@ public struct ConnectView: View {
                         MomentPillButton("연결 요청 보내기", style: .primary) {
                             send(.submitCodeTapped)
                         }
+                        .disabled(!state.canSubmitCode)
+                        .opacity(state.canSubmitCode ? 1 : 0.6)
                         .padding(.top, Spacing.xs)
                     }
 

@@ -19,6 +19,13 @@ public struct ConnectFeature {
         public var isLoading = false
         public var error: DomainError? = nil
 
+        public static let codeLength = 6
+
+        /// 6자리 코드를 다 입력했고 처리 중인 요청이 없을 때만 보낼 수 있다
+        public var canSubmitCode: Bool {
+            codeInput.count == Self.codeLength && !isLoading
+        }
+
         public enum Tab {
             case code
             case search
@@ -74,7 +81,9 @@ public struct ConnectFeature {
                 return .none
 
             case .codeInputChanged(let input):
-                state.codeInput = input
+                // 입력 중 공백·소문자·기호를 걸러 6자리 대문자 코드로 맞춘다
+                let filtered = input.uppercased().filter { $0.isASCII && ($0.isLetter || $0.isNumber) }
+                state.codeInput = String(filtered.prefix(State.codeLength))
                 return .none
 
             case .searchHandleChanged(let input):
@@ -95,10 +104,7 @@ public struct ConnectFeature {
                 }
 
             case .submitCodeTapped:
-                guard !state.codeInput.isEmpty else {
-                    state.error = .unknown(code: "ERROR", message: "코드를 입력해 주세요.")
-                    return .none
-                }
+                guard state.canSubmitCode else { return .none }
                 state.isLoading = true
                 return .run { [code = state.codeInput] send in
                     @Dependency(\.connectUseCase) var connectUseCase
