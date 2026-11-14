@@ -298,7 +298,7 @@ public struct HomeView: View {
             }
             HStack(spacing: Spacing.sm) {
                 MomentSecondaryPillButton("그룹 만들기") { send(.createGroupTapped) }
-                MomentSecondaryPillButton("코드로 참여") { send(.joinGroupTapped) }
+                MomentSecondaryPillButton("코드로 그룹 참여") { send(.joinGroupTapped) }
             }
         }
         .padding(.horizontal, Spacing.lg)

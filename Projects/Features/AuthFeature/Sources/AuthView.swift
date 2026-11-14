@@ -82,7 +82,7 @@ public struct AuthView: View {
                 .tracking(-1.2)
                 .foregroundColor(MomentColor.ink)
 
-            Text("두 사람만의 소중한 순간을\n함께 기록해보세요")
+            Text("소중한 사람과 함께\n오늘의 순간을 기록해 보세요")
                 .font(MomentTypography.body)
                 .foregroundColor(MomentColor.ink.opacity(0.65))
                 .multilineTextAlignment(.center)

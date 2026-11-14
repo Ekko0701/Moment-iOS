@@ -176,7 +176,7 @@ public struct SettingsFeature {
 
             case .confirmDisconnect:
                 guard let spaceId = state.currentSpace?.id else {
-                    state.error = .unknown(code: "ERROR", message: "스페이스를 찾을 수 없습니다.")
+                    state.error = .unknown(code: "ERROR", message: "스페이스를 찾을 수 없어요.")
                     return .none
                 }
 

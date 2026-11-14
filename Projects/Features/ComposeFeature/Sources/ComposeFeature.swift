@@ -113,7 +113,7 @@ public struct ComposeFeature {
 
             case .submitTapped:
                 guard let spaceId = state.selectedSpaceId else {
-                    state.error = .unknown(code: "NO_SPACE", message: "스페이스를 찾을 수 없습니다.")
+                    state.error = .unknown(code: "NO_SPACE", message: "스페이스를 찾을 수 없어요.")
                     return .none
                 }
 

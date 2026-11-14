@@ -432,7 +432,8 @@ public struct GroupSettingsView: View {
     }
 
     private func inviteMessage(_ code: GroupInviteCode) -> String {
-        "Moment 그룹 \"\(state.space.name ?? "")\"에 초대할게요. 앱의 '코드로 그룹 참여'에 \(code.code)를 입력하면 제가 수락할게요."
+        let group = state.space.name.flatMap { $0.isEmpty ? nil : "Moment 그룹 ‘\($0)’" } ?? "Moment 그룹"
+        return "\(group)에 초대할게요. 앱에서 ‘코드로 그룹 참여’를 누르고 \(code.code)를 입력하면 제가 수락할게요."
     }
 }
 
