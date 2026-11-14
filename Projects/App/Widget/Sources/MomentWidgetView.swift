@@ -26,9 +26,9 @@ struct MomentSmallWidgetView: View {
             VStack(spacing: 8) {
                 Image(systemName: "person.2.fill")
                     .font(.title2)
-                Text("상대방을 초대해 보세요")
+                Text("연결하고 순간을 나눠 보세요")
                     .font(.caption)
-                    .lineLimit(1)
+                    .lineLimit(2)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .multilineTextAlignment(.center)
@@ -141,7 +141,7 @@ struct MomentMediumWidgetView: View {
                     Text("로그인이 필요해요")
                         .font(.body)
                         .fontWeight(.semibold)
-                    Text("Moment에 로그인하여 친구와 순간을 공유하세요")
+                    Text("로그인하면 함께하는 사람의 순간이 여기 보여요")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -157,10 +157,10 @@ struct MomentMediumWidgetView: View {
                 Image(systemName: "person.2.fill")
                     .font(.title)
                 VStack(spacing: 4) {
-                    Text("상대방을 초대해 보세요")
+                    Text("연결하고 순간을 나눠 보세요")
                         .font(.body)
                         .fontWeight(.semibold)
-                    Text("친구의 초대 코드를 입력하여 스페이스에 초대하세요")
+                    Text("1:1로 연결하거나 코드로 그룹에 참여해 보세요")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -179,7 +179,7 @@ struct MomentMediumWidgetView: View {
                     Text("첫 순간을 기다리는 중")
                         .font(.body)
                         .fontWeight(.semibold)
-                    Text("친구의 순간이 공유되면 여기에 나타납니다")
+                    Text("새 순간이 공유되면 여기에 보여요")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -247,7 +247,7 @@ struct MomentMediumWidgetView: View {
 
                     HStack(spacing: 8) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("By \(snapshot.authorNickname)")
+                            Text(snapshot.authorNickname)
                                 .font(.caption)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.primary)
