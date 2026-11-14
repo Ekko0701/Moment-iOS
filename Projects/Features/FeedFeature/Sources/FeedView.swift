@@ -103,7 +103,7 @@ public struct FeedView: View {
                     .font(.system(size: 13, weight: .bold))
                     .foregroundColor(MomentColor.ink)
 
-                Text(moment.createdAt.feedRelativeTimeString)
+                Text(moment.createdAt.relativeFormatted)
                     .font(.system(size: 10, design: .default))
                     .foregroundColor(MomentColor.ink.opacity(0.5))
             }
@@ -206,18 +206,6 @@ extension Date {
         let sameYear = calendar.component(.year, from: self) == calendar.component(.year, from: Date())
         formatter.dateFormat = sameYear ? "M월 d일" : "yyyy년 M월 d일"
         return formatter.string(from: self)
-    }
-
-    fileprivate var feedRelativeTimeString: String {
-        let components = Calendar.current.dateComponents([.minute, .hour, .day], from: self, to: Date())
-        if let day = components.day, day >= 1 {
-            return "\(day)일 전"
-        } else if let hour = components.hour, hour >= 1 {
-            return "\(hour)시간 전"
-        } else if let minute = components.minute, minute >= 1 {
-            return "\(minute)분 전"
-        }
-        return "방금"
     }
 }
 

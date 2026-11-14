@@ -1,6 +1,7 @@
 import SwiftUI
 import Domain
 import MomentUIKit
+import CoreKit
 
 /// 로그인 직후 진입하는 홈 — Locket 스타일.
 /// 사진 모먼트는 대형 그라디언트/사진 카드, 텍스트 모먼트는 높이가 내용에 맞는 글래스 카드로 보여준다.
@@ -194,7 +195,7 @@ public struct HomeView: View {
             .overlay(alignment: .topLeading) {
                 SenderChip(
                     name: moment.author.nickname,
-                    timeText: moment.createdAt.homeRelativeTimeString
+                    timeText: moment.createdAt.relativeFormatted
                 )
                 .padding(Spacing.md)
             }
@@ -243,7 +244,7 @@ public struct HomeView: View {
                 .font(.footnote.weight(.bold))
                 .foregroundColor(MomentColor.ink)
 
-            Text(moment.createdAt.homeRelativeTimeString)
+            Text(moment.createdAt.relativeFormatted)
                 .font(.caption2)
                 .foregroundColor(MomentColor.ink.opacity(0.6)) // 그레이 칩 위 AA 대비 확보
         }
@@ -301,20 +302,6 @@ public struct HomeView: View {
             }
         }
         .padding(.horizontal, Spacing.lg)
-    }
-}
-
-extension Date {
-    fileprivate var homeRelativeTimeString: String {
-        let components = Calendar.current.dateComponents([.minute, .hour, .day], from: self, to: Date())
-        if let day = components.day, day >= 1 {
-            return "\(day)D AGO"
-        } else if let hour = components.hour, hour >= 1 {
-            return "\(hour)H AGO"
-        } else if let minute = components.minute, minute >= 1 {
-            return "\(minute)M AGO"
-        }
-        return "JUST NOW"
     }
 }
 

@@ -75,7 +75,7 @@ struct MomentSmallWidgetView: View {
 
                     Spacer()
 
-                    Text(snapshot.createdAt.relativeTimeString)
+                    Text(snapshot.createdAt.relativeFormatted)
                         .font(.caption2)
                         .foregroundColor(.white.opacity(0.7))
                         .shadow(radius: 1)
@@ -103,7 +103,7 @@ struct MomentSmallWidgetView: View {
 
                     Spacer()
 
-                    Text(snapshot.createdAt.relativeTimeString)
+                    Text(snapshot.createdAt.relativeFormatted)
                         .font(.caption2)
                         .foregroundColor(.black.opacity(0.6))
                 }
@@ -215,7 +215,7 @@ struct MomentMediumWidgetView: View {
 
                     Spacer()
 
-                    Text(snapshot.createdAt.relativeTimeString)
+                    Text(snapshot.createdAt.relativeFormatted)
                         .font(.caption)
                         .foregroundColor(.white.opacity(0.7))
                         .shadow(radius: 1)
@@ -252,7 +252,7 @@ struct MomentMediumWidgetView: View {
                                 .fontWeight(.semibold)
                                 .foregroundColor(.primary)
 
-                            Text(snapshot.createdAt.relativeTimeString)
+                            Text(snapshot.createdAt.relativeFormatted)
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
                         }
@@ -285,23 +285,3 @@ private struct WidgetPhotoBackground: View {
         }
     }
 }
-
-// MARK: - Helper Extensions
-extension Date {
-    var relativeTimeString: String {
-        let calendar = Calendar.current
-        let now = Date()
-        let components = calendar.dateComponents([.minute, .hour, .day], from: self, to: now)
-
-        if let day = components.day, day >= 1 {
-            return "\(day)일 전"
-        } else if let hour = components.hour, hour >= 1 {
-            return "\(hour)시간 전"
-        } else if let minute = components.minute, minute >= 1 {
-            return "\(minute)분 전"
-        } else {
-            return "방금"
-        }
-    }
-}
-
