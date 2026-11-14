@@ -6,6 +6,9 @@ import Dependencies
 /// 그룹 설정 — 초대 코드, 참여 요청, 알림, 멤버, 이름, 나가기·종료.
 /// 방장 전용 항목(참여 요청 수락·거절, 이름 변경, 코드 재발급, 내보내기, 종료)은 방장일 때만 노출하고 서버도 같은 규칙으로 막는다.
 public struct GroupSettingsFeature {
+    /// 앱이 푸시 알림을 등록하기 전까지는 알림 설정을 보여주지 않는다. 켜도 알림이 오지 않기 때문이다
+    public static let notificationsAvailable = false
+
     public struct State: Equatable {
         public var space: Space
         public var currentUserId: UUID?

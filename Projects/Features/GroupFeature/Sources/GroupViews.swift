@@ -341,12 +341,14 @@ public struct GroupSettingsView: View {
                 }
             }
 
-            Section {
-                Toggle("새 모먼트 알림", isOn: Binding(
-                    get: { state.notificationsEnabled },
-                    set: { send(.notificationsToggled($0)) }
-                ))
-                .disabled(state.isUpdatingNotifications)
+            if GroupSettingsFeature.notificationsAvailable {
+                Section {
+                    Toggle("새 모먼트 알림", isOn: Binding(
+                        get: { state.notificationsEnabled },
+                        set: { send(.notificationsToggled($0)) }
+                    ))
+                    .disabled(state.isUpdatingNotifications)
+                }
             }
 
             if state.isOwner {
