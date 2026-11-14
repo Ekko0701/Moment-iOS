@@ -122,12 +122,12 @@ public struct AuthView: View {
                 MomentTextField("이메일", text: Binding(
                     get: { state.email },
                     set: { send(.emailChanged($0)) }
-                ), disablesAutocapitalization: true)
+                ), disablesAutocapitalization: true, keyboardType: .emailAddress, contentType: .username)
 
                 MomentTextField("비밀번호", text: Binding(
                     get: { state.password },
                     set: { send(.passwordChanged($0)) }
-                ), isSecure: true, disablesAutocapitalization: true)
+                ), isSecure: true, disablesAutocapitalization: true, contentType: .password)
 
                 Button("비밀번호를 잊으셨나요?") {
                     showsResetNotice = true
@@ -172,17 +172,17 @@ public struct AuthView: View {
                 MomentTextField("이메일", text: Binding(
                     get: { state.email },
                     set: { send(.emailChanged($0)) }
-                ), disablesAutocapitalization: true)
+                ), disablesAutocapitalization: true, keyboardType: .emailAddress, contentType: .username)
 
                 MomentTextField("비밀번호 (8자 이상)", text: Binding(
                     get: { state.password },
                     set: { send(.passwordChanged($0)) }
-                ), isSecure: true, disablesAutocapitalization: true)
+                ), isSecure: true, disablesAutocapitalization: true, contentType: .newPassword)
 
                 MomentTextField("닉네임 (2~12자)", text: Binding(
                     get: { state.nickname },
                     set: { send(.nicknameChanged($0)) }
-                ))
+                ), contentType: .nickname)
 
                 MomentPillButton(isLoading ? "처리 중…" : "가입하기", style: .primary,
                         minHeight: Self.ctaHeight) {

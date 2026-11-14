@@ -55,15 +55,20 @@ public struct MomentTextField: View {
     @Binding var text: String
     let isSecure: Bool
     let disablesAutocapitalization: Bool
+    let keyboardType: UIKeyboardType
+    let contentType: UITextContentType?
     @State private var isFocused = false
     @Environment(\.colorScheme) private var colorScheme
 
     public init(_ placeholder: String, text: Binding<String>,
-                isSecure: Bool = false, disablesAutocapitalization: Bool = false) {
+                isSecure: Bool = false, disablesAutocapitalization: Bool = false,
+                keyboardType: UIKeyboardType = .default, contentType: UITextContentType? = nil) {
         self.placeholder = placeholder
         self._text = text
         self.isSecure = isSecure
         self.disablesAutocapitalization = disablesAutocapitalization
+        self.keyboardType = keyboardType
+        self.contentType = contentType
     }
 
     public var body: some View {
@@ -78,6 +83,8 @@ public struct MomentTextField: View {
         .foregroundColor(MomentColor.ink)
         .textInputAutocapitalization(disablesAutocapitalization ? .never : .sentences)
         .autocorrectionDisabled(disablesAutocapitalization)
+        .keyboardType(keyboardType)
+        .textContentType(contentType)
         .padding(.horizontal, 18)
         .frame(minHeight: 52)
         .background(fieldFill)
