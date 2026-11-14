@@ -159,10 +159,8 @@ public struct SettingsView: View {
                     }
                     .buttonStyle(.plain)
 
-                    Button {
-                        UIPasteboard.general.string = profile.handle
-                    } label: {
-                        Text("ID 복사")
+                    MomentCopyButton(value: profile.handle, announcement: "ID를 복사했어요") { copied in
+                        Text(copied ? "복사됨 ✓" : "ID 복사")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundColor(MomentColor.ink.opacity(0.6))
                     }

@@ -124,10 +124,8 @@ public struct ConnectView: View {
                             .foregroundColor(MomentColor.ink.opacity(0.6))
                     }
 
-                    Button {
-                        UIPasteboard.general.string = code
-                    } label: {
-                        Text("⧉ 코드 복사")
+                    MomentCopyButton(value: code, announcement: "코드를 복사했어요") { copied in
+                        Label(copied ? "복사됨" : "코드 복사", systemImage: copied ? "checkmark" : "doc.on.doc")
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(MomentColor.ink)
                             .padding(.horizontal, Spacing.md)
