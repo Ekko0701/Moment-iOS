@@ -31,6 +31,13 @@ let project = Project(
                     "NSBonjourServices": ["_http._tcp"],
                     // 로컬 개발 서버(http://localhost:8080) 연결 허용.
                     // ATS를 전역으로 끄지 않고 루프백/로컬 네트워킹만 예외 처리한다.
+                    // 위젯·알림이 여는 moment://login, moment://connect, moment://moment/{spaceId}/{momentId}
+                    "CFBundleURLTypes": [
+                        [
+                            "CFBundleURLName": "com.ekko.moment",
+                            "CFBundleURLSchemes": ["moment"],
+                        ],
+                    ],
                     "NSAppTransportSecurity": [
                         "NSAllowsLocalNetworking": true,
                     ],
