@@ -24,6 +24,7 @@ let project = Project(
             deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(
                 with: [
+                    "CFBundleDisplayName": "Moment",
                     "UIMainStoryboardFile": "",
                     // 스토리보드 없이 시스템 배경색(라이트 흰색, 다크 검정)으로 시작 화면을 그린다
                     "UILaunchScreen": [:],
