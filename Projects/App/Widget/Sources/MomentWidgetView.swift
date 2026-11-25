@@ -13,7 +13,7 @@ struct MomentSmallWidgetView: View {
                 Image(systemName: "person.crop.circle")
                     .font(.title2)
                 Text("로그인이 필요해요")
-                    .font(.caption)
+                    .font(.pretendard(.caption))
                     .lineLimit(1)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -27,7 +27,7 @@ struct MomentSmallWidgetView: View {
                 Image(systemName: "person.2.fill")
                     .font(.title2)
                 Text("연결하고 순간을 나눠 보세요")
-                    .font(.caption)
+                    .font(.pretendard(.caption))
                     .lineLimit(2)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -41,7 +41,7 @@ struct MomentSmallWidgetView: View {
                 Image(systemName: "sparkles")
                     .font(.title2)
                 Text("첫 순간을 기다리는 중")
-                    .font(.caption)
+                    .font(.pretendard(.caption))
                     .lineLimit(1)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -61,22 +61,21 @@ struct MomentSmallWidgetView: View {
            let uiImage = UIImage(data: imageData) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(snapshot.text ?? "")
-                    .font(.caption2)
-                    .fontWeight(.medium)
+                    .font(.pretendard(.caption2, weight: .medium))
                     .lineLimit(2)
                     .foregroundColor(.white)
                     .shadow(radius: 1)
 
                 HStack(spacing: 4) {
                     Text(snapshot.authorNickname)
-                        .font(.caption2)
+                        .font(.pretendard(.caption2))
                         .foregroundColor(.white.opacity(0.9))
                         .shadow(radius: 1)
 
                     Spacer()
 
                     Text(snapshot.createdAt.relativeFormatted)
-                        .font(.caption2)
+                        .font(.pretendard(.caption2))
                         .foregroundColor(.white.opacity(0.7))
                         .shadow(radius: 1)
                 }
@@ -91,20 +90,19 @@ struct MomentSmallWidgetView: View {
             let blockColor = getBlockColor(for: snapshot.momentId)
             VStack(alignment: .center, spacing: 4) {
                 Text(snapshot.text ?? "")
-                    .font(.caption2)
-                    .fontWeight(.medium)
+                    .font(.pretendard(.caption2, weight: .medium))
                     .lineLimit(2)
                     .foregroundColor(.black)
 
                 HStack(spacing: 4) {
                     Text(snapshot.authorNickname)
-                        .font(.caption2)
+                        .font(.pretendard(.caption2))
                         .foregroundColor(.black.opacity(0.7))
 
                     Spacer()
 
                     Text(snapshot.createdAt.relativeFormatted)
-                        .font(.caption2)
+                        .font(.pretendard(.caption2))
                         .foregroundColor(.black.opacity(0.6))
                 }
             }
@@ -139,10 +137,9 @@ struct MomentMediumWidgetView: View {
                     .font(.title)
                 VStack(spacing: 4) {
                     Text("로그인이 필요해요")
-                        .font(.body)
-                        .fontWeight(.semibold)
+                        .font(.pretendard(.body, weight: .semibold))
                     Text("로그인하면 함께하는 사람의 순간이 여기 보여요")
-                        .font(.caption)
+                        .font(.pretendard(.caption))
                         .foregroundColor(.secondary)
                 }
             }
@@ -158,10 +155,9 @@ struct MomentMediumWidgetView: View {
                     .font(.title)
                 VStack(spacing: 4) {
                     Text("연결하고 순간을 나눠 보세요")
-                        .font(.body)
-                        .fontWeight(.semibold)
+                        .font(.pretendard(.body, weight: .semibold))
                     Text("1:1로 연결하거나 코드로 그룹에 참여해 보세요")
-                        .font(.caption)
+                        .font(.pretendard(.caption))
                         .foregroundColor(.secondary)
                 }
             }
@@ -177,10 +173,9 @@ struct MomentMediumWidgetView: View {
                     .font(.title)
                 VStack(spacing: 4) {
                     Text("첫 순간을 기다리는 중")
-                        .font(.body)
-                        .fontWeight(.semibold)
+                        .font(.pretendard(.body, weight: .semibold))
                     Text("새 순간이 공유되면 여기에 보여요")
-                        .font(.caption)
+                        .font(.pretendard(.caption))
                         .foregroundColor(.secondary)
                 }
             }
@@ -201,22 +196,21 @@ struct MomentMediumWidgetView: View {
            let uiImage = UIImage(data: imageData) {
             VStack(alignment: .leading, spacing: 6) {
                 Text(snapshot.text ?? "")
-                    .font(.callout)
-                    .fontWeight(.medium)
+                    .font(.pretendard(.callout, weight: .medium))
                     .lineLimit(2)
                     .foregroundColor(.white)
                     .shadow(radius: 1)
 
                 HStack(spacing: 6) {
                     Text(snapshot.authorNickname)
-                        .font(.caption)
+                        .font(.pretendard(.caption))
                         .foregroundColor(.white.opacity(0.9))
                         .shadow(radius: 1)
 
                     Spacer()
 
                     Text(snapshot.createdAt.relativeFormatted)
-                        .font(.caption)
+                        .font(.pretendard(.caption))
                         .foregroundColor(.white.opacity(0.7))
                         .shadow(radius: 1)
                 }
@@ -240,20 +234,18 @@ struct MomentMediumWidgetView: View {
 
                 VStack(alignment: .center, spacing: 8) {
                     Text(snapshot.text ?? "")
-                        .font(.callout)
-                        .fontWeight(.medium)
+                        .font(.pretendard(.callout, weight: .medium))
                         .lineLimit(2)
                         .foregroundColor(.primary)
 
                     HStack(spacing: 8) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(snapshot.authorNickname)
-                                .font(.caption)
-                                .fontWeight(.semibold)
+                                .font(.pretendard(.caption, weight: .semibold))
                                 .foregroundColor(.primary)
 
                             Text(snapshot.createdAt.relativeFormatted)
-                                .font(.caption2)
+                                .font(.pretendard(.caption2))
                                 .foregroundColor(.secondary)
                         }
 

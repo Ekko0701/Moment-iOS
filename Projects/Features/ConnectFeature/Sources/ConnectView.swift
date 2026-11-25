@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreKit
 import Domain
 import MomentUIKit
 import UIKit
@@ -48,7 +49,7 @@ public struct ConnectView: View {
                         ), disablesAutocapitalization: true, keyboardType: .asciiCapable)
 
                         Text("상대에게 받은 6자리 코드를 입력하면 연결 요청을 보낼 수 있어요")
-                            .font(.system(size: 12))
+                            .font(.pretendard(size: 12))
                             .foregroundColor(MomentColor.ink.opacity(0.5))
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, Spacing.xxs)
@@ -64,7 +65,7 @@ public struct ConnectView: View {
                     // 보낸 요청 대기 안내
                     if state.sentInvitations.contains(where: { $0.status == .pending }) {
                         Text("요청을 보냈어요 — 상대방의 수락을 기다리는 중")
-                            .font(.system(size: 12, design: .default))
+                            .font(.pretendard(size: 12))
                             .tracking(0.4)
                             .foregroundColor(MomentColor.ink.opacity(0.55))
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -108,25 +109,25 @@ public struct ConnectView: View {
         SurfaceCard {
             VStack(spacing: Spacing.sm) {
                 Text("내 코드")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.pretendard(size: 12, weight: .semibold))
                     .foregroundColor(MomentColor.ink.opacity(0.65))
 
                 if let code = state.issuedCode {
                     Text(code)
-                        .font(.system(size: 40, weight: .bold, design: .default))
+                        .font(.pretendard(size: 40, weight: .bold))
                         .tracking(-1)
                         .foregroundColor(MomentColor.ink)
                         .textSelection(.enabled)
 
                     if let expiresAt = state.issuedCodeExpiresAt {
                         Text("\(expiresAt.formatted(date: .abbreviated, time: .shortened))까지 사용할 수 있어요")
-                            .font(.system(size: 12, design: .default))
+                            .font(.pretendard(size: 12))
                             .foregroundColor(MomentColor.ink.opacity(0.6))
                     }
 
                     MomentCopyButton(value: code, announcement: "코드를 복사했어요") { copied in
                         Label(copied ? "복사됨" : "코드 복사", systemImage: copied ? "checkmark" : "doc.on.doc")
-                            .font(.system(size: 13, weight: .medium))
+                            .font(.pretendard(size: 13, weight: .medium))
                             .foregroundColor(MomentColor.ink)
                             .padding(.horizontal, Spacing.md)
                             .padding(.vertical, Spacing.xs)
@@ -163,7 +164,7 @@ public struct ConnectView: View {
                 .fill(MomentColor.ink.opacity(0.15))
                 .frame(height: 1)
             Text("또는")
-                .font(.system(size: 12))
+                .font(.pretendard(size: 12))
                 .foregroundColor(MomentColor.ink.opacity(0.5))
             Rectangle()
                 .fill(MomentColor.ink.opacity(0.15))
@@ -181,7 +182,7 @@ public struct ConnectView: View {
     private var receivedInvitations: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             Text("받은 요청")
-                .font(.system(size: 12, weight: .semibold))
+                .font(.pretendard(size: 12, weight: .semibold))
                 .foregroundColor(MomentColor.ink.opacity(0.65))
 
             ForEach(pendingReceived, id: \.id) { invitation in
@@ -193,11 +194,11 @@ public struct ConnectView: View {
 
                         VStack(alignment: .leading, spacing: 2) {
                             Text(invitation.counterpart.nickname)
-                                .font(.system(size: 15, weight: .bold))
+                                .font(.pretendard(size: 15, weight: .bold))
                                 .foregroundColor(MomentColor.ink)
 
                             Text("@\(invitation.counterpart.handle)")
-                                .font(.system(size: 11, design: .default))
+                                .font(.pretendard(size: 11))
                                 .foregroundColor(MomentColor.ink.opacity(0.55))
                         }
 
@@ -206,7 +207,7 @@ public struct ConnectView: View {
                         Button("수락") {
                             send(.respondTapped(id: invitation.id, action: .accept))
                         }
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.pretendard(size: 14, weight: .medium))
                         .foregroundColor(MomentColor.inverseInk)
                         .padding(.horizontal, Spacing.md)
                         .padding(.vertical, Spacing.xs)
@@ -216,7 +217,7 @@ public struct ConnectView: View {
                         Button("거절") {
                             send(.respondTapped(id: invitation.id, action: .decline))
                         }
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.pretendard(size: 14, weight: .medium))
                         .foregroundColor(MomentColor.ink)
                         .padding(.horizontal, Spacing.md)
                         .padding(.vertical, Spacing.xs)

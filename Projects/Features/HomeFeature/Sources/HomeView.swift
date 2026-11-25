@@ -53,7 +53,7 @@ public struct HomeView: View {
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Text("Moment")
-                    .font(.subheadline.weight(.bold))
+                    .font(.pretendard(.subheadline, weight: .bold))
                     .foregroundColor(MomentColor.ink)
             }
         }
@@ -101,16 +101,16 @@ public struct HomeView: View {
             }
 
             Text(spaceTitle(space))
-                .font(.footnote.weight(.medium))
+                .font(.pretendard(.footnote, weight: .medium))
                 .foregroundColor(MomentColor.ink)
 
             if space.isGroup {
                 Text("\(space.memberCount)명")
-                    .font(.caption.weight(.medium))
+                    .font(.pretendard(.caption, weight: .medium))
                     .foregroundColor(MomentColor.ink.opacity(0.55))
                 if space.pendingJoinRequestCount > 0 {
                     Text("참여 요청 \(space.pendingJoinRequestCount)")
-                        .font(.caption2.weight(.semibold))
+                        .font(.pretendard(.caption2, weight: .semibold))
                         .foregroundColor(.white)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
@@ -119,7 +119,7 @@ public struct HomeView: View {
                 }
             } else {
                 Text("D+\(state.daysTogether(in: space))")
-                    .font(.caption.weight(.medium))
+                    .font(.pretendard(.caption, weight: .medium))
                     .foregroundColor(MomentColor.accent)
             }
         }
@@ -212,7 +212,7 @@ public struct HomeView: View {
             glassCard {
                 // 문장이 정중앙의 주인공 — 큰 타이포(Dynamic Type 대응), 여유로운 행간
                 Text(moment.text ?? "")
-                    .font(.title2.weight(.medium))
+                    .font(.pretendard(.title2, weight: .medium))
                     .foregroundColor(MomentColor.ink)
                     .multilineTextAlignment(.center)
                     .lineSpacing(8)
@@ -234,11 +234,11 @@ public struct HomeView: View {
                 .frame(width: 20, height: 20)
 
             Text(moment.author.nickname)
-                .font(.footnote.weight(.bold))
+                .font(.pretendard(.footnote, weight: .bold))
                 .foregroundColor(MomentColor.ink)
 
             Text(moment.createdAt.relativeFormatted)
-                .font(.caption2)
+                .font(.pretendard(.caption2))
                 .foregroundColor(MomentColor.ink.opacity(0.6)) // 그레이 칩 위 AA 대비 확보
         }
         .padding(.leading, 8)
@@ -270,7 +270,7 @@ public struct HomeView: View {
             send(.spaceTapped(space.id))
         } label: {
             Text(space.isGroup ? "그룹 들어가기" : "지난 순간 모아보기")
-                .font(.footnote.weight(.medium))
+                .font(.pretendard(.footnote, weight: .medium))
                 .foregroundColor(MomentColor.ink)
                 .padding(.horizontal, Spacing.md)
                 .padding(.vertical, 10)

@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreKit
 import Domain
 import MomentUIKit
 import UIKit
@@ -139,11 +140,11 @@ public struct SettingsView: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(profile.nickname)
-                        .font(.system(size: 15, weight: .bold))
+                        .font(.pretendard(size: 15, weight: .bold))
                         .foregroundColor(MomentColor.ink)
 
                     Text("@\(profile.handle)")
-                        .font(.system(size: 11, design: .default))
+                        .font(.pretendard(size: 11))
                         .foregroundColor(MomentColor.ink.opacity(0.55))
                 }
 
@@ -154,14 +155,14 @@ public struct SettingsView: View {
                         send(.showNicknameEditSheet)
                     } label: {
                         Text("닉네임 변경")
-                            .font(.system(size: 12, weight: .medium))
+                            .font(.pretendard(size: 12, weight: .medium))
                             .foregroundColor(MomentColor.ink.opacity(0.6))
                     }
                     .buttonStyle(.plain)
 
                     MomentCopyButton(value: profile.handle, announcement: "ID를 복사했어요") { copied in
                         Text(copied ? "복사됨 ✓" : "ID 복사")
-                            .font(.system(size: 12, weight: .medium))
+                            .font(.pretendard(size: 12, weight: .medium))
                             .foregroundColor(MomentColor.ink.opacity(0.6))
                     }
                     .buttonStyle(.plain)
@@ -177,19 +178,19 @@ public struct SettingsView: View {
         SurfaceCard {
             VStack(alignment: .leading, spacing: Spacing.sm) {
                 Text("내 스페이스")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.pretendard(size: 12, weight: .semibold))
                     .foregroundColor(MomentColor.ink.opacity(0.65))
 
                 HStack {
                     // 사용자가 붙인 이름이 있으면 그것을, 없으면 상대 이름 기반 폴백
                     Text(spaceTitle(space))
-                        .font(.system(size: 15, weight: .bold))
+                        .font(.pretendard(size: 15, weight: .bold))
                         .foregroundColor(MomentColor.ink)
 
                     Spacer()
 
                     Text("D+\(space.daysTogether())")
-                        .font(.system(size: 13, design: .default))
+                        .font(.pretendard(size: 13))
                         .foregroundColor(MomentColor.ink.opacity(0.55))
                 }
 
@@ -198,7 +199,7 @@ public struct SettingsView: View {
                         send(.showSpaceNameEditSheet)
                     } label: {
                         Text("이름 변경")
-                            .font(.system(size: 13, weight: .medium))
+                            .font(.pretendard(size: 13, weight: .medium))
                             .foregroundColor(MomentColor.ink.opacity(0.7))
                     }
                     .buttonStyle(.plain)
@@ -207,7 +208,7 @@ public struct SettingsView: View {
                         send(.disconnectTapped)
                     } label: {
                         Text("연결 해제")
-                            .font(.system(size: 13, weight: .medium))
+                            .font(.pretendard(size: 13, weight: .medium))
                             .foregroundColor(MomentColor.destructive)
                     }
                     .buttonStyle(.plain)
@@ -251,7 +252,7 @@ public struct SettingsView: View {
         SurfaceCard {
             VStack(alignment: .leading, spacing: Spacing.sm) {
                 Text("계정")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.pretendard(size: 12, weight: .semibold))
                     .foregroundColor(MomentColor.ink.opacity(0.65))
 
                 Button {
@@ -309,11 +310,11 @@ private struct EditSheet: View {
             VStack(spacing: Spacing.md) {
                 ZStack {
                     Text(title)
-                        .font(.system(size: 17, weight: .bold))
+                        .font(.pretendard(size: 17, weight: .bold))
                         .foregroundColor(MomentColor.ink)
                     HStack {
                         Button("취소", action: onCancel)
-                            .font(.system(size: 15))
+                            .font(.pretendard(size: 15))
                             .foregroundColor(MomentColor.ink.opacity(0.7))
                             .disabled(isLoading)
                         Spacer()
@@ -324,7 +325,7 @@ private struct EditSheet: View {
                 VStack(alignment: .trailing, spacing: Spacing.xxs) {
                     MomentTextField(placeholder, text: $text, contentType: contentType)
                     Text(countText)
-                        .font(.system(size: 11))
+                        .font(.pretendard(size: 11))
                         .foregroundColor(MomentColor.ink.opacity(0.45))
                         .accessibilityLabel("글자 수 \(countText)")
                 }
@@ -337,7 +338,7 @@ private struct EditSheet: View {
                 .animation(.easeOut(duration: 0.15), value: canSubmit)
 
                 Text(hint)
-                    .font(.system(size: 12))
+                    .font(.pretendard(size: 12))
                     .foregroundColor(MomentColor.ink.opacity(0.55))
 
                 Spacer()

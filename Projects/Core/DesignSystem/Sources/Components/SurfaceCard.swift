@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreKit
 
 public struct SurfaceCard<Content: View>: View {
     let content: Content
@@ -27,10 +28,10 @@ public struct SurfaceCard<Content: View>: View {
             SurfaceCard {
                 VStack(spacing: 12) {
                     Text("Card Title")
-                        .font(.system(.headline, design: .default))
+                        .font(.pretendard(.headline, weight: .semibold))
                         .foregroundColor(MomentColor.ink)
                     Text("This is example card content with surface styling")
-                        .font(.body)
+                        .font(.pretendard(.body))
                         .foregroundColor(MomentColor.ink)
                 }
                 .padding(16)

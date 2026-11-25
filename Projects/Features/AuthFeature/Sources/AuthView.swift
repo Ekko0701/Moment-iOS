@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreKit
 import MomentUIKit
 import AuthenticationServices
 import CryptoKit
@@ -78,7 +79,7 @@ public struct AuthView: View {
             // 시안 01: 워드마크는 40pt Bold + tracking -1.2.
             // (displayXL 토큰의 Thin은 크림 톤 시절 값 — 순백 위에서는 획이 흐려진다)
             Text("Moment")
-                .font(.system(size: 40, weight: .bold))
+                .font(.pretendard(size: 40, weight: .bold))
                 .tracking(-1.2)
                 .foregroundColor(MomentColor.ink)
 
@@ -113,7 +114,7 @@ public struct AuthView: View {
     private var loginSection: some View {
         VStack(spacing: 0) {
             Text("로그인")
-                .font(.system(size: 22, weight: .bold))
+                .font(.pretendard(size: 22, weight: .bold))
                 .foregroundColor(MomentColor.ink)
                 .padding(.top, Spacing.xxl)
                 .padding(.bottom, Spacing.xl)
@@ -134,7 +135,7 @@ public struct AuthView: View {
                 Button("비밀번호를 잊으셨나요?") {
                     showsResetNotice = true
                 }
-                .font(.system(size: 12, weight: .medium))
+                .font(.pretendard(size: 12, weight: .medium))
                 .foregroundColor(MomentColor.ink.opacity(0.6))
                 .padding(.top, Spacing.xs)
 
@@ -165,7 +166,7 @@ public struct AuthView: View {
     private var signupSection: some View {
         VStack(spacing: 0) {
             Text("회원가입")
-                .font(.system(size: 22, weight: .bold))
+                .font(.pretendard(size: 22, weight: .bold))
                 .foregroundColor(MomentColor.ink)
                 .padding(.top, Spacing.xxl)
                 .padding(.bottom, Spacing.xl)
@@ -212,7 +213,7 @@ public struct AuthView: View {
     private var submitHint: some View {
         if let reason = state.submitBlockedReason {
             Text(reason)
-                .font(.system(size: 12, weight: .medium))
+                .font(.pretendard(size: 12, weight: .medium))
                 .foregroundColor(MomentColor.ink.opacity(0.7))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, Spacing.xs)
@@ -291,10 +292,10 @@ public struct AuthView: View {
                 Text(prompt)
                     .foregroundColor(MomentColor.ink.opacity(0.55))
                 Text(action)
-                    .fontWeight(.bold)
+                    .font(.pretendard(size: 13, weight: .bold))
                     .foregroundColor(MomentColor.ink.opacity(0.95))
             }
-            .font(.system(size: 13))
+            .font(.pretendard(size: 13))
         }
         .buttonStyle(.plain)
     }
@@ -305,7 +306,7 @@ public struct AuthView: View {
                 .fill(MomentColor.ink.opacity(0.15))
                 .frame(height: 1)
             Text("또는")
-                .font(.system(size: 12))
+                .font(.pretendard(size: 12))
                 .foregroundColor(MomentColor.ink.opacity(0.5))
             Rectangle()
                 .fill(MomentColor.ink.opacity(0.15))

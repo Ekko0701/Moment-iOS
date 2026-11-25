@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreKit
 
 // MARK: - Space Pill (홈/스페이스 상단 중앙 — 아바타 + 스페이스명 + D+n)
 
@@ -18,12 +19,12 @@ public struct SpacePill: View {
                 .frame(width: 24, height: 24)
 
             Text(title)
-                .font(.system(size: 13, weight: .medium))
+                .font(.pretendard(size: 13, weight: .medium))
                 .foregroundColor(MomentColor.ink)
 
             if let days {
                 Text("D+\(days)")
-                    .font(.system(size: 12, design: .default))
+                    .font(.pretendard(size: 12))
                     .foregroundColor(MomentColor.ink.opacity(0.55))
             }
         }
@@ -53,11 +54,11 @@ public struct SenderChip: View {
                 .frame(width: 22, height: 22)
 
             Text(name)
-                .font(.system(size: 13, weight: .bold))
+                .font(.pretendard(size: 13, weight: .bold))
                 .foregroundColor(MomentColor.ink)
 
             Text(timeText)
-                .font(.system(size: 11, design: .default))
+                .font(.pretendard(size: 11))
                 .foregroundColor(MomentColor.ink.opacity(0.72))
         }
         .padding(.leading, Spacing.xs)
@@ -81,7 +82,7 @@ public struct CaptionPill: View {
 
     public var body: some View {
         Text(text)
-            .font(.system(size: 15))
+            .font(.pretendard(size: 15))
             .foregroundColor(MomentColor.ink)
             .lineLimit(1)
             .padding(.horizontal, 18)
@@ -104,7 +105,7 @@ public struct DateDividerPill: View {
 
     public var body: some View {
         Text(text)
-            .font(.system(size: 11, weight: .medium))
+            .font(.pretendard(size: 11, weight: .medium))
             .foregroundColor(MomentColor.ink.opacity(0.55))
             .padding(.horizontal, Spacing.sm)
             .padding(.vertical, 5)

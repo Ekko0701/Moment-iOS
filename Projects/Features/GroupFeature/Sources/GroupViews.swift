@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreKit
 import Domain
 import MomentUIKit
 
@@ -118,7 +119,7 @@ public struct GroupJoinView: View {
                                     get: { state.code },
                                     set: { send(.codeChanged($0)) }
                                 ))
-                                .font(.system(.title, design: .monospaced).weight(.semibold))
+                                .font(.pretendard(.title, weight: .semibold))
                                 .textInputAutocapitalization(.characters)
                                 .autocorrectionDisabled()
                                 .submitLabel(.join)
@@ -244,7 +245,7 @@ struct MemberMomentTile: View {
                     Image(systemName: "crown.fill").font(.caption2).foregroundColor(MomentColor.accent)
                 }
                 Text(member.user.nickname)
-                    .font(.caption.weight(.medium))
+                    .font(.pretendard(.caption, weight: .medium))
                     .foregroundColor(MomentColor.ink)
                     .lineLimit(1)
             }
@@ -285,7 +286,7 @@ public struct GroupSettingsView: View {
                 if let code = state.inviteCode {
                     HStack {
                         Text(code.code)
-                            .font(.system(.title2, design: .monospaced).weight(.semibold))
+                            .font(.pretendard(.title2, weight: .semibold))
                             .accessibilityLabel(spelledCode(code.code))
                         Spacer()
                         ShareLink(item: inviteMessage(code)) {
@@ -313,7 +314,7 @@ public struct GroupSettingsView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(request.user.nickname)
                                 Text("@\(request.user.handle)")
-                                    .font(.caption)
+                                    .font(.pretendard(.caption))
                                     .foregroundColor(MomentColor.ink.opacity(0.5))
                             }
                             Spacer()
@@ -326,7 +327,7 @@ public struct GroupSettingsView: View {
                                     .accessibilityLabel("\(request.user.nickname)님 요청 거절")
                                 Button("수락") { send(.decideJoinRequestTapped(request, approve: true)) }
                                     .buttonStyle(.borderless)
-                                    .fontWeight(.semibold)
+                                    .font(.pretendard(.body, weight: .semibold))
                                     .disabled(state.members.count >= state.space.maxMembers)
                                     .accessibilityLabel("\(request.user.nickname)님 요청 수락")
                             }
@@ -367,10 +368,10 @@ public struct GroupSettingsView: View {
                     HStack {
                         Text(member.user.nickname)
                         if member.role == .owner {
-                            Text("방장").font(.caption).foregroundColor(MomentColor.accent)
+                            Text("방장").font(.pretendard(.caption)).foregroundColor(MomentColor.accent)
                         }
                         if member.user.id == state.currentUserId {
-                            Text("나").font(.caption).foregroundColor(MomentColor.ink.opacity(0.5))
+                            Text("나").font(.pretendard(.caption)).foregroundColor(MomentColor.ink.opacity(0.5))
                         }
                         Spacer()
                         if state.isOwner && member.user.id != state.currentUserId {
@@ -459,14 +460,14 @@ struct GroupCodeCard: View {
                     .font(MomentTypography.bodySM)
                     .foregroundColor(MomentColor.ink.opacity(0.6))
                 Text(code.code)
-                    .font(.system(.largeTitle, design: .monospaced).weight(.bold))
+                    .font(.pretendard(.largeTitle, weight: .bold))
                     .foregroundColor(MomentColor.ink)
                     .padding(.vertical, Spacing.xs)
                     .textSelection(.enabled)
                     .accessibilityLabel(spelledCode(code.code))
                 ShareLink(item: "Moment 그룹 초대 코드: \(code.code)") {
                     Label("코드 보내기", systemImage: "square.and.arrow.up")
-                        .font(.footnote.weight(.medium))
+                        .font(.pretendard(.footnote, weight: .medium))
                 }
                 Text("\(code.expiresAt.formatted(date: .abbreviated, time: .shortened))까지 사용할 수 있어요. 코드로 요청하면 방장이 수락해야 들어와요.")
                     .font(MomentTypography.caption)

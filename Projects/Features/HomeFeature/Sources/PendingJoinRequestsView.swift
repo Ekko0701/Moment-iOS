@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreKit
 import Domain
 import MomentUIKit
 
@@ -17,7 +18,7 @@ public struct PendingJoinRequestsView: View {
         if !requests.isEmpty {
             VStack(alignment: .leading, spacing: Spacing.sm) {
                 Text("수락을 기다리는 그룹")
-                    .font(.footnote.weight(.medium))
+                    .font(.pretendard(.footnote, weight: .medium))
                     .foregroundColor(MomentColor.ink.opacity(0.6))
                 ForEach(requests) { request in
                     HStack(spacing: Spacing.sm) {
@@ -26,15 +27,15 @@ public struct PendingJoinRequestsView: View {
                             .accessibilityHidden(true)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(request.spaceName)
-                                .font(.subheadline.weight(.medium))
+                                .font(.pretendard(.subheadline, weight: .medium))
                                 .foregroundColor(MomentColor.ink)
                             Text("방장 수락 대기 중")
-                                .font(.caption)
+                                .font(.pretendard(.caption))
                                 .foregroundColor(MomentColor.ink.opacity(0.55))
                         }
                         Spacer()
                         Button("요청 취소") { onCancel(request) }
-                            .font(.footnote)
+                            .font(.pretendard(.footnote))
                             .foregroundColor(MomentColor.ink.opacity(0.6))
                             .accessibilityLabel("\(request.spaceName) 참여 요청 취소")
                     }

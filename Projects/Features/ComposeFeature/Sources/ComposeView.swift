@@ -1,5 +1,6 @@
 import PhotosUI
 import SwiftUI
+import CoreKit
 import UIKit
 import MomentUIKit
 import Domain
@@ -94,7 +95,7 @@ public struct ComposeView: View {
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundColor(MomentColor.ink.opacity(0.55))
             }
-            .font(.footnote.weight(.medium))
+            .font(.pretendard(.footnote, weight: .medium))
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, 8)
             .background(MomentColor.surfaceSoft)
@@ -139,7 +140,7 @@ public struct ComposeView: View {
                     photoPickerButton
                     Spacer()
                     Text("\(state.characterCount) / 500")
-                        .font(.system(size: 11, design: .default))
+                        .font(.pretendard(size: 11))
                         .tracking(0.8)
                         .foregroundColor(MomentColor.ink.opacity(0.45))
                 }

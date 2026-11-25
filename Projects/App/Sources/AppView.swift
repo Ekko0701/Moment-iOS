@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreKit
 import ComposableArchitecture
 import Domain
 import AuthFeature
@@ -120,7 +121,7 @@ struct AppView: View {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(MomentColor.ink)
                     Text("순간을 보냈어요")
-                        .font(.footnote.weight(.medium))
+                        .font(.pretendard(.footnote, weight: .medium))
                         .foregroundColor(MomentColor.ink)
                 }
                 .padding(.horizontal, Spacing.md)
@@ -423,7 +424,7 @@ struct AppView: View {
     private struct DebugServerBadge: View {
         var body: some View {
             Text(NetworkingLive.debugServerLabel)
-                .font(.system(size: 9, weight: .medium))
+                .font(.pretendard(size: 9, weight: .medium))
                 .foregroundColor(MomentColor.ink.opacity(0.5))
                 .padding(.horizontal, 7)
                 .padding(.vertical, 3)

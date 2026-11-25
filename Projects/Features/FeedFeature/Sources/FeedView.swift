@@ -53,7 +53,7 @@ public struct FeedView: View {
                                     send(.loadMore)
                                 } label: {
                                     Label("이전 순간을 불러오지 못했어요 · 다시 시도", systemImage: "arrow.clockwise")
-                                        .font(.system(size: 13, weight: .medium))
+                                        .font(.pretendard(size: 13, weight: .medium))
                                         .foregroundColor(MomentColor.ink.opacity(0.7))
                                         .padding(.horizontal, Spacing.md)
                                         .padding(.vertical, Spacing.sm)
@@ -119,11 +119,11 @@ public struct FeedView: View {
                     .frame(width: 26, height: 26)
 
                 Text(moment.author.nickname)
-                    .font(.system(size: 13, weight: .bold))
+                    .font(.pretendard(size: 13, weight: .bold))
                     .foregroundColor(MomentColor.ink)
 
                 Text(moment.createdAt.relativeFormatted)
-                    .font(.system(size: 10, design: .default))
+                    .font(.pretendard(size: 10))
                     .foregroundColor(MomentColor.ink.opacity(0.5))
             }
 
@@ -181,9 +181,9 @@ public struct FeedView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Text(reaction.emoji)
-                            .font(.system(size: 13))
+                            .font(.pretendard(size: 13))
                         Text("\(reaction.count)")
-                            .font(.system(size: 12, weight: .medium))
+                            .font(.pretendard(size: 12, weight: .medium))
                     }
                     .padding(.horizontal, Spacing.sm)
                     .padding(.vertical, 6)

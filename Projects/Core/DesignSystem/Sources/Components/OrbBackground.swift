@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreKit
 
 public struct Orb: Sendable {
     let color: Color
@@ -85,7 +86,7 @@ public struct OrbBackground: View {
         MomentColor.canvas.ignoresSafeArea()
         OrbBackground.home().ignoresSafeArea()
         VStack {
-            Text("Home Preview").font(.title)
+            Text("Home Preview").font(.pretendard(.title))
             Spacer()
         }
         .padding()

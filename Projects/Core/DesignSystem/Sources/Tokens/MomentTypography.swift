@@ -1,46 +1,47 @@
 import SwiftUI
+import CoreKit
 
 public struct MomentTypography {
     // MARK: - Display / Hero Sizes
     // displayXL: 40pt .light tracking -1.6 (hero wordmark/onboarding)
-    public static let displayXL = Font.system(size: 40, weight: .thin, design: .default)
+    public static let displayXL = Font.pretendard(size: 40, weight: .thin)
 
     // displayLG: 30pt .light tracking -0.9
-    public static let displayLG = Font.system(size: 30, weight: .thin, design: .default)
+    public static let displayLG = Font.pretendard(size: 30, weight: .thin)
 
     // MARK: - Headlines
     // headline: 20pt .semibold tracking -0.26
-    public static let headline = Font.system(size: 20, weight: .semibold, design: .default)
+    public static let headline = Font.pretendard(size: 20, weight: .semibold)
 
     // subhead: 20pt .light tracking -0.26
-    public static let subhead = Font.system(size: 20, weight: .light, design: .default)
+    public static let subhead = Font.pretendard(size: 20, weight: .light)
 
     // MARK: - Card & Body Hierarchy
     // cardTitle: 17pt .bold (pricing/card titles)
-    public static let cardTitle = Font.system(size: 17, weight: .bold, design: .default)
+    public static let cardTitle = Font.pretendard(size: 17, weight: .bold)
 
     // bodyLG: 17pt .regular tracking -0.14 (lead body/labels)
-    public static let bodyLG = Font.system(size: 17, weight: .regular, design: .default)
+    public static let bodyLG = Font.pretendard(size: 17, weight: .regular)
 
     // body: 15pt .regular tracking -0.2 (default body)
-    public static let body = Font.system(size: 15, weight: .regular, design: .default)
+    public static let body = Font.pretendard(size: 15, weight: .regular)
 
     // bodySM: 13pt .regular (card body, list items)
-    public static let bodySM = Font.system(size: 13, weight: .regular, design: .default)
+    public static let bodySM = Font.pretendard(size: 13, weight: .regular)
 
     // MARK: - Button/Link
     // button: 17pt .medium tracking -0.1 (pill buttons)
-    public static let button = Font.system(size: 17, weight: .medium, design: .default)
+    public static let button = Font.pretendard(size: 17, weight: .medium)
 
     // link: 17pt .medium tracking -0.1 (inline link emphasis)
-    public static let link = Font.system(size: 17, weight: .medium, design: .default)
+    public static let link = Font.pretendard(size: 17, weight: .medium)
 
     // MARK: - Eyebrow & Caption (small labels)
     // eyebrow: 13pt .regular tracking +1.2 (always UPPERCASE, 기본 폰트)
-    public static let eyebrow = Font.system(size: 13, weight: .regular, design: .default)
+    public static let eyebrow = Font.pretendard(size: 13, weight: .regular)
 
     // caption: 11pt .regular tracking +0.8 (always UPPERCASE, 기본 폰트)
-    public static let caption = Font.system(size: 11, weight: .regular, design: .default)
+    public static let caption = Font.pretendard(size: 11, weight: .regular)
 
     // MARK: - View Extension Helper
     // Use: .momentType(.body), .momentType(.headline), etc.

@@ -25,6 +25,12 @@ let project = Project(
             infoPlist: .extendingDefault(
                 with: [
                     "CFBundleDisplayName": "Moment",
+                    "UIAppFonts": [
+                        "Pretendard-Regular.otf",
+                        "Pretendard-Medium.otf",
+                        "Pretendard-SemiBold.otf",
+                        "Pretendard-Bold.otf",
+                    ],
                     "UIMainStoryboardFile": "",
                     // 스토리보드 없이 시스템 배경색(라이트 흰색, 다크 검정)으로 시작 화면을 그린다
                     "UILaunchScreen": [:],
@@ -45,6 +51,7 @@ let project = Project(
                 ]
             ),
             sources: ["Sources/**"],
+            resources: ["Resources/Fonts/**"],
             entitlements: .file(path: "MomentApp.entitlements"),
             dependencies: [
                 ModuleDependency.designSystem,
@@ -74,9 +81,17 @@ let project = Project(
                     "NSExtension": [
                         "NSExtensionPointIdentifier": "com.apple.widgetkit-extension",
                     ],
+                    "UIAppFonts": [
+                        "Pretendard-Regular.otf",
+                        "Pretendard-Medium.otf",
+                        "Pretendard-SemiBold.otf",
+                        "Pretendard-Bold.otf",
+                    ],
                 ]
             ),
             sources: ["Widget/Sources/**"],
+            // 위젯 익스텐션은 앱 번들의 글꼴을 읽지 못하므로 같은 글꼴 파일을 따로 담는다
+            resources: ["Resources/Fonts/**"],
             entitlements: .file(path: "Widget/MomentWidget.entitlements"),
             dependencies: [
                 ModuleDependency.coreKit,
