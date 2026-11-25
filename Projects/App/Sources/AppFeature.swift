@@ -697,7 +697,9 @@ private func syncWidget(spaces: [Space], myUserId: UUID?) async {
             text: moment.text,
             imageFileName: imageFileName,
             createdAt: moment.createdAt,
-            hasImage: moment.imageURL != nil
+            hasImage: moment.imageURL != nil,
+            textPosition: moment.textStyle?.position.rawValue,
+            textColor: moment.textStyle?.color.rawValue
         )), for: space.id)
     }
 

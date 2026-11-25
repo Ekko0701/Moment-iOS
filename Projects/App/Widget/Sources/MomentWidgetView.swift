@@ -59,32 +59,7 @@ struct MomentSmallWidgetView: View {
         if let imageFileName = snapshot.imageFileName,
            let imageData = WidgetMomentStore().loadCachedImage(fileName: imageFileName),
            let uiImage = UIImage(data: imageData) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(snapshot.text ?? "")
-                    .font(.pretendard(.caption2, weight: .medium))
-                    .lineLimit(2)
-                    .foregroundColor(.white)
-                    .shadow(radius: 1)
-
-                HStack(spacing: 4) {
-                    Text(snapshot.authorNickname)
-                        .font(.pretendard(.caption2))
-                        .foregroundColor(.white.opacity(0.9))
-                        .shadow(radius: 1)
-
-                    Spacer()
-
-                    Text(snapshot.createdAt.relativeFormatted)
-                        .font(.pretendard(.caption2))
-                        .foregroundColor(.white.opacity(0.7))
-                        .shadow(radius: 1)
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
-            .containerBackground(for: .widget) {
-                WidgetPhotoBackground(image: uiImage)
-            }
-            .widgetURL(URL(string: "moment://moment/\(snapshot.spaceId)/\(snapshot.momentId)"))
+            WidgetPhotoMoment(snapshot: snapshot, image: uiImage, textSize: 13, metaSize: 11, lineLimit: 3)
         } else {
             // Text-only with pastel color block background based on hash
             let blockColor = getBlockColor(for: snapshot.momentId)
@@ -194,32 +169,7 @@ struct MomentMediumWidgetView: View {
         if let imageFileName = snapshot.imageFileName,
            let imageData = WidgetMomentStore().loadCachedImage(fileName: imageFileName),
            let uiImage = UIImage(data: imageData) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(snapshot.text ?? "")
-                    .font(.pretendard(.callout, weight: .medium))
-                    .lineLimit(2)
-                    .foregroundColor(.white)
-                    .shadow(radius: 1)
-
-                HStack(spacing: 6) {
-                    Text(snapshot.authorNickname)
-                        .font(.pretendard(.caption))
-                        .foregroundColor(.white.opacity(0.9))
-                        .shadow(radius: 1)
-
-                    Spacer()
-
-                    Text(snapshot.createdAt.relativeFormatted)
-                        .font(.pretendard(.caption))
-                        .foregroundColor(.white.opacity(0.7))
-                        .shadow(radius: 1)
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
-            .containerBackground(for: .widget) {
-                WidgetPhotoBackground(image: uiImage)
-            }
-            .widgetURL(URL(string: "moment://moment/\(snapshot.spaceId)/\(snapshot.momentId)"))
+            WidgetPhotoMoment(snapshot: snapshot, image: uiImage, textSize: 20, metaSize: 12, lineLimit: 3)
         } else {
             // Text-only with gradient background
             ZStack(alignment: .center) {
@@ -260,20 +210,61 @@ struct MomentMediumWidgetView: View {
     }
 }
 
-/// 사진 모먼트 위젯의 배경. 아래쪽을 어둡게 깔아 흰 글자가 읽히게 한다.
-private struct WidgetPhotoBackground: View {
+/// 사진 모먼트 위젯. 글씨는 보낸 사람이 고른 모서리(왼쪽 위 또는 왼쪽 아래)에서 시작하고,
+/// 보낸 사람·시간은 반대쪽 모서리에 둔다. 글씨 없이 사진만 올린 모먼트는 보낸 사람·시간을 왼쪽 아래에 둔다.
+private struct WidgetPhotoMoment: View {
+    let snapshot: WidgetMomentSnapshot
     let image: UIImage
+    let textSize: CGFloat
+    let metaSize: CGFloat
+    let lineLimit: Int
+
+    private var position: PhotoTextPosition { PhotoTextPosition(name: snapshot.textPosition) }
+    private var color: PhotoTextColor { PhotoTextColor(name: snapshot.textColor) }
+
+    private var text: String? {
+        guard let text = snapshot.text, !text.isEmpty else { return nil }
+        return text
+    }
+
+    private var metaPosition: PhotoTextPosition { text == nil ? .bottom : position.opposite }
 
     var body: some View {
         ZStack {
-            Image(uiImage: image)
-                .resizable()
-                .scaledToFill()
-            LinearGradient(
-                colors: [.clear, .black.opacity(0.45)],
-                startPoint: .center,
-                endPoint: .bottom
-            )
+            if let text {
+                Text(text)
+                    .photoTextStyle(color: color, fontSize: textSize)
+                    .lineLimit(lineLimit)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: position.alignment)
+            }
+
+            Text("\(snapshot.authorNickname) · \(snapshot.createdAt.relativeFormatted)")
+                .font(.pretendard(size: metaSize, weight: .semibold))
+                .foregroundColor(.white)
+                .shadow(color: .black.opacity(0.5), radius: 1.5, x: 0, y: 1)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: metaPosition.alignment)
         }
+        .containerBackground(for: .widget) {
+            ZStack {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                if text != nil {
+                    PhotoTextScrim(position: position, color: color)
+                }
+                // 보낸 사람·시간 쪽도 옅게 어둡게 해 밝은 사진에서 읽히게 한다
+                LinearGradient(
+                    stops: [
+                        .init(color: .black.opacity(0.32), location: 0),
+                        .init(color: .clear, location: 0.3),
+                    ],
+                    startPoint: metaPosition == .top ? .top : .bottom,
+                    endPoint: metaPosition == .top ? .bottom : .top
+                )
+            }
+        }
+        .widgetURL(URL(string: "moment://moment/\(snapshot.spaceId)/\(snapshot.momentId)"))
+        .accessibilityElement(children: .combine)
     }
 }
