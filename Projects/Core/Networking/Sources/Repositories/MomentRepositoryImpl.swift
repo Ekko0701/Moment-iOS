@@ -24,8 +24,19 @@ public final class MomentRepositoryImpl: MomentRepositoryProtocol {
         return dto?.toDomainModel()
     }
 
-    public func create(spaceId: UUID, imageKey: String?, text: String?) async throws -> Moment {
-        let endpoint = MomentEndpoints.createMoment(spaceId: spaceId.uuidString, imageUrl: imageKey, text: text)
+    public func create(
+        spaceId: UUID,
+        imageKey: String?,
+        text: String?,
+        textStyle: MomentTextStyle?
+    ) async throws -> Moment {
+        let endpoint = MomentEndpoints.createMoment(
+            spaceId: spaceId.uuidString,
+            imageUrl: imageKey,
+            text: text,
+            textPosition: textStyle?.position.rawValue,
+            textColor: textStyle?.color.rawValue
+        )
         let response: MomentDTO = try await apiClient.request(endpoint)
         return response.toDomainModel()
     }
@@ -54,6 +65,7 @@ public final class MomentRepositoryImpl: MomentRepositoryProtocol {
 
 /// 서버 MomentResponse 매핑:
 /// { id, spaceId, author:{userId,handle,nickname,profileImageUrl}, imageUrl, text,
+///   textPosition(TOP|BOTTOM), textColor(WHITE|INK|PEACH|BUTTER|LILAC),
 ///   createdAtMs(epoch millis), reactions:[{emoji,count}], myReaction }
 struct MomentDTO: Decodable {
     let id: UUID
@@ -61,6 +73,8 @@ struct MomentDTO: Decodable {
     let author: MomentAuthorDTO
     let imageUrl: String?
     let text: String?
+    let textPosition: String?
+    let textColor: String?
     let createdAtMs: Int64
     let myReaction: String?
     let reactions: [ReactionCountDTO]?
@@ -72,9 +86,21 @@ struct MomentDTO: Decodable {
             author: author.toDomainModel(),
             imageURL: imageUrl.flatMap { URL(string: $0) },
             text: text,
+            textStyle: textStyle,
             createdAt: Date(timeIntervalSince1970: TimeInterval(createdAtMs) / 1000),
             myReaction: myReaction,
             reactions: (reactions ?? []).map { ReactionCount(emoji: $0.emoji, count: $0.count) }
+        )
+    }
+}
+
+extension MomentDTO {
+    /// 서버가 위치를 준 모먼트만 스타일을 가진다. 모르는 값은 기본값(왼쪽 위·흰색)으로 읽는다
+    var textStyle: MomentTextStyle? {
+        guard let textPosition else { return nil }
+        return MomentTextStyle(
+            position: MomentTextPosition(rawValue: textPosition) ?? .top,
+            color: textColor.flatMap(MomentTextColor.init(rawValue:)) ?? .white
         )
     }
 }

@@ -79,3 +79,34 @@ func spaceDisplayName() {
                       createdAt: Date())
     #expect(group.displayName(myUserId: me.id) == "그룹")
 }
+
+@Test("사진 위 글씨: 사진과 글이 함께 있을 때만 있고, 스타일이 없으면 왼쪽 위·흰색")
+func momentPhotoText() {
+    let author = UserProfile(id: UUID(), handle: "m_a", nickname: "지은")
+    let url = URL(string: "https://example.com/a.jpg")
+
+    let styled = Moment(id: UUID(), spaceId: UUID(), author: author, imageURL: url, text: "노을",
+                        textStyle: MomentTextStyle(position: .bottom, color: .butter), createdAt: Date())
+    #expect(styled.photoText == "노을")
+    #expect(styled.photoTextStyle == MomentTextStyle(position: .bottom, color: .butter))
+
+    let legacy = Moment(id: UUID(), spaceId: UUID(), author: author, imageURL: url, text: "노을", createdAt: Date())
+    #expect(legacy.photoText == "노을")
+    #expect(legacy.photoTextStyle == .standard)
+
+    let textOnly = Moment(id: UUID(), spaceId: UUID(), author: author, text: "글만", createdAt: Date())
+    #expect(textOnly.photoText == nil)
+
+    let photoOnly = Moment(id: UUID(), spaceId: UUID(), author: author, imageURL: url, text: "", createdAt: Date())
+    #expect(photoOnly.photoText == nil)
+}
+
+@Test("내 반응을 바꿔도 사진 위 글씨 스타일은 그대로다")
+func reactionKeepsTextStyle() {
+    let author = UserProfile(id: UUID(), handle: "m_a", nickname: "지은")
+    let style = MomentTextStyle(position: .bottom, color: .lilac)
+    let moment = Moment(id: UUID(), spaceId: UUID(), author: author,
+                        imageURL: URL(string: "https://example.com/a.jpg"), text: "노을",
+                        textStyle: style, createdAt: Date())
+    #expect(moment.withMyReaction("❤️").textStyle == style)
+}

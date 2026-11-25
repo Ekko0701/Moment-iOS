@@ -24,7 +24,8 @@ public protocol MomentRepositoryProtocol: Sendable {
     func timeline(spaceId: UUID, cursor: String?, limit: Int) async throws -> PaginatedMoments
     func latestExcludingMine(spaceId: UUID) async throws -> Moment?
     func presign() async throws -> PresignResponse
-    func create(spaceId: UUID, imageKey: String?, text: String?) async throws -> Moment
+    /// textStyle은 사진과 글을 함께 보낼 때만 의미가 있다
+    func create(spaceId: UUID, imageKey: String?, text: String?, textStyle: MomentTextStyle?) async throws -> Moment
     func delete(momentId: UUID) async throws
     func react(to momentId: UUID, emoji: String) async throws
     func removeReaction(from momentId: UUID) async throws

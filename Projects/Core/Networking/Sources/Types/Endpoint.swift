@@ -219,8 +219,20 @@ public enum MomentEndpoints {
         )
     }
 
-    static func createMoment(spaceId: String, imageUrl: String?, text: String?) -> Endpoint {
-        let body = CreateMomentRequest(spaceId: spaceId, imageUrl: imageUrl, text: text)
+    static func createMoment(
+        spaceId: String,
+        imageUrl: String?,
+        text: String?,
+        textPosition: String? = nil,
+        textColor: String? = nil
+    ) -> Endpoint {
+        let body = CreateMomentRequest(
+            spaceId: spaceId,
+            imageUrl: imageUrl,
+            text: text,
+            textPosition: textPosition,
+            textColor: textColor
+        )
         return Endpoint(
             path: "/v1/moments",
             method: .post,
@@ -357,22 +369,24 @@ struct CreateMomentRequest: Encodable, Sendable {
     let spaceId: String
     let imageUrl: String?
     let text: String?
+    let textPosition: String?
+    let textColor: String?
 
     enum CodingKeys: String, CodingKey {
         case spaceId
         case imageUrl
         case text
+        case textPosition
+        case textColor
     }
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(spaceId, forKey: .spaceId)
-        if let imageUrl = imageUrl {
-            try container.encode(imageUrl, forKey: .imageUrl)
-        }
-        if let text = text {
-            try container.encode(text, forKey: .text)
-        }
+        try container.encodeIfPresent(imageUrl, forKey: .imageUrl)
+        try container.encodeIfPresent(text, forKey: .text)
+        try container.encodeIfPresent(textPosition, forKey: .textPosition)
+        try container.encodeIfPresent(textColor, forKey: .textColor)
     }
 }
 

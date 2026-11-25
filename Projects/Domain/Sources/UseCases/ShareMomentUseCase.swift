@@ -8,7 +8,13 @@ public struct ShareMomentUseCase: Sendable {
 
     public init() {}
 
-    public func execute(spaceId: UUID, text: String, imageData: Data?) async throws -> Moment {
+    /// textStyle은 사진 위에 글씨를 올릴 때의 위치·색. 사진이나 글이 없으면 보내지 않는다
+    public func execute(
+        spaceId: UUID,
+        text: String,
+        imageData: Data?,
+        textStyle: MomentTextStyle = .standard
+    ) async throws -> Moment {
         var imageKey: String? = nil
 
         if let imageData {
@@ -20,7 +26,8 @@ public struct ShareMomentUseCase: Sendable {
         return try await momentRepository.create(
             spaceId: spaceId,
             imageKey: imageKey,
-            text: text.isEmpty ? nil : text
+            text: text.isEmpty ? nil : text,
+            textStyle: imageKey != nil && !text.isEmpty ? textStyle : nil
         )
     }
 
