@@ -13,6 +13,9 @@ public struct HomeView: View {
     /// 당겨서 새로고침. 앱 셸이 목록을 다 받을 때까지 기다려, 스피너가 로딩과 함께 사라지게 한다
     let refresh: (() async -> Void)?
 
+    /// 크게 보고 있는 사진 모먼트. 화면 안에서만 쓰는 표시 상태다
+    @State private var viewedMoment: Moment?
+
     public init(
         state: HomeFeature.State,
         send: @escaping (HomeFeature.Action) -> Void,
@@ -49,6 +52,17 @@ public struct HomeView: View {
             }
         }
         .onAppear { send(.onAppear) }
+        .fullScreenCover(item: $viewedMoment) { moment in
+            PhotoMomentViewer(
+                imageURL: moment.imageURL,
+                authorName: moment.author.nickname,
+                detailText: viewerDetailText(moment),
+                text: moment.photoText,
+                position: PhotoTextPosition(name: moment.photoTextStyle.position.rawValue),
+                color: PhotoTextColor(name: moment.photoTextStyle.color.rawValue),
+                onClose: { viewedMoment = nil }
+            )
+        }
         // 내비는 앱 정체성만 — 관계 정보는 카드 위 라벨이 담당한다
         .toolbar {
             ToolbarItem(placement: .principal) {
@@ -137,7 +151,7 @@ public struct HomeView: View {
             if moment.imageURL != nil {
                 photoMomentCard(moment, spaceId: space.id)
                     .accessibilityLabel(momentAccessibilityText(moment))
-                    .accessibilityHint(openLabel(space))
+                    .accessibilityHint("사진 크게 보기")
             } else {
                 textMomentCard(moment, spaceId: space.id)
                     .accessibilityLabel(momentAccessibilityText(moment))
@@ -168,8 +182,9 @@ public struct HomeView: View {
     // MARK: - 사진 모먼트 카드 (Locket 스타일 대형 카드)
 
     private func photoMomentCard(_ moment: Moment, spaceId: UUID) -> some View {
-        Button {
-            send(.spaceTapped(spaceId))
+        let textPosition = PhotoTextPosition(name: moment.photoTextStyle.position.rawValue)
+        return Button {
+            viewedMoment = moment
         } label: {
             AsyncImage(url: moment.imageURL) { phase in
                 if let image = phase.image {
@@ -184,23 +199,33 @@ public struct HomeView: View {
             // 모든 모먼트가 같은 자리·같은 크기 — 사진도 텍스트·빈 상태와 동일한 정사각형.
             // scaledToFill과 결합해 중앙 크롭되며, 사진↔글 전환 시 레이아웃이 출렁이지 않는다.
             .aspectRatio(1, contentMode: .fit)
+            // 글씨는 카드에 보이는 사진의 모서리를 기준으로 그려, 정사각으로 잘려도 잘리지 않는다
+            .overlay {
+                if let text = moment.photoText {
+                    PhotoTextOverlay(
+                        text: text,
+                        position: textPosition,
+                        color: PhotoTextColor(name: moment.photoTextStyle.color.rawValue)
+                    )
+                }
+            }
             .clipShape(RoundedRectangle(cornerRadius: 26))
-            .overlay(alignment: .topLeading) {
+            // 보낸 사람 칩은 글씨와 겹치지 않게 반대쪽 모서리에 둔다. 글씨가 없으면 왼쪽 위
+            .overlay(alignment: moment.photoText == nil ? .topLeading : textPosition.opposite.alignment) {
                 SenderChip(
                     name: moment.author.nickname,
                     timeText: moment.createdAt.relativeFormatted
                 )
                 .padding(Spacing.md)
             }
-            .overlay(alignment: .bottom) {
-                if let text = moment.text, !text.isEmpty {
-                    CaptionPill(text)
-                        .padding(.horizontal, Spacing.lg)
-                        .padding(.bottom, 20)
-                }
-            }
         }
         .buttonStyle(MomentPressStyle(scale: 0.98))
+    }
+
+    private func viewerDetailText(_ moment: Moment) -> String {
+        let time = moment.createdAt.relativeFormatted
+        guard let space = state.spaces.first(where: { $0.id == moment.spaceId }) else { return time }
+        return "\(time) · \(spaceTitle(space))"
     }
 
     // MARK: - 텍스트 모먼트 카드

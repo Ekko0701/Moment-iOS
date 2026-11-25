@@ -223,6 +223,17 @@ struct MemberMomentTile: View {
                                 MomentSunsetGradient()
                             }
                         }
+                        .overlay {
+                            if let text = moment.photoText {
+                                PhotoTextOverlay(
+                                    text: text,
+                                    positionName: moment.photoTextStyle.position.rawValue,
+                                    colorName: moment.photoTextStyle.color.rawValue,
+                                    fontSize: 11,
+                                    lineLimit: 3
+                                )
+                            }
+                        }
                     } else {
                         Text(moment.text ?? "")
                             .font(MomentTypography.bodySM)

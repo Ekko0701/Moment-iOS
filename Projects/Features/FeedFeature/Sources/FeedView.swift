@@ -11,6 +11,9 @@ public struct FeedView: View {
     let send: (FeedFeature.Action) -> Void
     let currentUserId: UUID?
 
+    /// 크게 보고 있는 사진 모먼트의 id. 반응이 바뀌면 뷰어도 따라 바뀌도록 모먼트 자체가 아니라 id를 둔다
+    @State private var viewedMomentId: UUID?
+
     public init(
         state: FeedFeature.State,
         send: @escaping (FeedFeature.Action) -> Void,
@@ -75,6 +78,23 @@ public struct FeedView: View {
             }
 
         }
+        .fullScreenCover(isPresented: Binding(
+            get: { viewedMoment != nil },
+            set: { if !$0 { viewedMomentId = nil } }
+        )) {
+            if let moment = viewedMoment {
+                PhotoMomentViewer(
+                    imageURL: moment.imageURL,
+                    authorName: moment.author.nickname,
+                    detailText: moment.createdAt.relativeFormatted,
+                    text: moment.photoText,
+                    position: PhotoTextPosition(name: moment.photoTextStyle.position.rawValue),
+                    color: PhotoTextColor(name: moment.photoTextStyle.color.rawValue),
+                    onClose: { viewedMomentId = nil },
+                    footer: { reactionRow(moment) }
+                )
+            }
+        }
         .alert(
             state.error?.errorDescription ?? "오류가 발생했어요",
             isPresented: Binding(
@@ -84,6 +104,11 @@ public struct FeedView: View {
         ) {
             Button("확인", role: .cancel) {}
         }
+    }
+
+    private var viewedMoment: Moment? {
+        guard let viewedMomentId else { return nil }
+        return state.moments.first { $0.id == viewedMomentId }
     }
 
     // MARK: - 날짜 그룹핑
@@ -127,23 +152,10 @@ public struct FeedView: View {
                     .foregroundColor(MomentColor.ink.opacity(0.5))
             }
 
-            // 사진
+            // 사진이 있으면 글은 사진 위에 올리고, 없으면 글만 보여 준다
             if let imageURL = moment.imageURL {
-                AsyncImage(url: imageURL) { phase in
-                    if let image = phase.image {
-                        image
-                            .resizable()
-                            .scaledToFill()
-                    } else {
-                        MomentSunsetGradient()
-                    }
-                }
-                .frame(maxHeight: 200)
-                .clipShape(RoundedRectangle(cornerRadius: 14))
-            }
-
-            // 텍스트
-            if let text = moment.text, !text.isEmpty {
+                photo(moment, imageURL: imageURL)
+            } else if let text = moment.text, !text.isEmpty {
                 Text(text)
                     .font(MomentTypography.body)
                     .foregroundColor(MomentColor.ink)
@@ -166,6 +178,42 @@ public struct FeedView: View {
             )
             .stroke(MomentColor.surfaceStroke, lineWidth: 1)
         )
+    }
+
+    // MARK: - 사진
+
+    /// 3:4로 보여 주는 사진. 누르면 크게 본다
+    private func photo(_ moment: Moment, imageURL: URL) -> some View {
+        Button {
+            viewedMomentId = moment.id
+        } label: {
+            Color.clear
+                .aspectRatio(3.0 / 4.0, contentMode: .fit)
+                .overlay {
+                    AsyncImage(url: imageURL) { phase in
+                        if let image = phase.image {
+                            image
+                                .resizable()
+                                .scaledToFill()
+                        } else {
+                            MomentSunsetGradient()
+                        }
+                    }
+                }
+                .overlay {
+                    if let text = moment.photoText {
+                        PhotoTextOverlay(
+                            text: text,
+                            positionName: moment.photoTextStyle.position.rawValue,
+                            colorName: moment.photoTextStyle.color.rawValue
+                        )
+                    }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+        }
+        .buttonStyle(MomentPressStyle(scale: 0.98))
+        .accessibilityLabel(moment.photoText.map { "사진, \($0)" } ?? "사진")
+        .accessibilityHint("크게 보기")
     }
 
     // MARK: - 리액션
