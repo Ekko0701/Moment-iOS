@@ -24,6 +24,9 @@ public struct WidgetMomentSnapshot: Codable, Sendable {
     public let imageFileName: String?
     public let createdAt: Date
     public let hasImage: Bool
+    /// 사진 위 글씨의 시작 모서리와 색 이름. 값이 없으면 왼쪽 위·흰색으로 그린다
+    public let textPosition: String?
+    public let textColor: String?
 
     public init(
         momentId: UUID,
@@ -32,7 +35,9 @@ public struct WidgetMomentSnapshot: Codable, Sendable {
         text: String?,
         imageFileName: String?,
         createdAt: Date,
-        hasImage: Bool
+        hasImage: Bool,
+        textPosition: String? = nil,
+        textColor: String? = nil
     ) {
         self.momentId = momentId
         self.spaceId = spaceId
@@ -41,6 +46,8 @@ public struct WidgetMomentSnapshot: Codable, Sendable {
         self.imageFileName = imageFileName
         self.createdAt = createdAt
         self.hasImage = hasImage
+        self.textPosition = textPosition
+        self.textColor = textColor
     }
 }
 
