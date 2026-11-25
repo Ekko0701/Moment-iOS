@@ -40,7 +40,17 @@ public struct ShareMomentUseCase: Sendable {
         request.setValue("image/jpeg", forHTTPHeaderField: "Content-Type")
         request.httpBody = data
 
-        let (_, response) = try await URLSession.shared.data(for: request)
+        let response: URLResponse
+        do {
+            (_, response) = try await URLSession.shared.data(for: request)
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            // 연결 실패·시간 초과는 시스템 문구 대신 앱의 말투로 알린다
+            throw DomainError.unknown(
+                code: "UPLOAD_FAILED",
+                message: "사진을 올리지 못했어요. 네트워크를 확인하고 다시 시도해 주세요.")
+        }
         guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
             throw DomainError.unknown(code: "UPLOAD_FAILED", message: "사진 업로드에 실패했어요.")
         }
