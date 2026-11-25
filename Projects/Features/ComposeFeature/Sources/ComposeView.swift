@@ -5,7 +5,7 @@ import UIKit
 import MomentUIKit
 import Domain
 
-/// 작성 — Final-MVP: 타이틀 없이 글래스 에디터 카드 + 카운터 + 다크 필 공유 버튼.
+/// 작성 — 글만 쓸 때는 글래스 에디터 카드, 사진을 고르면 사진 위에 글씨를 쓰는 편집기로 바뀐다.
 /// 매크로 없는 TCA 구성에서 모듈 경계를 지키기 위해 store.scope 대신 (state, send) 주입을 사용.
 public struct ComposeView: View {
     let state: ComposeFeature.State
@@ -15,6 +15,8 @@ public struct ComposeView: View {
     // PhotosPickerItem은 시스템 피커의 선택 핸들일 뿐이라 리듀서 상태로 올리지 않는다.
     // Data 로드가 끝나는 즉시 photoPicked로 넘기고 nil로 되돌린다.
     @State private var pickerItem: PhotosPickerItem?
+    // 고른 사진을 한 번만 디코드해 둔다. 글자를 칠 때마다 다시 디코드하지 않기 위함이다
+    @State private var selectedPhoto: UIImage?
 
     public init(
         state: ComposeFeature.State,
@@ -27,6 +29,45 @@ public struct ComposeView: View {
     }
 
     public var body: some View {
+        Group {
+            if state.selectedImage != nil {
+                PhotoComposeView(
+                    state: state,
+                    send: send,
+                    photo: selectedPhoto,
+                    destinationTitle: destinationTitle,
+                    pickerItem: $pickerItem
+                )
+            } else {
+                textComposer
+            }
+        }
+        .task(id: state.selectedImage) {
+            selectedPhoto = state.selectedImage.flatMap { UIImage(data: $0) }
+        }
+        .onChange(of: pickerItem) { _, newItem in
+            guard let newItem else { return }
+            Task {
+                // HEIC 등 원본 포맷 그대로 Data로 로드 — 변환·압축은 리듀서 이펙트가 수행
+                let data = try? await newItem.loadTransferable(type: Data.self)
+                send(.photoPicked(data))
+            }
+            pickerItem = nil
+        }
+        .alert(
+            state.error?.errorDescription ?? "오류가 발생했어요",
+            isPresented: Binding(
+                get: { state.error != nil },
+                set: { if !$0 { send(.dismissError) } }
+            )
+        ) {
+            Button("확인", role: .cancel) {}
+        }
+    }
+
+    // MARK: - 글만 쓰는 화면
+
+    private var textComposer: some View {
         ZStack {
             MomentColor.canvas.ignoresSafeArea()
 
@@ -58,15 +99,6 @@ public struct ComposeView: View {
             }
             .padding(.horizontal, Spacing.lg)
             .padding(.vertical, Spacing.lg)
-        }
-        .alert(
-            state.error?.errorDescription ?? "오류가 발생했어요",
-            isPresented: Binding(
-                get: { state.error != nil },
-                set: { if !$0 { send(.dismissError) } }
-            )
-        ) {
-            Button("확인", role: .cancel) {}
         }
     }
 
@@ -151,6 +183,7 @@ public struct ComposeView: View {
 
     // MARK: - 사진 첨부
 
+    /// 고른 사진을 줄이고 압축하는 동안 보이는 자리. 끝나면 사진 편집기로 바뀐다
     @ViewBuilder
     private var photoSection: some View {
         if state.isProcessingPhoto {
@@ -160,24 +193,7 @@ public struct ComposeView: View {
                 .overlay {
                     ProgressView().tint(MomentColor.ink)
                 }
-        } else if let data = state.selectedImage, let image = UIImage(data: data) {
-            Image(uiImage: image)
-                .resizable()
-                .scaledToFill()
-                .frame(maxWidth: .infinity)
-                .frame(height: 160)
-                .clipShape(RoundedRectangle(cornerRadius: 14))
-                .overlay(alignment: .topTrailing) {
-                    Button {
-                        send(.clearImage)
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 22))
-                            .foregroundStyle(.white, Color.black.opacity(0.45))
-                    }
-                    .padding(Spacing.xs)
-                    .accessibilityLabel("사진 제거")
-                }
+                .accessibilityLabel("사진을 준비하는 중")
         }
     }
 
@@ -185,21 +201,12 @@ public struct ComposeView: View {
         PhotosPicker(selection: $pickerItem, matching: .images, photoLibrary: .shared()) {
             HStack(spacing: 6) {
                 Image(systemName: "photo.on.rectangle")
-                Text(state.selectedImage == nil ? "사진" : "사진 바꾸기")
+                Text("사진")
             }
             .font(MomentTypography.bodySM)
             .foregroundColor(MomentColor.ink.opacity(0.7))
         }
         .disabled(state.isProcessingPhoto || state.isUploading)
-        .onChange(of: pickerItem) { _, newItem in
-            guard let newItem else { return }
-            Task {
-                // HEIC 등 원본 포맷 그대로 Data로 로드 — 변환·압축은 리듀서 이펙트가 수행
-                let data = try? await newItem.loadTransferable(type: Data.self)
-                send(.photoPicked(data))
-            }
-            pickerItem = nil
-        }
     }
 }
 
@@ -226,7 +233,8 @@ public struct ComposeView: View {
             UIColor.systemOrange.setFill()
             ctx.fill(CGRect(x: 0, y: 0, width: 400, height: 300))
         }.jpegData(compressionQuality: 0.8)
-        s.text = "노을이 예뻐서 한 장"
+        s.text = "노을이 예뻐서\n한 장 보내요"
+        s.textStyle = MomentTextStyle(position: .bottom, color: .butter)
         return s
     }()
     ComposeView(state: state, send: { _ in })

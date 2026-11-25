@@ -71,3 +71,44 @@ func overflowIsTruncated() {
     _ = ComposeFeature().reduce(into: &state, action: .textChanged(String(repeating: "가", count: 520)))
     #expect(state.characterCount == 500)
 }
+
+@Test("사진 위 글씨의 위치와 색을 고를 수 있고, 처음에는 왼쪽 위·흰색이다")
+func textStyleSelection() {
+    var state = ComposeFeature.State()
+    #expect(state.textStyle == .standard)
+
+    _ = ComposeFeature().reduce(into: &state, action: .textPositionSelected(.bottom))
+    _ = ComposeFeature().reduce(into: &state, action: .textColorSelected(.butter))
+    #expect(state.textStyle == MomentTextStyle(position: .bottom, color: .butter))
+}
+
+@Test("공유가 끝나면 사진·글·글씨 스타일이 모두 처음으로 돌아간다")
+func successResetsTextStyle() {
+    var state = ComposeFeature.State()
+    state.selectedImage = Data([0xFF, 0xD8])
+    state.text = "노을"
+    state.textStyle = MomentTextStyle(position: .bottom, color: .lilac)
+    state.isUploading = true
+
+    let author = UserProfile(id: UUID(), handle: "m_a", nickname: "동주")
+    let moment = Moment(id: UUID(), spaceId: UUID(), author: author, text: "노을", createdAt: Date())
+    _ = ComposeFeature().reduce(into: &state, action: .submitResponse(.success(moment)))
+
+    #expect(state.selectedImage == nil)
+    #expect(state.text.isEmpty)
+    #expect(state.textStyle == .standard)
+    #expect(state.isUploading == false)
+}
+
+@Test("사진을 빼도 써 둔 글과 글씨 스타일은 남는다")
+func clearImageKeepsText() {
+    var state = ComposeFeature.State()
+    state.selectedImage = Data([0xFF, 0xD8])
+    state.text = "노을"
+    state.textStyle = MomentTextStyle(position: .bottom, color: .peach)
+
+    _ = ComposeFeature().reduce(into: &state, action: .clearImage)
+    #expect(state.selectedImage == nil)
+    #expect(state.text == "노을")
+    #expect(state.textStyle.position == .bottom)
+}

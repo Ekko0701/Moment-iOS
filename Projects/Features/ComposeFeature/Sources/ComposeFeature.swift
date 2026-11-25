@@ -13,6 +13,8 @@ public struct ComposeFeature {
     public struct State: Equatable {
         public var selectedImage: Data? = nil
         public var text: String = ""
+        /// 사진 위 글씨의 위치와 색. 사진을 골랐을 때만 화면에서 고칠 수 있다
+        public var textStyle: MomentTextStyle = .standard
         public var selectedSpaceId: UUID? = nil
         /// 보낼 수 있는 스페이스. 둘 이상이면 화면이 보낼 곳을 고르게 한다
         public var availableSpaces: [Space] = []
@@ -44,6 +46,8 @@ public struct ComposeFeature {
         case imageSelected(Data)
         case photoProcessingFailed
         case textChanged(String)
+        case textPositionSelected(MomentTextPosition)
+        case textColorSelected(MomentTextColor)
         case spaceSelected(UUID)
         case clearImage
         case submitTapped
@@ -107,6 +111,14 @@ public struct ComposeFeature {
                 state.text = String(newText.prefix(state.maxCharacters))
                 return .none
 
+            case .textPositionSelected(let position):
+                state.textStyle.position = position
+                return .none
+
+            case .textColorSelected(let color):
+                state.textStyle.color = color
+                return .none
+
             case .clearImage:
                 state.selectedImage = nil
                 return .none
@@ -119,12 +131,19 @@ public struct ComposeFeature {
 
                 state.isUploading = true
 
-                return .run { [useCase = self.shareMomentUseCase, spaceId, text = state.trimmedText, imageData = state.selectedImage] send in
+                return .run { [
+                    useCase = self.shareMomentUseCase,
+                    spaceId,
+                    text = state.trimmedText,
+                    imageData = state.selectedImage,
+                    textStyle = state.textStyle
+                ] send in
                     do {
                         let moment = try await useCase.execute(
                             spaceId: spaceId,
                             text: text,
-                            imageData: imageData
+                            imageData: imageData,
+                            textStyle: textStyle
                         )
                         await send(.submitResponse(.success(moment)))
                     } catch {
@@ -144,6 +163,7 @@ public struct ComposeFeature {
                 state.isUploading = false
                 state.selectedImage = nil
                 state.text = ""
+                state.textStyle = .standard
                 state.error = nil
                 return .send(.delegate(.shared(moment)))
 
