@@ -26,6 +26,30 @@ public enum MomentPackage {
         requirement: .upToNextMajor(from: "5.8.0"))
 }
 
+// MARK: - 앱 버전 단일 선언
+// 앱과 위젯은 같은 버전·빌드 번호를 써야 스토어 검증을 통과하므로 여기서만 정한다.
+
+public enum MomentVersion {
+    /// 사용자에게 보이는 버전 (CFBundleShortVersionString). 출시할 때 여기를 올린다
+    public static let marketing = "1.0.0"
+
+    /// 빌드 번호 (CFBundleVersion). 배포 파이프라인이 `TUIST_BUILD_NUMBER`로 넣어 주고,
+    /// 넣지 않은 로컬 빌드는 1을 쓴다. `tuist generate` 시점에 정해진다.
+    public static let build = Environment.buildNumber.getString(default: "1")
+
+    /// 앱·위젯 타깃이 함께 쓰는 빌드 설정
+    public static let buildSettings: SettingsDictionary = [
+        "MARKETING_VERSION": .string(marketing),
+        "CURRENT_PROJECT_VERSION": .string(build),
+    ]
+
+    /// Info.plist가 빌드 설정을 따라가게 하는 항목
+    public static let infoPlist: [String: Plist.Value] = [
+        "CFBundleShortVersionString": "$(MARKETING_VERSION)",
+        "CFBundleVersion": "$(CURRENT_PROJECT_VERSION)",
+    ]
+}
+
 // MARK: - 모듈 간 참조 단일 선언
 // 경로 문자열이 여러 매니페스트에 흩어지지 않도록 여기서만 정의한다.
 

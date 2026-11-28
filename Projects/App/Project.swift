@@ -13,7 +13,8 @@ let project = Project(
         MomentPackage.swiftNavigation,
     ],
     settings: .settings(
-        base: ["SWIFT_ALLOW_MACRO_ATTESTATIONS": "YES"],
+        base: MomentVersion.buildSettings
+            .merging(["SWIFT_ALLOW_MACRO_ATTESTATIONS": "YES"]) { _, new in new },
         configurations: MomentConfiguration.all),
     targets: [
         .target(
@@ -23,8 +24,10 @@ let project = Project(
             bundleId: "com.ekko.moment",
             deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(
-                with: [
+                with: MomentVersion.infoPlist.merging([
                     "CFBundleDisplayName": "Moment",
+                    // HTTPS 등 운영체제가 제공하는 표준 암호화만 쓴다. 수출 규정 신고 대상이 아님을 알린다
+                    "ITSAppUsesNonExemptEncryption": false,
                     "UIAppFonts": [
                         "Pretendard-Regular.otf",
                         "Pretendard-Medium.otf",
@@ -36,8 +39,6 @@ let project = Project(
                     "UILaunchScreen": [:],
                     "NSLocalNetworkUsageDescription": "개발 서버와 통신하려면 로컬 네트워크 접근이 필요해요.",
                     "NSBonjourServices": ["_http._tcp"],
-                    // 로컬 개발 서버(http://localhost:8080) 연결 허용.
-                    // ATS를 전역으로 끄지 않고 루프백/로컬 네트워킹만 예외 처리한다.
                     // 위젯·알림이 여는 moment://login, moment://connect, moment://moment/{spaceId}/{momentId}
                     "CFBundleURLTypes": [
                         [
@@ -45,13 +46,16 @@ let project = Project(
                             "CFBundleURLSchemes": ["moment"],
                         ],
                     ],
+                    // 로컬 개발 서버(http://localhost:8080) 연결 허용.
+                    // ATS를 전역으로 끄지 않고 루프백/로컬 네트워킹만 예외 처리한다.
                     "NSAppTransportSecurity": [
                         "NSAllowsLocalNetworking": true,
                     ],
-                ]
+                ]) { _, new in new }
             ),
             sources: ["Sources/**"],
-            resources: ["Resources/Fonts/**"],
+            // 글꼴, 앱 아이콘(Assets.xcassets), 개인정보 매니페스트
+            resources: ["Resources/**"],
             entitlements: .file(path: "MomentApp.entitlements"),
             dependencies: [
                 ModuleDependency.designSystem,
@@ -68,7 +72,11 @@ let project = Project(
                 .package(product: "ComposableArchitecture"),
                 .package(product: "Dependencies"),
                 .target(name: "MomentWidget"),
-            ]
+            ],
+            settings: .settings(base: [
+                // 강조 색은 코드(MomentColor)로 지정한다. 에셋 카탈로그에서 찾지 않게 비워 둔다
+                "ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME": "",
+            ])
         ),
         .target(
             name: "MomentWidget",
@@ -77,7 +85,7 @@ let project = Project(
             bundleId: "com.ekko.moment.widget",
             deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(
-                with: [
+                with: MomentVersion.infoPlist.merging([
                     "NSExtension": [
                         "NSExtensionPointIdentifier": "com.apple.widgetkit-extension",
                     ],
@@ -87,11 +95,12 @@ let project = Project(
                         "Pretendard-SemiBold.otf",
                         "Pretendard-Bold.otf",
                     ],
-                ]
+                ]) { _, new in new }
             ),
             sources: ["Widget/Sources/**"],
-            // 위젯 익스텐션은 앱 번들의 글꼴을 읽지 못하므로 같은 글꼴 파일을 따로 담는다
-            resources: ["Resources/Fonts/**"],
+            // 위젯 익스텐션은 앱 번들의 글꼴을 읽지 못하므로 같은 글꼴 파일을 따로 담는다.
+            // 개인정보 매니페스트도 익스텐션 번들에 따로 있어야 한다
+            resources: ["Resources/Fonts/**", "Widget/Resources/**"],
             entitlements: .file(path: "Widget/MomentWidget.entitlements"),
             dependencies: [
                 ModuleDependency.coreKit,

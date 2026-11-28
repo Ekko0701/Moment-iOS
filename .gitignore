@@ -14,3 +14,12 @@ Tuist/.build/
 
 # 빌드 산출물
 DerivedData/
+
+# Ruby gem 설치 위치와 Bundler 로컬 설정 — bundle install로 재생성된다
+.bundle/
+vendor/bundle/
+
+# fastlane 실행 산출물
+fastlane/report.xml
+fastlane/test_output/
+fastlane/logs/
