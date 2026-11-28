@@ -13,7 +13,8 @@ let project = Project(
         MomentPackage.swiftNavigation,
     ],
     settings: .settings(
-        base: ["SWIFT_ALLOW_MACRO_ATTESTATIONS": "YES"],
+        base: MomentVersion.buildSettings
+            .merging(["SWIFT_ALLOW_MACRO_ATTESTATIONS": "YES"]) { _, new in new },
         configurations: MomentConfiguration.all),
     targets: [
         .target(
@@ -23,7 +24,7 @@ let project = Project(
             bundleId: "com.ekko.moment",
             deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(
-                with: [
+                with: MomentVersion.infoPlist.merging([
                     "CFBundleDisplayName": "Moment",
                     "UIAppFonts": [
                         "Pretendard-Regular.otf",
@@ -48,7 +49,7 @@ let project = Project(
                     "NSAppTransportSecurity": [
                         "NSAllowsLocalNetworking": true,
                     ],
-                ]
+                ]) { _, new in new }
             ),
             sources: ["Sources/**"],
             resources: ["Resources/Fonts/**"],
@@ -77,7 +78,7 @@ let project = Project(
             bundleId: "com.ekko.moment.widget",
             deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(
-                with: [
+                with: MomentVersion.infoPlist.merging([
                     "NSExtension": [
                         "NSExtensionPointIdentifier": "com.apple.widgetkit-extension",
                     ],
@@ -87,7 +88,7 @@ let project = Project(
                         "Pretendard-SemiBold.otf",
                         "Pretendard-Bold.otf",
                     ],
-                ]
+                ]) { _, new in new }
             ),
             sources: ["Widget/Sources/**"],
             // 위젯 익스텐션은 앱 번들의 글꼴을 읽지 못하므로 같은 글꼴 파일을 따로 담는다
