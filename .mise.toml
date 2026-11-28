@@ -1,0 +1,9 @@
+# 이 저장소에서 쓰는 도구 버전. `mise install` 한 번으로 모두 설치된다.
+[tools]
+tuist = "4.205.0"
+ruby = "3.4.13"
+xcbeautify = "3.2.1"
+
+[settings]
+# Ruby를 소스에서 빌드하지 않고 미리 빌드된 것을 내려받는다
+ruby.compile = false
