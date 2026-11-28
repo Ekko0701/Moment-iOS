@@ -52,7 +52,8 @@ let project = Project(
                 ]) { _, new in new }
             ),
             sources: ["Sources/**"],
-            resources: ["Resources/Fonts/**"],
+            // 글꼴, 앱 아이콘(Assets.xcassets)
+            resources: ["Resources/Fonts/**", "Resources/Assets.xcassets"],
             entitlements: .file(path: "MomentApp.entitlements"),
             dependencies: [
                 ModuleDependency.designSystem,
@@ -69,7 +70,11 @@ let project = Project(
                 .package(product: "ComposableArchitecture"),
                 .package(product: "Dependencies"),
                 .target(name: "MomentWidget"),
-            ]
+            ],
+            settings: .settings(base: [
+                // 강조 색은 코드(MomentColor)로 지정한다. 에셋 카탈로그에서 찾지 않게 비워 둔다
+                "ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME": "",
+            ])
         ),
         .target(
             name: "MomentWidget",
