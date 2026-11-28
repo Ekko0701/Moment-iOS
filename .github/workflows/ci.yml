@@ -1,0 +1,71 @@
+name: CI
+
+# main으로 들어오는 코드를 병합 전에 검증한다. 배포는 하지 않는다.
+# - PR: main을 대상으로 열거나 새 커밋을 올릴 때마다 실행
+# - push: main에 병합된 뒤 한 번 더 실행해 main 자체가 통과 상태인지 확인
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# 테스트만 돌리므로 저장소 읽기 권한이면 충분하다. 공개 저장소라 외부 PR도 이 워크플로를 실행한다.
+permissions:
+  contents: read
+
+# 같은 PR에 커밋을 연달아 올리면 앞선 실행은 취소하고 최신 커밋만 검증한다
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: test
+    # Xcode 27이 설치된 Apple Silicon 러너
+    runs-on: xcode-27
+    timeout-minutes: 45
+    env:
+      # fastlane은 UTF-8 로캘이 필요하다
+      LC_ALL: en_US.UTF-8
+      LANG: en_US.UTF-8
+      # gem을 저장소 안 vendor/bundle에 설치하고, Gemfile.lock과 다르면 실패시킨다
+      BUNDLE_PATH: vendor/bundle
+      BUNDLE_FROZEN: 'true'
+    steps:
+      - uses: actions/checkout@v7
+
+      # 러너에는 Xcode가 여러 버전 있다. .xcode-version에 적힌 버전을 쓴다.
+      - name: Xcode 선택
+        run: echo "DEVELOPER_DIR=/Applications/Xcode_$(cat .xcode-version).app/Contents/Developer" >> "$GITHUB_ENV"
+
+      # .mise.toml에 적힌 Tuist, Ruby, xcbeautify를 설치한다
+      - name: 도구 설치
+        uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
+
+      - name: gem 캐시
+        uses: actions/cache@v6
+        with:
+          path: vendor/bundle
+          key: gems-${{ runner.os }}-${{ hashFiles('.mise.toml', 'Gemfile.lock') }}
+
+      - name: fastlane 설치
+        run: bundle install
+
+      - name: Swift 패키지 캐시
+        uses: actions/cache@v6
+        with:
+          path: .build/SourcePackages
+          key: spm-${{ runner.os }}-${{ hashFiles('.xcode-version', 'Tuist/Package.swift', '.package.resolved') }}
+
+      - name: 테스트
+        run: bundle exec fastlane test
+
+      - name: 실패한 테스트 결과 올리기
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results
+          path: |
+            fastlane/test_output/
+            fastlane/logs/
+          retention-days: 7
